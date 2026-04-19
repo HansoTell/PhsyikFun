@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector.h"
+#include <cstddef>
 
 namespace Physik 
 {
@@ -13,18 +14,19 @@ public:
 };
 
 
-//wie mit dimensionene machen?? templaten wir einfach alles durch? oder machen wir interfacve klasse für die dimensionen die gebraucht werden?
-class StandartPotential : public IPotential 
+//wie richtig machen dass man nicht ditance rein geben muss sondern ein vector damit man zwischen den beidne die distanc rechnen kann --> zudem was mit einer methode um minus von vecktoren zur echnen ohne die zu verändern sondern der zurück gibt als ergbenis
+template <size_t Dim>
+class ClassicalPotential : public IPotential 
 {
 public:
     double getForce( double distance ) const override;
     double getPotentialEnergy( double distance ) const override;
 public:
-    StandartPotential( double beta, Vector<3> );
-    StandartPotential( const StandartPotential& other ) = delete;
-    StandartPotential( StandartPotential&& other ) = delete;
-    ~StandartPotential() = default;
+    ClassicalPotential( double beta, Vector<Dim> position );
+    ClassicalPotential( const ClassicalPotential& other ) = delete;
+    ClassicalPotential( ClassicalPotential&& other ) = delete;
+    ~ClassicalPotential() = default;
 private:
-    Vector<3> m_Position;
+    Vector<Dim> m_Position;
 };
 }

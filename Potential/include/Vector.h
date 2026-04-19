@@ -1,10 +1,13 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <initializer_list>
 namespace Physik 
 {
 template <size_t Dim>
+//zahlen wert template um entschiedne lassen zu können was für vektor u.s.w
 class Vector  
 {
 public:
@@ -13,11 +16,35 @@ public:
     void minus( const Vector<Dim> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
     void add( const Vector<Dim> other ) { for( int i = 0; i < Dim; i++ ) at(i) += other[i]; }
     void skalarProduct( double skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
+    double EukNorm() const 
+    { 
+        double betragsquadrat = 0;
+        for( int i = 0; i < Dim; i++ )
+        {
+            betragsquadrat += data[i] * data[i];
+
+        }
+        return sqrt(betragsquadrat); 
+    }
     double& operator[]( size_t i ) { return at(i); }
     const double& operator[]( size_t i ) const { return at(i); }
     void operator-(const Vector<Dim>& other) { minus(other); }
     void operator+(const Vector<Dim>& other) { add(other); }
     void operator*( double skalar ) { skalarProduct(skalar); }
+public:
+    Vector() = default;
+    Vector(std::initializer_list<double> init)
+    {
+        size_t i = 0;
+        for( double val : init )
+        {
+            if( i >= Dim ) break;
+            data[i++] = val;
+        }
+    }
+    Vector( const Vector<Dim>& other );
+    Vector( Vector<Dim>&& other );
+    ~Vector() = default;
 private:
     std::array<double, Dim> data;
 };
