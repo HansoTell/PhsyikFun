@@ -12,8 +12,15 @@ public:
     Vector<Dim, T> getPosition() const { return m_Position; }
     Vector<Dim, T> getVelocity() const { return m_Velocity; }
     T getMass() const { return m_Mass; }
-
-
+public:
+    Entity();
+    Entity( Vector<Dim, T> startPosition, double mass );
+    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity );
+    Entity( Vector<Dim, T> startPosition, double mass, Vector<Dim, T> startVelocity );
+    //other EntityKonstruxters
+    Entity( const Entity<Dim, T>& other );
+    Entity( Entity<Dim, T>&& other );
+    ~Entity() = default;
 private:
     Vector<Dim, T> m_Position;
     Vector<Dim, T> m_Velocity;

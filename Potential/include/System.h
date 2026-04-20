@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Vector.h"
+#include "Potential.h"
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -18,6 +21,14 @@ public:
 class ClassicalSystem : public ISystem 
 {
 public:
+    //wie interactiv machen mit dimensionen??
+    using Vector = Vector<3, double>;
+
+    void addPotential( std::unique_ptr<ClassicPotential> potential );
+    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicPotential>> potentials );
+    void addEntity();
+    void addMulipleEntitys();
+    void setTimeIncrement( double DeltaTime );
 
 public:
     ClassicalSystem();
@@ -30,6 +41,8 @@ private:
 
     double m_Time;
     double m_DelatTime;
+    //??
+    double Energy;
 };
 
 class RelativistikSystem : public ISystem 

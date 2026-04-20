@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <type_traits>
 
+//interaces für noemen und skalarprodukte??
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
@@ -16,7 +17,9 @@ static_assert(std::is_arithmetic_v<T>);
 public:
     double& at ( size_t i ) { return data.at(i); }
     const double& at( size_t i ) const { return data.at(i); }
-    void minus( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
+    void minusIP( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
+    //wie mache ichd das ? Also wie retune ich die sachen in die initialliser list?
+    Vector<Dim, T> minusOP( const Vector<Dim, T> other ){}
     void add( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) += other[i]; }
     void skalarProduct( double skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
     double EukNorm() const 
@@ -31,7 +34,7 @@ public:
     }
     double& operator[]( size_t i ) { return at(i); }
     const double& operator[]( size_t i ) const { return at(i); }
-    void operator-(const Vector<Dim, T>& other) { minus(other); }
+    void operator-(const Vector<Dim, T>& other) { minusIP(other); }
     void operator+(const Vector<Dim, T>& other) { add(other); }
     void operator*( double skalar ) { skalarProduct(skalar); }
 public:

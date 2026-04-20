@@ -3,6 +3,7 @@
 #include "Vector.h"
 #include <cstddef>
 
+//brauchen modul das sich um das versetzten von teilchen und berechnen davon kümmert...
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
@@ -29,4 +30,6 @@ public:
 private:
     Vector<Dim, T> m_Position;
 };
+
+using ClassicPotential = IPotential<3, double>;
 }
