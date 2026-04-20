@@ -2,19 +2,22 @@
 
 #include <array>
 #include <cmath>
+#include <complex>
 #include <cstddef>
 #include <initializer_list>
+#include <type_traits>
+
 namespace Physik 
 {
-template <size_t Dim>
-//zahlen wert template um entschiedne lassen zu können was für vektor u.s.w
+template <size_t Dim = 3, typename T = double>
 class Vector  
 {
+static_assert(std::is_arithmetic_v<T>);
 public:
     double& at ( size_t i ) { return data.at(i); }
     const double& at( size_t i ) const { return data.at(i); }
-    void minus( const Vector<Dim> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
-    void add( const Vector<Dim> other ) { for( int i = 0; i < Dim; i++ ) at(i) += other[i]; }
+    void minus( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
+    void add( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) += other[i]; }
     void skalarProduct( double skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
     double EukNorm() const 
     { 
@@ -28,8 +31,8 @@ public:
     }
     double& operator[]( size_t i ) { return at(i); }
     const double& operator[]( size_t i ) const { return at(i); }
-    void operator-(const Vector<Dim>& other) { minus(other); }
-    void operator+(const Vector<Dim>& other) { add(other); }
+    void operator-(const Vector<Dim, T>& other) { minus(other); }
+    void operator+(const Vector<Dim, T>& other) { add(other); }
     void operator*( double skalar ) { skalarProduct(skalar); }
 public:
     Vector() = default;
@@ -42,15 +45,16 @@ public:
             data[i++] = val;
         }
     }
-    Vector( const Vector<Dim>& other );
-    Vector( Vector<Dim>&& other );
+    Vector( const Vector<Dim, T>& other );
+    Vector( Vector<Dim, T>&& other );
     ~Vector() = default;
 private:
     std::array<double, Dim> data;
 };
 
 
-using Vec2D = Vector<2>;
-using Vec3D = Vector<3>;
+using Vec2D = Vector<2, double>;
+using Vec3D = Vector<3, double>;
+using ComplexVec3d = Vector<3, std::complex<double>>;
 
 }
