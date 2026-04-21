@@ -18,8 +18,15 @@ public:
     double& at ( size_t i ) { return data.at(i); }
     const double& at( size_t i ) const { return data.at(i); }
     void minusIP( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
-    //wie mache ichd das ? Also wie retune ich die sachen in die initialliser list?
-    Vector<Dim, T> minusOP( const Vector<Dim, T> other ){}
+    Vector<Dim, T> minusOP( const Vector<Dim, T> other )
+    {
+        Vector<Dim, T> res;
+        for( int i = 0; i < Dim; i++ )
+        {
+            res[i] = at(i) - other.at(i);
+        }
+        return res;
+    }
     void add( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) += other[i]; }
     void skalarProduct( double skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
     double EukNorm() const 
@@ -48,8 +55,8 @@ public:
             data[i++] = val;
         }
     }
-    Vector( const Vector<Dim, T>& other );
-    Vector( Vector<Dim, T>&& other );
+    Vector( const Vector<Dim, T>& other ) : data( other.data ) {}
+    Vector( Vector<Dim, T>&& other ) : data(std::move(other.data)) {}
     ~Vector() = default;
 private:
     std::array<double, Dim> data;

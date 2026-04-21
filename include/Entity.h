@@ -18,13 +18,15 @@ public:
     Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity );
     Entity( Vector<Dim, T> startPosition, double mass, Vector<Dim, T> startVelocity );
     //other EntityKonstruxters
-    Entity( const Entity<Dim, T>& other );
-    Entity( Entity<Dim, T>&& other );
+    Entity( const Entity<Dim, T>& other ) = default;
+    Entity( Entity<Dim, T>&& other ) = default;
     ~Entity() = default;
 private:
     Vector<Dim, T> m_Position;
     Vector<Dim, T> m_Velocity;
     T m_Mass;
 };
+
+using ClassicEntity = Entity<3, double>;
     
 }
