@@ -28,14 +28,25 @@ void ClassicalSystem::Run()
     }
 }
 
+void ClassicalSystem::Pause() 
+{
+
+}
+
+void ClassicalSystem::Clear()
+{
+
+}
+
 void ClassicalSystem::addPotential( std::unique_ptr<ClassicPotential> potential )
 {
     m_Potentials.push_back(std::move(potential)); 
 }
 
-void ClassicalSystem::addMulitpPotentials( std::vector<std::unique_ptr<ClassicPotential>> potentials )
+void ClassicalSystem::addMulitpPotentials( const std::vector<std::unique_ptr<ClassicPotential>>& potentials )
 {
-    m_Potentials.insert(m_Potentials.cend(), potentials.begin(), potentials.end());
+    //problem unique ptr ist nicht copy constructble ig
+    //m_Potentials.insert(m_Potentials.cend(), potentials.begin(), potentials.end());
 }
 
 void ClassicalSystem::addEntity( ClassicEntity entity )
@@ -43,9 +54,10 @@ void ClassicalSystem::addEntity( ClassicEntity entity )
     m_Entitys.push_back(std::move(entity));
 }
 
-void ClassicalSystem::addMulipleEntitys( std::vector<ClassicEntity> entitys )
+void ClassicalSystem::addMulipleEntitys( const std::vector<ClassicEntity>& entitys )
 {
-    m_Entitys.insert(m_Entitys.cend(), entitys.begin(), entitys.end());
+    //gleiche hier
+    //m_Entitys.insert(m_Entitys.cend(), entitys.begin(), entitys.end());
 }
 
 
