@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 #include <cstddef>
+#include <memory>
 
 //brauchen modul das sich um das versetzten von teilchen und berechnen davon kümmert...
 namespace Physik 
@@ -22,6 +23,7 @@ class StandartPotential : public IPotential<Dim, T>
 public:
     Vector<Dim, T> getForce( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
     {
+    //einfach falsch ist nicht in bezug zu position des Kordinaten des potentials 
         T distance = positionEntity.EukNorm();
         //distance muss riochtig gemacht werden wenn distance --> 0 geht was dann??? Kann nicht einfach error machen
         
@@ -36,13 +38,13 @@ public:
     }
     T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override { return - m_Beta / positionEntity.EukNorm(); }
 public:
-    StandartPotential( T beta, Vector<Dim, T> position ) : m_Beta(beta), m_Position(std::move(position)){}
+    StandartPotential( T beta, std::shared_ptr<Vector<Dim, T>> position ) : m_Beta(beta), m_Position(position){}
     StandartPotential( const StandartPotential& other ) = default ;
     StandartPotential( StandartPotential&& other ) = default;
     ~StandartPotential() = default;
 private:
     T m_Beta;
-    Vector<Dim, T> m_Position;
+    std::shared_ptr<Vector<Dim, T>> m_Position;
 };
 
 using ClassicPotential = IPotential<3, double>;
