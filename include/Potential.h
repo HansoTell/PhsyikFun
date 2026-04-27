@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <memory>
 
-//brauchen modul das sich um das versetzten von teilchen und berechnen davon kümmert...
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
@@ -14,6 +13,7 @@ public:
     ~IPotential() = default;
     virtual Vector<Dim, T> getForce( const Vector<Dim, T>& positionEntity, T mass, double time ) const = 0;
     virtual T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const = 0;
+    virtual std::unique_ptr<IPotential> clone() const = 0;
 };
 
 
@@ -21,22 +21,25 @@ template <size_t Dim = 3, typename T = double>
 class StandartPotential : public IPotential<Dim, T> 
 {
 public:
+    //distance muss riochtig gemacht werden wenn distance --> 0 geht was dann??? Kann nicht einfach error machen
     Vector<Dim, T> getForce( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
     {
-    //einfach falsch ist nicht in bezug zu position des Kordinaten des potentials 
-        T distance = positionEntity.EukNorm();
-        //distance muss riochtig gemacht werden wenn distance --> 0 geht was dann??? Kann nicht einfach error machen
+        Vector<Dim, T> offset = positionEntity.minusOP(*m_Position);
+        T distance = offset.EukNorm();
         
         double constant = - m_Beta / (distance*distance*distance);
-        Vector<Dim, T> erg;
-        for( int i = 0; i < Dim; i++ )
-        {
-            erg.at(i) = positionEntity[i] * constant;
-        }
 
-        return erg;
+        offset * constant;
+
+        return offset;
     }
-    T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override { return - m_Beta / positionEntity.EukNorm(); }
+    T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override 
+    {
+        Vector<Dim, T> offset = positionEntity.minusOP(*m_Position);
+
+        return - m_Beta / offset.EukNorm(); 
+    }
+    std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<StandartPotential>(*this); }
 public:
     StandartPotential( T beta, std::shared_ptr<Vector<Dim, T>> position ) : m_Beta(beta), m_Position(position){}
     StandartPotential( const StandartPotential& other ) = default ;

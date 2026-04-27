@@ -15,10 +15,11 @@ class Vector
 {
 static_assert(std::is_arithmetic_v<T>);
 public:
-    double& at ( size_t i ) { return data.at(i); }
-    const double& at( size_t i ) const { return data.at(i); }
+    T& at ( size_t i ) { return data.at(i); }
+    const T& at( size_t i ) const { return data.at(i); }
     void minusIP( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) -= other[i]; }
-    Vector<Dim, T> minusOP( const Vector<Dim, T> other )
+    void fill( T value ) { data.fill(value); }
+    Vector<Dim, T> minusOP( const Vector<Dim, T> other ) const 
     {
         Vector<Dim, T> res;
         for( int i = 0; i < Dim; i++ )
@@ -28,10 +29,10 @@ public:
         return res;
     }
     void add( const Vector<Dim, T> other ) { for( int i = 0; i < Dim; i++ ) at(i) += other[i]; }
-    void skalarProduct( double skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
-    double EukNorm() const 
+    void skalarProduct( T skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
+    T EukNorm() const 
     { 
-        double betragsquadrat = 0;
+        T betragsquadrat = 0;
         for( int i = 0; i < Dim; i++ )
         {
             betragsquadrat += data[i] * data[i];
@@ -39,17 +40,17 @@ public:
         }
         return sqrt(betragsquadrat); 
     }
-    double& operator[]( size_t i ) { return at(i); }
-    const double& operator[]( size_t i ) const { return at(i); }
+    T& operator[]( size_t i ) { return at(i); }
+    const T& operator[]( size_t i ) const { return at(i); }
     void operator-(const Vector<Dim, T>& other) { minusIP(other); }
     void operator+(const Vector<Dim, T>& other) { add(other); }
-    void operator*( double skalar ) { skalarProduct(skalar); }
+    void operator*( T skalar ) { skalarProduct(skalar); }
 public:
     Vector() = default;
-    Vector(std::initializer_list<double> init)
+    Vector(std::initializer_list<T> init)
     {
         size_t i = 0;
-        for( double val : init )
+        for( T val : init )
         {
             if( i >= Dim ) break;
             data[i++] = val;
@@ -59,7 +60,7 @@ public:
     Vector( Vector<Dim, T>&& other ) : data(std::move(other.data)) {}
     ~Vector() = default;
 private:
-    std::array<double, Dim> data;
+    std::array<T, Dim> data;
 };
 
 

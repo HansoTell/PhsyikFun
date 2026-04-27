@@ -4,15 +4,13 @@
 #include "Vector.h"
 #include <memory>
 
-namespace Physik 
-{
+using namespace Physik;
+
 int main()
 {
     ClassicalSystem sys;
-    //das aber nicht schön ich meine hätte ja shcon gerne das er das ganze owned oder?
-    Vec3D posPotential{ 0.0, 0.0, 0.0};
-    std::unique_ptr<ClassicPotential> potential = std::make_unique<ClassicStandartPotential>(100.0, std::make_shared<Vec3D>( Vec3D{ 0.0, 0.0, 0.0 } ));
-    ClassicEntity ent( std::make_shared<Vec3D>( Vec3D{ 10.0, 0.0 , 0.0 } ), 10.0, Vec3D{ 0.0, 1.0, 0.0 } );
+    std::unique_ptr<ClassicPotential> potential = std::make_unique<ClassicStandartPotential>(100.0, CREATE_POSITON_VEC3D(0.0, 0.0, 0.0) );
+    ClassicEntity ent( CREATE_POSITON_VEC3D(10.0, 0.0, 0.0), 10.0, Vec3D{ 0.0, 1.0, 0.0 } );
 
     sys.addEntity(std::move(ent));
     sys.addPotential(std::move(potential));
@@ -22,5 +20,5 @@ int main()
 
     return 0;
 }
-}
+
 
