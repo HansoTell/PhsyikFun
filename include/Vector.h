@@ -65,7 +65,7 @@ public:
     Vector<Dim, T>& operator*=( T scalar ) 
     {
         for( size_t i = 0; i < data.size(); i++ )
-            data[i] += scalar;
+            data[i] *= scalar;
 
         return *this;
     }
