@@ -6,6 +6,7 @@
 #include <memory>
 #include <thread>
 
+
 using namespace Physik;
 
 int main()
@@ -16,11 +17,11 @@ int main()
 
     sys.addEntity(std::move(ent));
     sys.addPotential(std::move(potential));
-    sys.setTimeIncrement( 0.001 );
+    sys.setTimeIncrement( 0.01 );
 
     sys.Start();
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     sys.Clear();
     return 0;

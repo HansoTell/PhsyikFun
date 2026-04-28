@@ -9,16 +9,16 @@ namespace Physik
 {
 ClassicalSystem::ClassicalSystem() : m_running(false)
 {
-    m_Printer = std::make_unique<ConsolePrinter>();
-    m_Core = std::make_unique<ClassicalSystemCore>();
+    m_Core = std::make_shared<ClassicalSystemCore>();
+    m_Printer = std::make_unique<ConsolePrinter>(m_Core);
 }
 
 ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_running(false) {}
 
 ClassicalSystem::ClassicalSystem( const ClassicalSystem& other ) 
 {
-    m_Printer = other.m_Printer->clone();
-    m_Core = std::make_unique<ClassicalSystemCore>(*other.m_Core);
+    m_Core = std::make_shared<ClassicalSystemCore>(*other.m_Core);
+    m_Printer = other.m_Printer->clone(m_Core);
 }
 
 ClassicalSystem::~ClassicalSystem() 
@@ -27,7 +27,7 @@ ClassicalSystem::~ClassicalSystem()
     if( m_Thread.joinable() )
         m_Thread.join();
 
-    m_Core.reset(nullptr);
+    m_Core.reset();
     m_Printer.reset(nullptr);
 }
 
@@ -94,12 +94,17 @@ void ClassicalSystem::setTimeIncrement( double DeltaTime )
 
 void ClassicalSystem::run() 
 {
+    m_Printer->printEntityPositions();
     while( m_running )
         tick();
 }
 
 void ClassicalSystem::tick() 
 {
+    m_Core->moveEntitys();
 
+    m_Core->advanceTimeIncrement();
+
+    m_Printer->printEntityPositions();
 }
 }

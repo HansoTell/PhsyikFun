@@ -4,6 +4,9 @@
 #include <cstddef>
 #include <memory>
 
+
+#include <iostream>
+
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
@@ -24,18 +27,16 @@ public:
     //distance muss riochtig gemacht werden wenn distance --> 0 geht was dann??? Kann nicht einfach error machen
     Vector<Dim, T> getForce( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
     {
-        Vector<Dim, T> offset = positionEntity.minusOP(*m_Position);
+        Vector<Dim, T> offset = positionEntity - (*m_Position);
         T distance = offset.EukNorm();
-        
+
         double constant = - m_Beta / (distance*distance*distance);
 
-        offset * constant;
-
-        return offset;
+        return offset * constant;
     }
     T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override 
     {
-        Vector<Dim, T> offset = positionEntity.minusOP(*m_Position);
+        Vector<Dim, T> offset = positionEntity - (*m_Position);
 
         return - m_Beta / offset.EukNorm(); 
     }

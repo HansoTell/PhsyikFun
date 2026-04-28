@@ -10,13 +10,20 @@
 
 namespace Physik 
 {
+
 template <size_t Dim = 3, typename T = double>
 class Entity 
 {
 public:
-    Vector<Dim, T> getPosition() const { return m_Position; }
+    Vector<Dim, T> getPosition() const { return *m_Position; }
     Vector<Dim, T> getVelocity() const { return m_Velocity; }
     T getMass() const { return m_Mass; }
+    const std::vector<std::unique_ptr<IPotential<Dim, T>>>& getIntrinsicPotentials() const { return m_OwnPotentials; }
+
+    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_Velocity = newVelocity; }
+    void setPosition( const Vector<Dim, T>& newPosition ) { *m_Position = newPosition; }
+    void setMass( T newMass ){ m_Mass = newMass; }
+    void addIntrinsivPotential( std::unique_ptr<IPotential<Dim, T>> newPotential ){ m_OwnPotentials.push_back(std::move(newPotential)); }
 public:
     Entity(){}
     Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_Position(startPosition), m_Mass(mass){}
@@ -49,7 +56,7 @@ private:
     Vector<Dim, T> m_Velocity;
     T m_Mass;
 
-    std::vector<std::unique_ptr<ClassicPotential>> m_OwnPotentials;
+    std::vector<std::unique_ptr<IPotential<Dim, T>>> m_OwnPotentials;
 };
 
 using ClassicEntity = Entity<3, double>;
