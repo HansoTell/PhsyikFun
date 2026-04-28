@@ -107,7 +107,7 @@ public:
         return os;
     }
 public:
-    Vector() = default;
+    Vector() { data.fill(0.0); }
     Vector(std::initializer_list<T> init)
     {
         size_t i = 0;

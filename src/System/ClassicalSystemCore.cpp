@@ -33,7 +33,6 @@ void ClassicalSystemCore::advanceTimeIncrement() { m_Time += m_DeltaTime; }
 void ClassicalSystemCore::moveEntitys()
 {
     const auto EntityChanges = ClacEffektOfPotentials();
-    std::cout << "Fordce: " << EntityChanges[0].Force << " Acc: " << EntityChanges[0].Acceleration << " veloc " << EntityChanges[0].deltaVelocity << " pos " << EntityChanges[0].deltaPosition << "\n";
 
     ApplyMovementOnEntitys(EntityChanges);
 }

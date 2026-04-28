@@ -5,8 +5,6 @@
 #include <memory>
 
 
-#include <iostream>
-
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
