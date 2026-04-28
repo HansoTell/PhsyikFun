@@ -2,7 +2,9 @@
 #include "Potential.h"
 #include "System.h"
 #include "Vector.h"
+#include <chrono>
 #include <memory>
+#include <thread>
 
 using namespace Physik;
 
@@ -16,8 +18,11 @@ int main()
     sys.addPotential(std::move(potential));
     sys.setTimeIncrement( 0.001 );
 
-    sys.Run();
+    sys.Start();
 
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    sys.Clear();
     return 0;
 }
 
