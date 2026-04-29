@@ -6,6 +6,8 @@
 #include <memory>
 
 
+//#define CREATE_CLASSIC_GRAVITATIONAL_POTENTIAL(Mass, x, y, z) std::make_unique<ClassicGravitationPotential>(Mass, CREATE_POSITION_VEC(x,y,z)) 
+
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
@@ -56,13 +58,15 @@ class GravitationalPotential : public IPotential<Dim, T>
 public:
     Vector<Dim, T> getForce( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
     {
-
+        Vector<Dim, T> offset = positionEntity - (*m_Position);
+        double constant  =  GravtationalKonstant * mass * m_OwnMass /(offset.EukNorm() * offset.EukNorm() * offset.EukNorm());
+        return offset * constant;
     }
     T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
     {
         Vector<Dim, T> offset = positionEntity - (*m_Position);
 
-        return GravtationalKonstant * m_OwnMass * mass / offset.EukNorm();
+        return - GravtationalKonstant * m_OwnMass * mass / offset.EukNorm();
     }
     std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<GravitationalPotential>(*this); }
 public:
@@ -77,4 +81,5 @@ private:
 
 using ClassicIPotential = IPotential<3, double>;
 using ClassicStandartPotential = StandartPotential<3, double>;
+using ClassicGravitationPotential = GravitationalPotential<3, double>;
 }
