@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Constants.h"
 #include "Vector.h"
 #include <cstddef>
 #include <memory>
@@ -59,7 +60,9 @@ public:
     }
     T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
     {
+        Vector<Dim, T> offset = positionEntity - (*m_Position);
 
+        return GravtationalKonstant * m_OwnMass * mass / offset.EukNorm();
     }
     std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<GravitationalPotential>(*this); }
 public:

@@ -1,7 +1,5 @@
 #include "SystemCore.h"
 
-
-#include <iostream>
 namespace Physik 
 {
 
@@ -23,9 +21,9 @@ void ClassicalSystemCore::Clear()
 }
 
 void ClassicalSystemCore::addEntity( ClassicEntity entity ) { m_Entitys.push_back(std::move(entity)); }
-void ClassicalSystemCore::addPotential( std::unique_ptr<ClassicPotential> potential ) { m_ExtPotentials.push_back(std::move(potential)); }
+void ClassicalSystemCore::addPotential( std::unique_ptr<ClassicIPotential> potential ) { m_ExtPotentials.push_back(std::move(potential)); }
 void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) { for( int i = 0; i < entitys.size(); i++ ) m_Entitys.push_back(std::move(entitys[i])); }
-void ClassicalSystemCore::addMulitpPotentials( std::vector<std::unique_ptr<ClassicPotential>> potentials ) { for( int i = 0; i < potentials.size(); i++ ) m_ExtPotentials.push_back(std::move(potentials[i])); }
+void ClassicalSystemCore::addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials ) { for( int i = 0; i < potentials.size(); i++ ) m_ExtPotentials.push_back(std::move(potentials[i])); }
 
 
 void ClassicalSystemCore::advanceTimeIncrement() { m_Time += m_DeltaTime; }
