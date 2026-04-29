@@ -1,62 +1,52 @@
 #pragma once
 
 #include "Vector.h"
-#include "Potential.h"
 #include <cstddef>
 #include <memory>
-#include <vector>
 
 #define CREATE_POSITON_VEC3D(x, y, z) std::make_shared<Vec3D>(Vec3D { x, y, z} )
 
 namespace Physik 
 {
 
+template <size_t Dim = 3, typename T = double> 
+struct EntityState 
+{
+    std::shared_ptr<Vector<Dim, T>> m_Position;
+    Vector<Dim, T> m_Velocity;
+    T m_Mass;
+};
+
+using ClassicEntityState = EntityState<3, double>;
+
 template <size_t Dim = 3, typename T = double>
 class Entity 
 {
 public:
-    Vector<Dim, T> getPosition() const { return *m_Position; }
-    Vector<Dim, T> getVelocity() const { return m_Velocity; }
-    T getMass() const { return m_Mass; }
-    const std::vector<std::unique_ptr<ClassicIPotential>>& getIntrinsicPotentials() const { return m_OwnPotentials; }
+    Vector<Dim, T> getPosition() const { return *m_State.m_Position; }
+    Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
+    T getMass() const { return m_State.m_Mass; }
+    const EntityState<Dim, T>& getEntityState() const { return m_State; }
 
-    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_Velocity = newVelocity; }
-    void setPosition( const Vector<Dim, T>& newPosition ) { *m_Position = newPosition; }
-    void setMass( T newMass ){ m_Mass = newMass; }
-    void addIntrinsivPotential( std::unique_ptr<ClassicIPotential> newPotential ){ m_OwnPotentials.push_back(std::move(newPotential)); }
+    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
+    void setPosition( const Vector<Dim, T>& newPosition ) { *m_State.m_Position = newPosition; }
+    void setMass( T newMass ){ m_State.m_Mass = newMass; }
 public:
     Entity(){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_Position(startPosition), m_Mass(mass){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity ) : m_Position(startPosition), m_Velocity(std::move(startVelocity)) {}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass, Vector<Dim, T> startVelocity ) : m_Position(startPosition), m_Velocity(std::move(startVelocity)), m_Mass(mass) {}
+    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass} ){}
+    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity), mass } ) {}
     Entity( const Entity<Dim, T>& other ) : 
-        m_Mass(other.m_Mass), 
-        m_Velocity(other.m_Velocity), 
-        m_Position(std::make_shared<Vec3D>(*other.m_Position)) 
-    {
-        m_OwnPotentials.reserve(other.m_OwnPotentials.size());
-        for( int i = 0; i < other.m_OwnPotentials.size(); i++ )
-        {
-            m_OwnPotentials.push_back(other.m_OwnPotentials[i]->clone());
-        }
-    }
+         m_State( { std::make_shared<Vector<Dim, T>>(*other.m_State.m_Position), other.m_State.m_Velocity, other.m_State.m_Mass }) {}
     Entity( Entity<Dim, T>&& other ) : 
-        m_Mass(other.m_Mass), 
-        m_Velocity(std::move(other.m_Velocity)), 
-        m_Position(other.m_Position), 
-        m_OwnPotentials(std::move(other.m_OwnPotentials))
+        m_State( other.m_State )
     {
-        other.m_Mass = 0.0;
-        other.m_Velocity.fill(0.0);
-        other.m_Position = nullptr;
+        other.m_State.m_Mass = 0.0;
+        other.m_State.m_Velocity.fill(0.0);
+        other.m_State.m_Position = nullptr;
     }
     ~Entity() = default;
 private:
-    std::shared_ptr<Vector<Dim, T>> m_Position;
-    Vector<Dim, T> m_Velocity;
-    T m_Mass;
-
-    std::vector<std::unique_ptr<ClassicIPotential>> m_OwnPotentials;
+    EntityState<Dim, T> m_State;
 };
 
 using ClassicEntity = Entity<3, double>;

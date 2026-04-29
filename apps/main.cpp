@@ -1,9 +1,7 @@
 #include "Entity.h"
-#include "Potential.h"
 #include "System.h"
 #include "Vector.h"
 #include <chrono>
-#include <memory>
 #include <thread>
 
 
@@ -12,11 +10,9 @@ using namespace Physik;
 int main()
 {
     ClassicalSystem sys;
-    std::unique_ptr<ClassicIPotential> potential = std::make_unique<ClassicStandartPotential>(100.0, CREATE_POSITON_VEC3D(0.0, 0.0, 0.0) );
-    ClassicEntity ent( CREATE_POSITON_VEC3D(10.0, 0.0, 0.0), 10.0, Vec3D{ 0.0, 1.0, 0.0 } );
-
+    ClassicEntity ent( CREATE_POSITON_VEC3D(10.0, 0.0, 0.0), Vec3D{ 0.0, 1.0, 0.0 }, 10.0 );
     sys.addEntity(std::move(ent));
-    sys.addPotential(std::move(potential));
+    sys.addExternPotential(ClassicField( std::make_unique<ClassicStandartPotential>(100.0), { CREATE_POSITON_VEC3D(0.0, 0.0, 0.0), Vec3D{0.0, 0.0, 0.0}, 0.0 } ));
     sys.setTimeIncrement( 0.01 );
 
     sys.Start();

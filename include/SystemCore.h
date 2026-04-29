@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Interactions.h"
 #include "Entity.h"
+#include <vector>
 
 #define DEFAULT_DELTA_TIME 0.001
 
@@ -21,11 +23,14 @@ class ClassicalSystemCore
 {
 public:
     void Clear();
-    void addPotential( std::unique_ptr<ClassicIPotential> potential );
-    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials );
+    void addExternPotential( ClassicField potential );
+    void addMulitpleExternPotentials( std::vector<ClassicField> potentials );
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
+    //vorläufig
+    void addEntityPotential( ClassicInteraction potential);
+    void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
 
     void advanceTimeIncrement();
     void moveEntitys();
@@ -41,11 +46,13 @@ public:
 private:
     std::vector<ClassicEntityPropertys> ClacEffektOfPotentials() const;
     ClassicEntityPropertys CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx ) const;
-    void CalcForceOfPotentialsOnEntity( const std::vector<std::unique_ptr<ClassicIPotential>>& potentials, const ClassicEntity& entity, ClassicEntityPropertys& outPropertys ) const;
+    Vec3D CalcForceOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
+    Vec3D CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const;
     void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
 private:
     std::vector<ClassicEntity> m_Entitys;
-    std::vector<std::unique_ptr<ClassicIPotential>> m_ExtPotentials;
+    std::vector<ClassicField> m_ExtPotentials;
+    std::vector<ClassicInteraction> m_EntityPotentials;
 
     double m_Time;
     double m_DeltaTime;

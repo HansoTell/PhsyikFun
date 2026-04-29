@@ -1,8 +1,10 @@
 #include "Entity.h"
+#include "Interactions.h"
 #include <System.h>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 
 namespace Physik 
@@ -57,17 +59,31 @@ void ClassicalSystem::Clear()
     m_Core->Clear();
 }
 
-void ClassicalSystem::addPotential( std::unique_ptr<ClassicIPotential> potential )
+void ClassicalSystem::addExternPotential( ClassicField potential )
 {
     Pause();
-    m_Core->addPotential( std::move(potential) );
+    m_Core->addExternPotential( std::move(potential) );
     Start();
 }
 
-void ClassicalSystem::addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials )
+void ClassicalSystem::addMulitpleExternPotentials( std::vector<ClassicField> potentials )
 {
     Pause();
-    m_Core->addMulitpPotentials( std::move(potentials) );
+    m_Core->addMulitpleExternPotentials( std::move(potentials) );
+    Start();
+}
+
+void ClassicalSystem::addEntityPotential( ClassicInteraction potential )
+{
+    Pause();
+    m_Core->addEntityPotential(std::move(potential));
+    Start();
+}
+
+void ClassicalSystem::addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials )
+{
+    Pause();
+    m_Core->addMultipleEntityPotentials( std::move(potentials) );
     Start();
 }
 

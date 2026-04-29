@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Entity.h"
+#include "Interactions.h"
 #include "Printer.h"
-#include "Potential.h"
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -30,12 +30,13 @@ public:
     void Start() override;
     void Pause() override;
     void Clear() override;
-    void addPotential( std::unique_ptr<ClassicIPotential> potential );
-    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials );
+    void addExternPotential( ClassicField potential );
+    void addEntityPotential( ClassicInteraction potential );
+    void addMulitpleExternPotentials( std::vector<ClassicField> potentials );
+    void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 
-
 public:
     //more Konstruktores
     ClassicalSystem();
