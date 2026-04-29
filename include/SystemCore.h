@@ -21,8 +21,8 @@ class ClassicalSystemCore
 {
 public:
     void Clear();
-    void addPotential( std::unique_ptr<ClassicPotential> potential );
-    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicPotential>> potentials );
+    void addPotential( std::unique_ptr<ClassicIPotential> potential );
+    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials );
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
@@ -41,11 +41,11 @@ public:
 private:
     std::vector<ClassicEntityPropertys> ClacEffektOfPotentials() const;
     ClassicEntityPropertys CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx ) const;
-    void CalcForceOfPotentialsOnEntity( const std::vector<std::unique_ptr<IPotential<3, double>>>& potentials, const ClassicEntity& entity, ClassicEntityPropertys& outPropertys ) const;
+    void CalcForceOfPotentialsOnEntity( const std::vector<std::unique_ptr<ClassicIPotential>>& potentials, const ClassicEntity& entity, ClassicEntityPropertys& outPropertys ) const;
     void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
 private:
     std::vector<ClassicEntity> m_Entitys;
-    std::vector<std::unique_ptr<ClassicPotential>> m_ExtPotentials;
+    std::vector<std::unique_ptr<ClassicIPotential>> m_ExtPotentials;
 
     double m_Time;
     double m_DeltaTime;

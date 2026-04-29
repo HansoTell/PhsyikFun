@@ -31,8 +31,8 @@ public:
     void Start() override;
     void Pause() override;
     void Clear() override;
-    void addPotential( std::unique_ptr<ClassicPotential> potential );
-    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicPotential>> potentials );
+    void addPotential( std::unique_ptr<ClassicIPotential> potential );
+    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials );
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 

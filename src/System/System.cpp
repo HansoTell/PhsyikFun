@@ -57,14 +57,14 @@ void ClassicalSystem::Clear()
     m_Core->Clear();
 }
 
-void ClassicalSystem::addPotential( std::unique_ptr<ClassicPotential> potential )
+void ClassicalSystem::addPotential( std::unique_ptr<ClassicIPotential> potential )
 {
     Pause();
     m_Core->addPotential( std::move(potential) );
     Start();
 }
 
-void ClassicalSystem::addMulitpPotentials( std::vector<std::unique_ptr<ClassicPotential>> potentials )
+void ClassicalSystem::addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials )
 {
     Pause();
     m_Core->addMulitpPotentials( std::move(potentials) );

@@ -40,15 +40,38 @@ public:
     }
     std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<StandartPotential>(*this); }
 public:
-    StandartPotential( T beta, std::shared_ptr<Vector<Dim, T>> position ) : m_Beta(beta), m_Position(position){}
+    StandartPotential( T beta, std::shared_ptr<const Vector<Dim, T>> position ) : m_Beta(beta), m_Position(position){}
     StandartPotential( const StandartPotential& other ) = default ;
     StandartPotential( StandartPotential&& other ) = default;
     ~StandartPotential() = default;
 private:
     T m_Beta;
-    std::shared_ptr<Vector<Dim, T>> m_Position;
+    std::shared_ptr<const Vector<Dim, T>> m_Position;
 };
 
-using ClassicPotential = IPotential<3, double>;
+template <size_t Dim = 3, typename T = double>
+class GravitationalPotential : public IPotential<Dim, T> 
+{
+public:
+    Vector<Dim, T> getForce( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
+    {
+
+    }
+    T getPotentialEnergy( const Vector<Dim, T>& positionEntity, T mass, double time ) const override
+    {
+
+    }
+    std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<GravitationalPotential>(*this); }
+public:
+    GravitationalPotential( T ownMass, std::shared_ptr <const Vector<Dim, T>> position) : m_OwnMass(ownMass), m_Position(position) {} 
+    GravitationalPotential( const GravitationalPotential& other ) = delete;
+    GravitationalPotential( GravitationalPotential&& other ) = delete;
+    ~GravitationalPotential() = default;
+private:
+    T m_OwnMass; 
+    std::shared_ptr<const Vector<Dim, T>> m_Position;
+};
+
+using ClassicIPotential = IPotential<3, double>;
 using ClassicStandartPotential = StandartPotential<3, double>;
 }
