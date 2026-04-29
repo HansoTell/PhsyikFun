@@ -6,7 +6,6 @@
 #include <memory>
 
 
-//#define CREATE_CLASSIC_GRAVITATIONAL_POTENTIAL(Mass, x, y, z) std::make_unique<ClassicGravitationPotential>(Mass, CREATE_POSITION_VEC(x,y,z)) 
 
 namespace Physik 
 {
