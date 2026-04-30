@@ -45,7 +45,7 @@ public:
     ~ClassicalSystemCore() = default;
 private:
     std::vector<ClassicEntityPropertys> ClacEffektOfPotentials() const;
-    ClassicEntityPropertys CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx ) const;
+    void CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx, std::vector<ClassicEntityPropertys>& outPropertys ) const;
     Vec3D CalcForceOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
     Vec3D CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const;
     void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );

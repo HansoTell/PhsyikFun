@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <vector>
 
+
+#include <iostream>
+
 namespace Physik 
 {
 
@@ -43,39 +46,38 @@ void ClassicalSystemCore::moveEntitys()
 
 std::vector<ClassicEntityPropertys> ClassicalSystemCore::ClacEffektOfPotentials() const 
 {
-    std::vector<ClassicEntityPropertys> AllEntityChanges;
-    AllEntityChanges.reserve(m_Entitys.size());
+    std::vector<ClassicEntityPropertys> AllEntityChanges(m_Entitys.size());
     for( int i = 0; i < m_Entitys.size(); i++ )
     {
         const auto& entitys = m_Entitys[i]; 
 
-        ClassicEntityPropertys Propertys = CalcEffectOnEntity( entitys, i );
-        AllEntityChanges.push_back(Propertys);
+        CalcEffectOnEntity( entitys, i, AllEntityChanges );
+        std::cout << AllEntityChanges[i].Force << "\n";
     }
 
     return AllEntityChanges;
 }
 
-ClassicEntityPropertys ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx ) const
+void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx, std::vector<ClassicEntityPropertys>& outPropertys ) const
 {
-    ClassicEntityPropertys Propertys;
-    Propertys.EntityIndex = idx;
 
-    //alles in der vor scholeife noch nicht korrekt muss richtig gemacht werden
-    for( int j = 0; j < m_Entitys.size(); j++ )
+    auto& Property_idx = outPropertys[idx];
+
+    Property_idx.EntityIndex = idx;
+
+    for( size_t j = idx+1; j < m_Entitys.size(); j++ )
     {
-        if( Propertys.EntityIndex == j)
-            continue;
+        Vec3D force = CalcForceOfEntityPotentials(m_EntityPotentials, entitys, m_Entitys[j]);
 
-        Propertys.Force += CalcForceOfEntityPotentials(m_EntityPotentials, entitys, m_Entitys[j]);
+        Property_idx.Force += force;
+        outPropertys[j].Force += force * -1;
     }
-    Propertys.Force += CalcForceOfExtPotentials(m_ExtPotentials, entitys);
+    Property_idx.Force += CalcForceOfExtPotentials(m_ExtPotentials, entitys);
 
-    Propertys.Acceleration = Propertys.Force * (1/entitys.getMass());
-    Propertys.deltaVelocity = Propertys.Acceleration * m_DeltaTime;
-    Propertys.deltaPosition = (entitys.getVelocity() + Propertys.deltaVelocity) * m_DeltaTime;
+    Property_idx.Acceleration = Property_idx.Force * (1/entitys.getMass());
+    Property_idx.deltaVelocity = Property_idx.Acceleration * m_DeltaTime;
+    Property_idx.deltaPosition = (entitys.getVelocity() + Property_idx.deltaVelocity) * m_DeltaTime;
 
-    return Propertys;
 }
 
 Vec3D ClassicalSystemCore::CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const
