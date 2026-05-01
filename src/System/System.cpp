@@ -118,6 +118,7 @@ void ClassicalSystem::run()
 void ClassicalSystem::tick() 
 {
     m_Core->moveEntitys();
+    m_Core->UpdateEnergy();
 
     m_Core->advanceTimeIncrement();
 

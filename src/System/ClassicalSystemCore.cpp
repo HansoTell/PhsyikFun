@@ -52,7 +52,6 @@ std::vector<ClassicEntityPropertys> ClassicalSystemCore::ClacEffektOfPotentials(
         const auto& entitys = m_Entitys[i]; 
 
         CalcEffectOnEntity( entitys, i, AllEntityChanges );
-        std::cout << AllEntityChanges[i].Force << "\n";
     }
 
     return AllEntityChanges;
@@ -77,7 +76,6 @@ void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size
     Property_idx.Acceleration = Property_idx.Force * (1/entitys.getMass());
     Property_idx.deltaVelocity = Property_idx.Acceleration * m_DeltaTime;
     Property_idx.deltaPosition = (entitys.getVelocity() + Property_idx.deltaVelocity) * m_DeltaTime;
-
 }
 
 Vec3D ClassicalSystemCore::CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const
@@ -107,5 +105,30 @@ void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntit
         entity.setVelocity(entity.getVelocity() + prop.deltaVelocity);
         entity.setPosition(entity.getPosition() + prop.deltaPosition);
     }
+}
+
+void ClassicalSystemCore::UpdateEnergy()
+{
+    double Ekin = CalcKineticEnergy();
+    double EPot = CalcPotEnergy(); 
+
+    Energy = Ekin + EPot;
+}
+
+double ClassicalSystemCore::CalcKineticEnergy() const 
+{
+    double T = 0.0;
+    for( const auto& entity : m_Entitys )
+    {
+        const auto velocity = entity.getVelocity().EukNorm();
+        T += 0.5 * entity.getMass() * velocity * velocity; 
+    }
+
+    return T;
+}
+
+double ClassicalSystemCore::CalcPotEnergy() const 
+{
+
 }
 }

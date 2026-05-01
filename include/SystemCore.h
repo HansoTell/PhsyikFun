@@ -16,9 +16,12 @@ struct EntityPropertys
     Vector<Dim, T> Acceleration;
     Vector<Dim, T> deltaVelocity;
     Vector<Dim, T> deltaPosition;
+    T KinEnergy;
+    T PotEnergy;
 };
 
 using ClassicEntityPropertys = EntityPropertys<3, double>;
+
 class ClassicalSystemCore 
 {
 public:
@@ -34,6 +37,7 @@ public:
 
     void advanceTimeIncrement();
     void moveEntitys();
+    void UpdateEnergy();
 
     const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
 
@@ -49,6 +53,9 @@ private:
     Vec3D CalcForceOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
     Vec3D CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const;
     void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
+
+    double CalcKineticEnergy() const; 
+    double CalcPotEnergy() const; 
 private:
     std::vector<ClassicEntity> m_Entitys;
     std::vector<ClassicField> m_ExtPotentials;
