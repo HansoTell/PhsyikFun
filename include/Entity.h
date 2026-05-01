@@ -15,6 +15,8 @@ struct EntityState
     std::shared_ptr<Vector<Dim, T>> m_Position;
     Vector<Dim, T> m_Velocity;
     T m_Mass;
+    T KineticEnergy;
+    T PotentialNergy;
 };
 
 using ClassicEntityState = EntityState<3, double>;

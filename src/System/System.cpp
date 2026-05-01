@@ -11,7 +11,7 @@ namespace Physik
 {
 ClassicalSystem::ClassicalSystem() : m_running(false)
 {
-    m_Core = std::make_shared<ClassicalSystemCore>();
+    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<EulerCauchy>());
     m_Printer = std::make_unique<ConsolePrinter>(m_Core);
 }
 

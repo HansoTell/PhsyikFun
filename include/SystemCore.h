@@ -2,6 +2,8 @@
 
 #include "Interactions.h"
 #include "Entity.h"
+#include "NumericNewontDGLSolver.h"
+#include <memory>
 #include <vector>
 
 #define DEFAULT_DELTA_TIME 0.001
@@ -14,8 +16,8 @@ struct EntityPropertys
     size_t EntityIndex;
     Vector<Dim, T> Force;
     Vector<Dim, T> Acceleration;
-    Vector<Dim, T> deltaVelocity;
-    Vector<Dim, T> deltaPosition;
+    Vector<Dim, T> Velocity;
+    Vector<Dim, T> Position;
     T KinEnergy;
     T PotEnergy;
 };
@@ -40,8 +42,8 @@ public:
     const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
 
 public:
-    ClassicalSystemCore();
-    ClassicalSystemCore( double DeltaTime );
+    ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod );
+    ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
     ClassicalSystemCore(const ClassicalSystemCore& other);
     ClassicalSystemCore( ClassicalSystemCore&& other);
     ~ClassicalSystemCore() = default;
@@ -61,6 +63,8 @@ private:
     double m_Time;
     double m_DeltaTime;
     double Energy;
+
+    std::unique_ptr<IDGLSolver> m_DGLMethod;
 };
 
 }

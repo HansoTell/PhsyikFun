@@ -3,15 +3,17 @@
 #include "Vector.h"
 
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 namespace Physik 
 {
 
-ClassicalSystemCore::ClassicalSystemCore() : m_DeltaTime(DEFAULT_DELTA_TIME) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) : m_DeltaTime(DEFAULT_DELTA_TIME), m_DGLMethod(std::move(dglMethod)) {}
 
-ClassicalSystemCore::ClassicalSystemCore( double deltaTime ) : m_DeltaTime( deltaTime ) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) : m_DeltaTime( deltaTime ), m_DGLMethod(std::move(dglMethod)) {}
 
+//TODO:
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) {}
 
 ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) {}
@@ -67,12 +69,19 @@ void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size
 
         Property_idx.Force += force;
         outPropertys[j].Force += force * -1;
+
+        double energy = CalcPotEnergyOfEntityPotentials(m_EntityPotentials, entitys, m_Entitys[j]);
+        Property_idx.PotEnergy += energy;
+        outPropertys[j].PotEnergy += energy * -1;
     }
     Property_idx.Force += CalcForceOfExtPotentials(m_ExtPotentials, entitys);
-
     Property_idx.Acceleration = Property_idx.Force * (1/entitys.getMass());
-    Property_idx.deltaVelocity = Property_idx.Acceleration * m_DeltaTime;
-    Property_idx.deltaPosition = (entitys.getVelocity() + Property_idx.deltaVelocity) * m_DeltaTime;
+    Property_idx.PotEnergy += CalcPotEnergyOfExtPotentials(m_ExtPotentials, entitys);
+
+    Property_idx.Velocity = m_DGLMethod->CalcNewVelocity(entitys.getVelocity(), Property_idx.Acceleration, m_DeltaTime);
+    Property_idx.Position = m_DGLMethod->CalcNewPosition(entitys.getPosition(), Property_idx.Velocity, m_DeltaTime);
+
+    Property_idx.KinEnergy = 0.5 * entitys.getMass() * Property_idx.Velocity.EukNorm() * Property_idx.Velocity.EukNorm();
 }
 
 Vec3D ClassicalSystemCore::CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const
@@ -99,8 +108,8 @@ void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntit
     for( const auto& prop : Propertys )
     {
         auto& entity = m_Entitys[prop.EntityIndex];
-        entity.setVelocity(entity.getVelocity() + prop.deltaVelocity);
-        entity.setPosition(entity.getPosition() + prop.deltaPosition);
+        entity.setVelocity(prop.Velocity);
+        entity.setPosition(prop.Position);
     }
 }
 
