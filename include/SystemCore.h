@@ -31,13 +31,11 @@ public:
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
-    //vorläufig
     void addEntityPotential( ClassicInteraction potential);
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
 
     void advanceTimeIncrement();
     void moveEntitys();
-    void UpdateEnergy();
 
     const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
 
@@ -51,11 +49,10 @@ private:
     std::vector<ClassicEntityPropertys> ClacEffektOfPotentials() const;
     void CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx, std::vector<ClassicEntityPropertys>& outPropertys ) const;
     Vec3D CalcForceOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
-    Vec3D CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const;
+    Vec3D CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const;
+    double CalcPotEnergyOfEntityPotentials ( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const;
+    double CalcPotEnergyOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
     void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
-
-    double CalcKineticEnergy() const; 
-    double CalcPotEnergy() const; 
 private:
     std::vector<ClassicEntity> m_Entitys;
     std::vector<ClassicField> m_ExtPotentials;

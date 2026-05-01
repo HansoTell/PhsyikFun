@@ -5,9 +5,6 @@
 #include <cstddef>
 #include <vector>
 
-
-#include <iostream>
-
 namespace Physik 
 {
 
@@ -107,28 +104,22 @@ void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntit
     }
 }
 
-void ClassicalSystemCore::UpdateEnergy()
+double ClassicalSystemCore::CalcPotEnergyOfEntityPotentials ( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const
 {
-    double Ekin = CalcKineticEnergy();
-    double EPot = CalcPotEnergy(); 
+    double Energy_ges;
 
-    Energy = Ekin + EPot;
+    for( const auto& potential : potentials )
+        Energy_ges += potential.getPotentialEnergy( ent1.getEntityState(), ent2.getEntityState(), m_Time);
+    
+    return Energy_ges;
+}
+double ClassicalSystemCore::CalcPotEnergyOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const
+{
+    double Energy_ges;
+    for( const auto& potential : potentials ) 
+        Energy_ges += potential.getPotentialEnergy(entity.getEntityState(), m_Time);
+    
+    return Energy_ges;
 }
 
-double ClassicalSystemCore::CalcKineticEnergy() const 
-{
-    double T = 0.0;
-    for( const auto& entity : m_Entitys )
-    {
-        const auto velocity = entity.getVelocity().EukNorm();
-        T += 0.5 * entity.getMass() * velocity * velocity; 
-    }
-
-    return T;
-}
-
-double ClassicalSystemCore::CalcPotEnergy() const 
-{
-
-}
 }
