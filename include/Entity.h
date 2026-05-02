@@ -29,10 +29,13 @@ public:
     Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
     T getMass() const { return m_State.m_Mass; }
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
+    T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialNergy; }
 
     void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
     void setPosition( const Vector<Dim, T>& newPosition ) { *m_State.m_Position = newPosition; }
     void setMass( T newMass ){ m_State.m_Mass = newMass; }
+    void setKineticEnergy( T newEKin ) { m_State.KineticEnergy = newEKin; } 
+    void setPotentialEnergy( T newEPot ) { m_State.PotentialNergy = newEPot; }
 public:
     Entity(){}
     Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass} ){}

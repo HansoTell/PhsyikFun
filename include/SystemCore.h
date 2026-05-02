@@ -35,11 +35,13 @@ public:
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
     void addEntityPotential( ClassicInteraction potential);
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
+    void UpdateEnergy();
 
     void advanceTimeIncrement();
     void moveEntitys();
 
     const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
+    double getEnergy() const { return Energy; }
 
 public:
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod );

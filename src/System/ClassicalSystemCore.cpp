@@ -110,7 +110,18 @@ void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntit
         auto& entity = m_Entitys[prop.EntityIndex];
         entity.setVelocity(prop.Velocity);
         entity.setPosition(prop.Position);
+        entity.setKineticEnergy(prop.KinEnergy);
+        entity.setPotentialEnergy(prop.PotEnergy);
     }
+}
+
+void ClassicalSystemCore::UpdateEnergy()
+{
+    double Energy_Tot = 0.0;
+    for( const auto& entity : m_Entitys )
+        Energy_Tot += entity.getEnergy();
+    
+    Energy = Energy_Tot;
 }
 
 double ClassicalSystemCore::CalcPotEnergyOfEntityPotentials ( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const
