@@ -3,13 +3,24 @@
 
 namespace Physik 
 {
-Vec3D EulerCauchy::CalcNewVelocity( Vec3D oldVelocity, Vec3D Acceleration, double deltaTime ) const
+Vec3D EulerCauchy::CalcNewVelocity( const ClassicEntityState& state, double deltaTime ) const
 {
-    return oldVelocity += Acceleration * deltaTime;
+    Vec3D newVelocity = state.m_Velocity + deltaTime * state.m_Acceleration;
+    return newVelocity;
 }
-Vec3D EulerCauchy::CalcNewPosition( Vec3D oldPosition, Vec3D Velocity, double deltaTime ) const
+Vec3D EulerCauchy::CalcNewPosition( const ClassicEntityState& state, double deltaTime ) const
 {
-    return oldPosition += Velocity * deltaTime;
+    Vec3D newPos = *state.m_Position + ( deltaTime * state.m_Velocity );
+    return newPos;
 }
 
+Vec3D VelocityVerleit::CalcNewVelocity( const ClassicEntityState& state, double deltaTime ) const
+{
+
+}
+Vec3D VelocityVerleit::CalcNewPosition( const ClassicEntityState& state, double deltaTime ) const
+{
+ //   Vec3D newPos = oldPosition + Velocity*deltaTime ;//+ 0.5 *Acceleration * deltatime*deltatime
+
+}
 }

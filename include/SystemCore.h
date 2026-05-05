@@ -57,6 +57,7 @@ private:
     double CalcPotEnergyOfEntityPotentials ( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const;
     double CalcPotEnergyOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
     void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
+    Vec3D CalcStartAcceleration( const ClassicEntityState& entity ) const;
 private:
     std::vector<ClassicEntity> m_Entitys;
     std::vector<ClassicField> m_ExtPotentials;

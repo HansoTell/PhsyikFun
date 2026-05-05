@@ -1,3 +1,4 @@
+#include "Entity.h"
 #include "Interactions.h"
 #include "SystemCore.h"
 #include "Vector.h"
@@ -58,7 +59,6 @@ std::vector<ClassicEntityPropertys> ClassicalSystemCore::ClacEffektOfPotentials(
 
 void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx, std::vector<ClassicEntityPropertys>& outPropertys ) const
 {
-
     auto& Property_idx = outPropertys[idx];
 
     Property_idx.EntityIndex = idx;
@@ -78,8 +78,8 @@ void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size
     Property_idx.Acceleration = Property_idx.Force * (1/entitys.getMass());
     Property_idx.PotEnergy += CalcPotEnergyOfExtPotentials(m_ExtPotentials, entitys);
 
-    Property_idx.Velocity = m_DGLMethod->CalcNewVelocity(entitys.getVelocity(), Property_idx.Acceleration, m_DeltaTime);
-    Property_idx.Position = m_DGLMethod->CalcNewPosition(entitys.getPosition(), Property_idx.Velocity, m_DeltaTime);
+    Property_idx.Velocity = m_DGLMethod->CalcNewVelocity(entitys.getEntityState(), m_DeltaTime);
+    Property_idx.Position = m_DGLMethod->CalcNewPosition(entitys.getEntityState(), m_DeltaTime);
 
     Property_idx.KinEnergy = 0.5 * entitys.getMass() * Property_idx.Velocity.EukNorm() * Property_idx.Velocity.EukNorm();
 }
@@ -141,5 +141,11 @@ double ClassicalSystemCore::CalcPotEnergyOfExtPotentials( const std::vector<Clas
     
     return Energy_ges;
 }
+
+//brauchen methodfe die start acceleration bestimmt. Dann immer wenn entity hinzugefügt und im Konstrukltor wird das berechnet und dann gesetzt.
+//Müssen das integrieren richtig machen --> Verschieben des integrieren und updaten der sachen in Newton modul das dann einfach ein EntityProperty dings zurück gibt
+//--> frage was machen wir mit den anderen Werten? Energie z.B
+//--> Zudem müssen wir ja Acceleration einfach im mittelding berchnen wie das machen
+//-->aber wie macht man das passend für newton3 ???        
 
 }

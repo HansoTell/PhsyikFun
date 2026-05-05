@@ -14,6 +14,7 @@ struct EntityState
 {
     std::shared_ptr<Vector<Dim, T>> m_Position;
     Vector<Dim, T> m_Velocity;
+    Vector<Dim, T> m_Acceleration;
     T m_Mass;
     T KineticEnergy;
     T PotentialNergy;
