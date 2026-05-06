@@ -10,9 +10,9 @@
 namespace Physik 
 {
 
-ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) : m_DeltaTime(DEFAULT_DELTA_TIME), m_DGLMethod(std::move(dglMethod)) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod ) : m_DeltaTime(DEFAULT_DELTA_TIME), m_DGLMethod(std::move(dglMethod)) {}
 
-ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) : m_DeltaTime( deltaTime ), m_DGLMethod(std::move(dglMethod)) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double deltaTime ) : m_DeltaTime( deltaTime ), m_DGLMethod(std::move(dglMethod)) {}
 
 //TODO:
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) {}
@@ -78,8 +78,8 @@ void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size
     Property_idx.Acceleration = Property_idx.Force * (1/entitys.getMass());
     Property_idx.PotEnergy += CalcPotEnergyOfExtPotentials(m_ExtPotentials, entitys);
 
-    Property_idx.Velocity = m_DGLMethod->CalcNewVelocity(entitys.getEntityState(), m_DeltaTime);
-    Property_idx.Position = m_DGLMethod->CalcNewPosition(entitys.getEntityState(), m_DeltaTime);
+    //Property_idx.Velocity = m_DGLMethod->CalcNewVelocity(entitys.getEntityState(), m_DeltaTime);
+    //Property_idx.Position = m_DGLMethod->CalcNewPosition(entitys.getEntityState(), m_DeltaTime);
 
     Property_idx.KinEnergy = 0.5 * entitys.getMass() * Property_idx.Velocity.EukNorm() * Property_idx.Velocity.EukNorm();
 }

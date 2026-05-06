@@ -24,6 +24,6 @@ void ConsolePrinter::printEntityPositions() const
 
 void ConsolePrinter::printEnergy() const 
 {
-    std::cout << "Energy: " << m_SystemCore->getEnergy() << "\n";
+    std::cout << "Energy: " << m_SystemCore->getEnergy() << "J\n";
 }
 }

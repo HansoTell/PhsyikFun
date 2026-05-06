@@ -3,6 +3,7 @@
 #include "Interactions.h"
 #include "Entity.h"
 #include "NumericNewontDGLSolver.h"
+#include "PropertyCalculus.h"
 #include <memory>
 #include <vector>
 
@@ -44,8 +45,8 @@ public:
     double getEnergy() const { return Energy; }
 
 public:
-    ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod );
-    ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
+    ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod );
+    ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double DeltaTime );
     ClassicalSystemCore(const ClassicalSystemCore& other);
     ClassicalSystemCore( ClassicalSystemCore&& other);
     ~ClassicalSystemCore() = default;
@@ -67,7 +68,7 @@ private:
     double m_DeltaTime;
     double Energy;
 
-    std::unique_ptr<IDGLSolver> m_DGLMethod;
+    std::unique_ptr<IPropertyCalculus> m_DGLMethod;
 };
 
 }
