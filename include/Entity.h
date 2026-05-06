@@ -9,15 +9,17 @@
 namespace Physik 
 {
 
+//TODO: Konstruktor und Makros
 template <size_t Dim = 3, typename T = double> 
 struct EntityState 
 {
     std::shared_ptr<Vector<Dim, T>> m_Position;
     Vector<Dim, T> m_Velocity;
     Vector<Dim, T> m_Acceleration;
+    Vector<Dim, T> m_Force;
     T m_Mass;
     T KineticEnergy;
-    T PotentialNergy;
+    T PotentialEnergy;
 };
 
 using ClassicEntityState = EntityState<3, double>;
@@ -30,19 +32,20 @@ public:
     Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
     T getMass() const { return m_State.m_Mass; }
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
-    T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialNergy; }
+    T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialEnergy; }
 
     void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
     void setPosition( const Vector<Dim, T>& newPosition ) { *m_State.m_Position = newPosition; }
     void setMass( T newMass ){ m_State.m_Mass = newMass; }
     void setKineticEnergy( T newEKin ) { m_State.KineticEnergy = newEKin; } 
-    void setPotentialEnergy( T newEPot ) { m_State.PotentialNergy = newEPot; }
+    void setPotentialEnergy( T newEPot ) { m_State.PotentialEnergy = newEPot; }
 public:
+    //TODO: Auch nicht vergessen acceleration start bedingun zu berechnen!!
     Entity(){}
     Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass} ){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity), mass } ) {}
+    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity), Vector<Dim, T>(), Vector<Dim, T>(), mass, 0.5*mass* startVelocity.EukNorm() * startVelocity.EukNorm(), 0.0 } ) {}
     Entity( const Entity<Dim, T>& other ) : 
-         m_State( { std::make_shared<Vector<Dim, T>>(*other.m_State.m_Position), other.m_State.m_Velocity, other.m_State.m_Mass }) {}
+         m_State( { std::make_shared<Vector<Dim, T>>(*other.m_State.m_Position), other.m_State.m_Velocity, other.m_State.m_Acceleration, other.m_State.m_Force, other.m_State.m_Mass, other.m_State.KineticEnergy, other.m_State.PotentialEnergy } ) {}
     Entity( Entity<Dim, T>&& other ) : 
         m_State( other.m_State )
     {

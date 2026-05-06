@@ -1,8 +1,8 @@
 #include "Entity.h"
 #include "Interactions.h"
 #include "SystemCore.h"
-#include "Vector.h"
 
+#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -10,9 +10,9 @@
 namespace Physik 
 {
 
-ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod ) : m_DeltaTime(DEFAULT_DELTA_TIME), m_DGLMethod(std::move(dglMethod)) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod ) : m_DeltaTime(DEFAULT_DELTA_TIME), m_PropertyCalcer(std::move(dglMethod)) {}
 
-ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double deltaTime ) : m_DeltaTime( deltaTime ), m_DGLMethod(std::move(dglMethod)) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double deltaTime ) : m_DeltaTime( deltaTime ), m_PropertyCalcer(std::move(dglMethod)) {}
 
 //TODO:
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) {}
@@ -44,74 +44,47 @@ void ClassicalSystemCore::moveEntitys()
     ApplyMovementOnEntitys(EntityChanges);
 }
 
-std::vector<ClassicEntityPropertys> ClassicalSystemCore::ClacEffektOfPotentials() const 
+void ClassicalSystemCore::ApplyAllForces( std::vector<ClassicEntityState>& outPropertys ) const
 {
-    std::vector<ClassicEntityPropertys> AllEntityChanges(m_Entitys.size());
-    for( int i = 0; i < m_Entitys.size(); i++ )
-    {
-        const auto& entitys = m_Entitys[i]; 
+    for( auto& interaction : m_EntityPotentials )
+        interaction.applyForceOnAllEntitys( m_Entitys, outPropertys, m_Time);
 
-        CalcEffectOnEntity( entitys, i, AllEntityChanges );
-    }
+    for( auto& field : m_ExtPotentials )
+        field.applyForceOnAllEntitys(m_Entitys, outPropertys, m_Time);
+}
+
+void ClassicalSystemCore::ApplyAllEnergy( std::vector<ClassicEntityState>& outPropertys ) const
+{
+    for( auto& interaction : m_EntityPotentials )
+        interaction.ApplyPotEnergyOnAllEntitys(m_Entitys, outPropertys, m_Time);
+    for( auto& field : m_ExtPotentials )
+        field.ApplyPotEnergyOnAllEntitys(m_Entitys, outPropertys, m_Time);
+    
+    m_PropertyCalcer->ApplyAllKineticEnergy(m_Entitys, outPropertys);
+}
+
+std::vector<ClassicEntityState> ClassicalSystemCore::ClacEffektOfPotentials() const 
+{
+    //TODO: Es fehlen die nicht modifizierten attribute wie masse u.s.w, dass die kopiert werden
+    std::vector<ClassicEntityState> AllEntityChanges(m_Entitys.size());
+
+    ApplyAllForces(AllEntityChanges);
+
+    m_PropertyCalcer->ApplyAllAcceleration(m_Entitys, AllEntityChanges);
+    m_PropertyCalcer->ApplyAllNewtonIntegration(m_Entitys, AllEntityChanges);
+    
+    ApplyAllEnergy(AllEntityChanges);
 
     return AllEntityChanges;
 }
 
-void ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx, std::vector<ClassicEntityPropertys>& outPropertys ) const
+void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntityState>& Propertys )
 {
-    auto& Property_idx = outPropertys[idx];
-
-    Property_idx.EntityIndex = idx;
-
-    for( size_t j = idx+1; j < m_Entitys.size(); j++ )
+    assert(Propertys.size() == m_Entitys.size());
+    for( size_t i = 0; i < Propertys.size(); i++ )
     {
-        Vec3D force = CalcForceOfEntityPotentials(m_EntityPotentials, entitys, m_Entitys[j]);
+        //TODO: Alle werte setzten --> fehlende set Methoden adden oder alle entf3rnen und kopieren des property states ok machen
 
-        Property_idx.Force += force;
-        outPropertys[j].Force += force * -1;
-
-        double energy = CalcPotEnergyOfEntityPotentials(m_EntityPotentials, entitys, m_Entitys[j]);
-        Property_idx.PotEnergy += energy;
-        outPropertys[j].PotEnergy += energy * -1;
-    }
-    Property_idx.Force += CalcForceOfExtPotentials(m_ExtPotentials, entitys);
-    Property_idx.Acceleration = Property_idx.Force * (1/entitys.getMass());
-    Property_idx.PotEnergy += CalcPotEnergyOfExtPotentials(m_ExtPotentials, entitys);
-
-    //Property_idx.Velocity = m_DGLMethod->CalcNewVelocity(entitys.getEntityState(), m_DeltaTime);
-    //Property_idx.Position = m_DGLMethod->CalcNewPosition(entitys.getEntityState(), m_DeltaTime);
-
-    Property_idx.KinEnergy = 0.5 * entitys.getMass() * Property_idx.Velocity.EukNorm() * Property_idx.Velocity.EukNorm();
-}
-
-Vec3D ClassicalSystemCore::CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2) const
-{
-    Vec3D Force_erg;
-
-    for( const auto& potential : potentials )
-        Force_erg += potential.getForce( ent1.getEntityState(), ent2.getEntityState(), m_Time);
-    
-    return Force_erg;
-}
-
-Vec3D ClassicalSystemCore::CalcForceOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const
-{
-    Vec3D Force_ges;
-    for( const auto& potential : potentials ) 
-        Force_ges += potential.getForce(entity.getEntityState(), m_Time);
-    
-    return Force_ges;
-}
-
-void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys )
-{
-    for( const auto& prop : Propertys )
-    {
-        auto& entity = m_Entitys[prop.EntityIndex];
-        entity.setVelocity(prop.Velocity);
-        entity.setPosition(prop.Position);
-        entity.setKineticEnergy(prop.KinEnergy);
-        entity.setPotentialEnergy(prop.PotEnergy);
     }
 }
 
@@ -123,29 +96,4 @@ void ClassicalSystemCore::UpdateEnergy()
     
     Energy = Energy_Tot;
 }
-
-double ClassicalSystemCore::CalcPotEnergyOfEntityPotentials ( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const
-{
-    double Energy_ges;
-
-    for( const auto& potential : potentials )
-        Energy_ges += potential.getPotentialEnergy( ent1.getEntityState(), ent2.getEntityState(), m_Time);
-    
-    return Energy_ges;
-}
-double ClassicalSystemCore::CalcPotEnergyOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const
-{
-    double Energy_ges;
-    for( const auto& potential : potentials ) 
-        Energy_ges += potential.getPotentialEnergy(entity.getEntityState(), m_Time);
-    
-    return Energy_ges;
-}
-
-//brauchen methodfe die start acceleration bestimmt. Dann immer wenn entity hinzugefügt und im Konstrukltor wird das berechnet und dann gesetzt.
-//Müssen das integrieren richtig machen --> Verschieben des integrieren und updaten der sachen in Newton modul das dann einfach ein EntityProperty dings zurück gibt
-//--> frage was machen wir mit den anderen Werten? Energie z.B
-//--> Zudem müssen wir ja Acceleration einfach im mittelding berchnen wie das machen
-//-->aber wie macht man das passend für newton3 ???        
-
 }

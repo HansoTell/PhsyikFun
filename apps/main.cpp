@@ -12,7 +12,7 @@ int main()
     ClassicalSystem sys;
     ClassicEntity ent( CREATE_POSITON_VEC3D(10.0, 0.0, 0.0), Vec3D{ 0.0, 1.0, 0.0 }, 10.0 );
     sys.addEntity(std::move(ent));
-    sys.addExternPotential(ClassicField( std::make_unique<ClassicStandartPotential>(100.0), { CREATE_POSITON_VEC3D(0.0, 0.0, 0.0), Vec3D{0.0, 0.0, 0.0}, 0.0 } ));
+    sys.addExternPotential(ClassicField( std::make_unique<ClassicStandartPotential>(100.0), { CREATE_POSITON_VEC3D(0.0, 0.0, 0.0), Vec3D{0.0, 0.0, 0.0}, Vec3D(), Vec3D(), 0.0, 0.0, 0.0 } ));
     sys.setTimeIncrement( 0.01 );
 
     sys.Start();

@@ -81,13 +81,13 @@ public:
         tmp -= other;
         return tmp;
     }
-    Vector<Dim, T> operator*( T skalar ) 
+    Vector<Dim, T> operator*( T skalar ) const
     { 
         Vector<Dim, T> tmp = *this;
         tmp *= skalar;
         return tmp;
     }
-    friend Vector<Dim, T> operator*(T scalar, const Vector<Dim, T>& vec)
+    friend Vector<Dim, T> operator*(T scalar, const Vector<Dim, T>& vec) 
     {
         return vec * scalar;
     }

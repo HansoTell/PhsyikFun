@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "Interactions.h"
+#include "PropertyCalculus.h"
 #include <System.h>
 #include <memory>
 #include <mutex>
@@ -11,7 +12,7 @@ namespace Physik
 {
 ClassicalSystem::ClassicalSystem() : m_running(false)
 {
-    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<EulerCauchy>());
+    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<EulerCauchy>()));
     m_Printer = std::make_unique<ConsolePrinter>(m_Core);
 }
 
@@ -117,9 +118,9 @@ void ClassicalSystem::run()
 
 void ClassicalSystem::tick() 
 {
+    m_Core->advanceTimeIncrement();
     m_Core->moveEntitys();
     m_Core->UpdateEnergy();
-    m_Core->advanceTimeIncrement();
 
     m_Printer->printEnergy();
     m_Printer->printEntityPositions();

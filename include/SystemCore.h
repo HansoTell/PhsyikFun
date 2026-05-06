@@ -2,7 +2,6 @@
 
 #include "Interactions.h"
 #include "Entity.h"
-#include "NumericNewontDGLSolver.h"
 #include "PropertyCalculus.h"
 #include <memory>
 #include <vector>
@@ -11,20 +10,7 @@
 
 namespace Physik 
 {
-template<size_t Dim = 3, typename T = double> 
-struct EntityPropertys 
-{
-    size_t EntityIndex;
-    Vector<Dim, T> Force;
-    Vector<Dim, T> Acceleration;
-    Vector<Dim, T> Velocity;
-    Vector<Dim, T> Position;
-    T KinEnergy;
-    T PotEnergy;
-};
-
-using ClassicEntityPropertys = EntityPropertys<3, double>;
-
+//TODO: Methode dass Beim start und hinzufügen von entitys propertys neu berechnet werden
 class ClassicalSystemCore 
 {
 public:
@@ -45,20 +31,16 @@ public:
     double getEnergy() const { return Energy; }
 
 public:
-    ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod );
+    ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> PropertyCalcer );
     ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double DeltaTime );
     ClassicalSystemCore(const ClassicalSystemCore& other);
     ClassicalSystemCore( ClassicalSystemCore&& other);
     ~ClassicalSystemCore() = default;
 private:
-    std::vector<ClassicEntityPropertys> ClacEffektOfPotentials() const;
-    void CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx, std::vector<ClassicEntityPropertys>& outPropertys ) const;
-    Vec3D CalcForceOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
-    Vec3D CalcForceOfEntityPotentials( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const;
-    double CalcPotEnergyOfEntityPotentials ( const std::vector<ClassicInteraction>& potentials, const ClassicEntity& ent1, const ClassicEntity& ent2 ) const;
-    double CalcPotEnergyOfExtPotentials( const std::vector<ClassicField>& potentials, const ClassicEntity& entity ) const;
-    void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
-    Vec3D CalcStartAcceleration( const ClassicEntityState& entity ) const;
+    std::vector<ClassicEntityState> ClacEffektOfPotentials() const;
+    void ApplyAllForces( std::vector<ClassicEntityState>& outPropertys ) const;
+    void ApplyAllEnergy( std::vector<ClassicEntityState>& outPropertys ) const;
+    void ApplyMovementOnEntitys( const std::vector<ClassicEntityState>& Propertys );
 private:
     std::vector<ClassicEntity> m_Entitys;
     std::vector<ClassicField> m_ExtPotentials;
@@ -67,8 +49,8 @@ private:
     double m_Time;
     double m_DeltaTime;
     double Energy;
-
-    std::unique_ptr<IPropertyCalculus> m_DGLMethod;
+    
+    std::unique_ptr<IPropertyCalculus> m_PropertyCalcer;
 };
 
 }
