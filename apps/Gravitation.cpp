@@ -12,9 +12,9 @@ int main()
 {
     ClassicalSystem sys;
 
-    ClassicEntity Sun(CREATE_POSITON_VEC3D(0.0, 0.0, 0.0), Vec3D{1.0, 0.0, 0.0}, 1000.0);
+    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 1.0, 0.0, 0.0 }, 1000.0);
 
-    ClassicEntity Planet(CREATE_POSITON_VEC3D(10.0, 0.0, 0.0), Vec3D{0.0, 10.0, 0.0}, 1.0);
+    ClassicEntity Planet( Vec3D{ 10.0, 0.0, 0.0 }, Vec3D{ 0.0, 10.0, 0.0 }, 1.0);
 
     sys.addEntity(std::move(Sun));
     sys.addEntity(std::move(Planet));

@@ -6,7 +6,6 @@
 
 namespace Physik 
 {
-//geben wir die gebrauchten propertys zum printen in der konstruktor hinzu???
 class IPrinter 
 {
 public:

@@ -80,7 +80,6 @@ void ClassicalSystemCore::ApplyAllEnergy( std::vector<ClassicEntityState>& outPr
     m_PropertyCalcer->ApplyAllKineticEnergy(m_Entitys, outPropertys);
 }
 
-//Geführlich Weil ptr wird ja mit kopiert nicht der inhalt also ziegt n9ch auf gleiche speuicherstelle
 static std::vector<ClassicEntityState> CreateEntityStateList( const std::vector<ClassicEntity>& entitys )
 {
     std::vector<ClassicEntityState> AllEntityChanges;
@@ -110,7 +109,7 @@ void ClassicalSystemCore::ApplyNewEntityStates( const std::vector<ClassicEntityS
 {
     assert(Propertys.size() == m_Entitys.size());
     for( size_t i = 0; i < Propertys.size(); i++ )
-        m_Entitys[i].setEntityState(Propertys[i]);
+        m_Entitys[i].setEntityState(std::move(Propertys[i]));
 }
 
 void ClassicalSystemCore::UpdateEnergy()

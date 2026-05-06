@@ -8,7 +8,9 @@
 #include <thread>
 #include <vector>
 
-#define CREATE_CLASSIC_GRAVITATIONAL_POTENTIAL(Mass, x, y, z) std::make_unique<ClassicGravitationPotential>(Mass, CREATE_POSITON_VEC3D(x,y,z)) 
+#define CREATE_CLASSIC_EXT_STANDART_POTENTIAL( beta, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicStandartPotential>(beta),  ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{0.0, 0.0, 0.0}, 0.0 ) ) 
+#define CREATE_CLASSIC_ENTITY__STANDART_POTENTIAL( beta ) ClassicInteraction( std::make_unique<ClassicStandartPotential>(beta) )
+#define CREATE_CLASSIC_EXT_GRAVITATIONAL_POTENTIAL( Mass, xPos, yPos, zPos ) std::make_unique<ClassicGravitationPotential>(Mass, Vec3D{ xPos, yPos, zPos }) 
 
 //idee für später: Einen allgemeinen system thread machen und dann kann man sein systemcore rein geben als dependeciy dann rbaucht man kein thread je nach system
 namespace Physik 

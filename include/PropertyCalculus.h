@@ -29,8 +29,7 @@ public:
     virtual std::unique_ptr<IPropertyCalculus> clone() const override { return std::make_unique<ClassicPropCalc>(*this); }
 public:
     ClassicPropCalc( std::unique_ptr<IDGLSolver> solver ) : m_DGLSolver(std::move(solver)) {}
-    //TODO:
-    ClassicPropCalc( const ClassicPropCalc& other ) {};
+    ClassicPropCalc( const ClassicPropCalc& other ) : m_DGLSolver(other.m_DGLSolver->clone()) {};
     ClassicPropCalc( ClassicPropCalc&& other ) : m_DGLSolver(std::move(other.m_DGLSolver)) {}
     ~ClassicPropCalc() = default;
 private:

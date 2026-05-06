@@ -41,9 +41,8 @@ public:
     }
 public:
     Field( std::unique_ptr<IPotential<Dim, T>> potential, EntityState<Dim, T> state ) : m_Potential(std::move(potential)), m_State(std::move(state)) {}
-    //TODO
-    Field( const Field& other ) = default;
-    Field ( Field&& other ) = default;
+    Field( const Field& other ) : m_Potential(other.m_Potential->clone()), m_State(other.m_State) {}
+    Field ( Field&& other ) : m_Potential(std::move(other.m_Potential)), m_State(std::move(other.m_State)) {} 
     ~Field() = default;
 private:
     std::unique_ptr<IPotential<Dim, T>> m_Potential;
@@ -90,9 +89,8 @@ public:
     }
 public:
     Interaction( std::unique_ptr<IPotential<Dim, T>> potential ) : m_Potential(std::move(potential)) {}
-    //TODO
-    Interaction( const Interaction& other ) = default;
-    Interaction( Interaction&& other ) = default;
+    Interaction( const Interaction& other ) : m_Potential(other.m_Potential->clone()) {} 
+    Interaction( Interaction&& other ) : m_Potential(std::move(other.m_Potential)){}
     ~Interaction() = default;
 private:
     std::unique_ptr<IPotential<Dim, T>> m_Potential;

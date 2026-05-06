@@ -4,13 +4,10 @@
 #include <cstddef>
 #include <memory>
 
-#define CREATE_POSITON_VEC3D(x, y, z) std::make_shared<Vec3D>(Vec3D { x, y, z} )
 
 namespace Physik 
 {
 
-//TODO: Konstruktor und Makros
-//TODO: schauen wie wir es am performantestenm mit der position pointer machen kann ja nicht sein dass da dauerhaft heaped wird
 template <size_t Dim = 3, typename T = double> 
 struct EntityState 
 {
@@ -21,6 +18,47 @@ struct EntityState
     T m_Mass;
     T KineticEnergy;
     T PotentialEnergy;
+
+
+public:
+    EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass ) 
+        : m_Mass(Mass), m_Position(std::make_shared<Vector<Dim, T>>(position)), m_Velocity(velocity) {}
+    EntityState( const EntityState& other )  
+        : m_Mass(other.m_Mass), m_Velocity(other.m_Velocity), m_Position(std::make_shared<Vector<Dim, T>>(*other.m_Position)), 
+        m_Force(other.m_Force), m_Acceleration(other.m_Acceleration), KineticEnergy(other.KineticEnergy), PotentialEnergy(other.PotentialEnergy) {}
+    EntityState( EntityState&& other ) : 
+        m_Position(std::move(other.m_Position)), m_Velocity(std::move(other.m_Velocity)), m_Acceleration(std::move(other.m_Acceleration)),
+        m_Mass(std::move(other.m_Mass)), m_Force(std::move(other.m_Force)), KineticEnergy(std::move(other.KineticEnergy)), PotentialEnergy(std::move(other.PotentialEnergy)) {}
+    ~EntityState() = default;
+    EntityState<Dim, T>& operator=( EntityState<Dim, T>&& other ) noexcept
+    {
+        if( this == &other)
+            return *this;
+
+        m_Mass = std::move(other.m_Mass);
+        m_Velocity = std::move(other.m_Velocity);
+        m_Position = std::move(other.m_Position);
+        m_Force = std::move(other.m_Force);
+        m_Acceleration = std::move(other.m_Acceleration);
+        KineticEnergy = std::move(other.KineticEnergy);
+        PotentialEnergy = std::move(other.PotentialEnergy);
+
+        return *this;
+    }
+    EntityState<Dim, T>& operator=( const EntityState<Dim, T>& other )
+    {
+        if( this == &other)
+            return *this;
+        m_Mass = other.m_Mass;
+        m_Velocity = other.m_Velocity;
+        m_Position = std::make_shared<Vector<Dim, T>>(*other.m_Position);
+        m_Force = other.m_Force;
+        m_Acceleration = other.m_Acceleration;
+        KineticEnergy = other.KineticEnergy;
+        PotentialEnergy = other.PotentialEnergy;
+
+        return *this;
+    }
 };
 
 using ClassicEntityState = EntityState<3, double>;
@@ -43,21 +81,13 @@ public:
     void setKineticEnergy( T newEKin ) { m_State.KineticEnergy = newEKin; } 
     void setPotentialEnergy( T newEPot ) { m_State.PotentialEnergy = newEPot; }
 
-    void setEntityState( const EntityState<Dim, T>& NewEntityState ){ m_State = NewEntityState; }
+    void setEntityState( EntityState<Dim, T> NewEntityState ){ m_State = NewEntityState; }
 public:
-    //TODO: Constructors
     Entity(){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass} ){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity), Vector<Dim, T>(), Vector<Dim, T>(), mass, 0.5*mass* startVelocity.EukNorm() * startVelocity.EukNorm(), 0.0 } ) {}
-    Entity( const Entity<Dim, T>& other ) : 
-         m_State( { std::make_shared<Vector<Dim, T>>(*other.m_State.m_Position), other.m_State.m_Velocity, other.m_State.m_Acceleration, other.m_State.m_Force, other.m_State.m_Mass, other.m_State.KineticEnergy, other.m_State.PotentialEnergy } ) {}
-    Entity( Entity<Dim, T>&& other ) : 
-        m_State( other.m_State )
-    {
-        other.m_State.m_Mass = 0.0;
-        other.m_State.m_Velocity.fill(0.0);
-        other.m_State.m_Position = nullptr;
-    }
+    Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ){}
+    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity),  mass } ) {}
+    Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ) {}
+    Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ){}
     ~Entity() = default;
 private:
     EntityState<Dim, T> m_State;
