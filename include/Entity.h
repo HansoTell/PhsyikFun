@@ -10,6 +10,7 @@ namespace Physik
 {
 
 //TODO: Konstruktor und Makros
+//TODO: schauen wie wir es am performantestenm mit der position pointer machen kann ja nicht sein dass da dauerhaft heaped wird
 template <size_t Dim = 3, typename T = double> 
 struct EntityState 
 {
@@ -30,8 +31,10 @@ class Entity
 public:
     Vector<Dim, T> getPosition() const { return *m_State.m_Position; }
     Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
+    Vector<Dim, T> getAcceleration() const { return m_State.m_Acceleration; }
     T getMass() const { return m_State.m_Mass; }
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
+    EntityState<Dim, T> getEntityStateCopy() const { return m_State; }
     T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialEnergy; }
 
     void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
@@ -39,8 +42,10 @@ public:
     void setMass( T newMass ){ m_State.m_Mass = newMass; }
     void setKineticEnergy( T newEKin ) { m_State.KineticEnergy = newEKin; } 
     void setPotentialEnergy( T newEPot ) { m_State.PotentialEnergy = newEPot; }
+
+    void setEntityState( const EntityState<Dim, T>& NewEntityState ){ m_State = NewEntityState; }
 public:
-    //TODO: Auch nicht vergessen acceleration start bedingun zu berechnen!!
+    //TODO: Constructors
     Entity(){}
     Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass} ){}
     Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity), Vector<Dim, T>(), Vector<Dim, T>(), mass, 0.5*mass* startVelocity.EukNorm() * startVelocity.EukNorm(), 0.0 } ) {}

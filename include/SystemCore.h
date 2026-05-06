@@ -10,7 +10,6 @@
 
 namespace Physik 
 {
-//TODO: Methode dass Beim start und hinzufügen von entitys propertys neu berechnet werden
 class ClassicalSystemCore 
 {
 public:
@@ -22,10 +21,11 @@ public:
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
     void addEntityPotential( ClassicInteraction potential);
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
+
+    void UpdateEntityPropertys();
     void UpdateEnergy();
 
-    void advanceTimeIncrement();
-    void moveEntitys();
+    void MakeTimeStep();
 
     const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
     double getEnergy() const { return Energy; }
@@ -37,10 +37,11 @@ public:
     ClassicalSystemCore( ClassicalSystemCore&& other);
     ~ClassicalSystemCore() = default;
 private:
-    std::vector<ClassicEntityState> ClacEffektOfPotentials() const;
+    void advanceTimeIncrement();
+    std::vector<ClassicEntityState> ClacNewEntityStates() const;
     void ApplyAllForces( std::vector<ClassicEntityState>& outPropertys ) const;
     void ApplyAllEnergy( std::vector<ClassicEntityState>& outPropertys ) const;
-    void ApplyMovementOnEntitys( const std::vector<ClassicEntityState>& Propertys );
+    void ApplyNewEntityStates( const std::vector<ClassicEntityState>& Propertys );
 private:
     std::vector<ClassicEntity> m_Entitys;
     std::vector<ClassicField> m_ExtPotentials;
@@ -52,5 +53,4 @@ private:
     
     std::unique_ptr<IPropertyCalculus> m_PropertyCalcer;
 };
-
 }

@@ -10,14 +10,26 @@
 namespace Physik 
 {
 
-ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod ) : m_DeltaTime(DEFAULT_DELTA_TIME), m_PropertyCalcer(std::move(dglMethod)) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod ) 
+    : m_DeltaTime(DEFAULT_DELTA_TIME), m_PropertyCalcer(std::move(dglMethod)), m_Time(0.0) 
+{
+    UpdateEntityPropertys();
+}
 
-ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double deltaTime ) : m_DeltaTime( deltaTime ), m_PropertyCalcer(std::move(dglMethod)) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> dglMethod, double deltaTime ) 
+    : m_DeltaTime( deltaTime ), m_PropertyCalcer(std::move(dglMethod)), m_Time(0.0) 
+{
+    UpdateEntityPropertys();
+}
 
-//TODO:
-ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) {}
+ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) 
+    : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy),
+    m_EntityPotentials(other.m_EntityPotentials), m_Entitys(other.m_Entitys), m_ExtPotentials(other.m_ExtPotentials), m_PropertyCalcer(other.m_PropertyCalcer->clone()) {}
 
-ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) {}
+ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) 
+    : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy), 
+    m_PropertyCalcer(std::move(other.m_PropertyCalcer)), 
+    m_EntityPotentials(std::move(other.m_EntityPotentials)), m_Entitys(std::move(other.m_Entitys)), m_ExtPotentials(std::move(other.m_ExtPotentials)) {}
 
 void ClassicalSystemCore::Clear() 
 {
@@ -35,14 +47,19 @@ void ClassicalSystemCore::addMulitpleExternPotentials( std::vector<ClassicField>
 void ClassicalSystemCore::addEntityPotential( ClassicInteraction potential ) { m_EntityPotentials.push_back(std::move(potential)); }
 void ClassicalSystemCore::addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials ) { for( size_t i = 0; i < potentials.size(); i++) m_EntityPotentials.push_back(std::move(potentials[i])); }
 
-void ClassicalSystemCore::advanceTimeIncrement() { m_Time += m_DeltaTime; }
 
-void ClassicalSystemCore::moveEntitys()
+void ClassicalSystemCore::MakeTimeStep()
 {
-    const auto EntityChanges = ClacEffektOfPotentials();
+    advanceTimeIncrement();
 
-    ApplyMovementOnEntitys(EntityChanges);
+    const auto NewEntityStates = ClacNewEntityStates();
+
+    ApplyNewEntityStates(NewEntityStates);
+
+    UpdateEnergy();
 }
+
+void ClassicalSystemCore::advanceTimeIncrement() { m_Time += m_DeltaTime; }
 
 void ClassicalSystemCore::ApplyAllForces( std::vector<ClassicEntityState>& outPropertys ) const
 {
@@ -63,29 +80,37 @@ void ClassicalSystemCore::ApplyAllEnergy( std::vector<ClassicEntityState>& outPr
     m_PropertyCalcer->ApplyAllKineticEnergy(m_Entitys, outPropertys);
 }
 
-std::vector<ClassicEntityState> ClassicalSystemCore::ClacEffektOfPotentials() const 
+//Geführlich Weil ptr wird ja mit kopiert nicht der inhalt also ziegt n9ch auf gleiche speuicherstelle
+static std::vector<ClassicEntityState> CreateEntityStateList( const std::vector<ClassicEntity>& entitys )
 {
-    //TODO: Es fehlen die nicht modifizierten attribute wie masse u.s.w, dass die kopiert werden
-    std::vector<ClassicEntityState> AllEntityChanges(m_Entitys.size());
+    std::vector<ClassicEntityState> AllEntityChanges;
+    AllEntityChanges.reserve(entitys.size());
+
+    for(const auto& entity : entitys )
+        AllEntityChanges.push_back(entity.getEntityStateCopy());
+
+    return AllEntityChanges;
+}
+
+std::vector<ClassicEntityState> ClassicalSystemCore::ClacNewEntityStates() const 
+{
+    std::vector<ClassicEntityState> AllEntityChanges = CreateEntityStateList(m_Entitys);
 
     ApplyAllForces(AllEntityChanges);
 
     m_PropertyCalcer->ApplyAllAcceleration(m_Entitys, AllEntityChanges);
-    m_PropertyCalcer->ApplyAllNewtonIntegration(m_Entitys, AllEntityChanges);
+    m_PropertyCalcer->ApplyAllNewtonIntegration(m_Entitys, AllEntityChanges, m_DeltaTime);
     
     ApplyAllEnergy(AllEntityChanges);
 
     return AllEntityChanges;
 }
 
-void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntityState>& Propertys )
+void ClassicalSystemCore::ApplyNewEntityStates( const std::vector<ClassicEntityState>& Propertys )
 {
     assert(Propertys.size() == m_Entitys.size());
     for( size_t i = 0; i < Propertys.size(); i++ )
-    {
-        //TODO: Alle werte setzten --> fehlende set Methoden adden oder alle entf3rnen und kopieren des property states ok machen
-
-    }
+        m_Entitys[i].setEntityState(Propertys[i]);
 }
 
 void ClassicalSystemCore::UpdateEnergy()
@@ -95,5 +120,18 @@ void ClassicalSystemCore::UpdateEnergy()
         Energy_Tot += entity.getEnergy();
     
     Energy = Energy_Tot;
+}
+
+void ClassicalSystemCore::UpdateEntityPropertys() 
+{
+    std::vector<ClassicEntityState> AllEntityChanges = CreateEntityStateList(m_Entitys);
+
+    ApplyAllForces(AllEntityChanges);
+    m_PropertyCalcer->ApplyAllAcceleration(m_Entitys, AllEntityChanges);
+    ApplyAllEnergy(AllEntityChanges);
+
+    ApplyNewEntityStates(AllEntityChanges);
+
+    UpdateEnergy();
 }
 }

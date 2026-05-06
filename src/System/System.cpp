@@ -12,7 +12,7 @@ namespace Physik
 {
 ClassicalSystem::ClassicalSystem() : m_running(false)
 {
-    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<EulerCauchy>()));
+    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<VelocityVerleit>()));
     m_Printer = std::make_unique<ConsolePrinter>(m_Core);
 }
 
@@ -64,6 +64,7 @@ void ClassicalSystem::addExternPotential( ClassicField potential )
 {
     Pause();
     m_Core->addExternPotential( std::move(potential) );
+    m_Core->UpdateEntityPropertys();
     Start();
 }
 
@@ -71,6 +72,7 @@ void ClassicalSystem::addMulitpleExternPotentials( std::vector<ClassicField> pot
 {
     Pause();
     m_Core->addMulitpleExternPotentials( std::move(potentials) );
+    m_Core->UpdateEntityPropertys();
     Start();
 }
 
@@ -78,6 +80,7 @@ void ClassicalSystem::addEntityPotential( ClassicInteraction potential )
 {
     Pause();
     m_Core->addEntityPotential(std::move(potential));
+    m_Core->UpdateEntityPropertys();
     Start();
 }
 
@@ -85,6 +88,7 @@ void ClassicalSystem::addMultipleEntityPotentials( std::vector<ClassicInteractio
 {
     Pause();
     m_Core->addMultipleEntityPotentials( std::move(potentials) );
+    m_Core->UpdateEntityPropertys();
     Start();
 }
 
@@ -92,12 +96,14 @@ void ClassicalSystem::addEntity( ClassicEntity entity )
 {
     Pause();
     m_Core->addEntity( std::move(entity) );
+    m_Core->UpdateEntityPropertys();
     Start();
 }
 
 void ClassicalSystem::addMulipleEntitys( std::vector<ClassicEntity> entitys )
 {
     Pause();
+    m_Core->UpdateEntityPropertys();
     m_Core->addMulipleEntitys( std::move(entitys) );
     Start();
 }
@@ -118,9 +124,7 @@ void ClassicalSystem::run()
 
 void ClassicalSystem::tick() 
 {
-    m_Core->advanceTimeIncrement();
-    m_Core->moveEntitys();
-    m_Core->UpdateEnergy();
+    m_Core->MakeTimeStep();
 
     m_Printer->printEnergy();
     m_Printer->printEntityPositions();
