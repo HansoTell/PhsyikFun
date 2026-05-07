@@ -56,7 +56,7 @@ class GravitationalPotential : public IPotential<Dim, T>
 public:
     Vector<Dim, T> getForce( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = *ent1.m_Position - *ent2.m_Position;
+        Vector<Dim, T> offset = *ent2.m_Position - *ent1.m_Position;
         double constant  =  GravtationalKonstant * ent1.m_Mass * ent2.m_Mass /(offset.EukNorm() * offset.EukNorm() * offset.EukNorm());
         return offset * constant;
     }

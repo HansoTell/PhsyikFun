@@ -1,9 +1,7 @@
 #include "Entity.h"
-#include "Interactions.h"
 #include "System.h"
 #include "Vector.h"
 #include <chrono>
-#include <memory>
 #include <thread>
 
 using namespace Physik;
@@ -12,13 +10,12 @@ int main()
 {
     ClassicalSystem sys;
 
-    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 1.0, 0.0, 0.0 }, 1000.0);
-
+    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 0.0, 0.0, 0.0 }, 1000.0);
     ClassicEntity Planet( Vec3D{ 10.0, 0.0, 0.0 }, Vec3D{ 0.0, 10.0, 0.0 }, 1.0);
 
     sys.addEntity(std::move(Sun));
     sys.addEntity(std::move(Planet));
-    sys.addEntityPotential( ClassicInteraction( std::make_unique<ClassicGravitationPotential>()) );
+    sys.addEntityPotential(CREATE_CLASSIC_ENTITY_GRAVITATIONAL_POTENTIAL());
 
     sys.setTimeIncrement(0.01);
 
