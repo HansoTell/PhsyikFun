@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include "Interactions.h"
 #include "SystemCore.h"
+#include "Vector.h"
 
 #include <cassert>
 #include <cstddef>
@@ -86,7 +87,11 @@ static std::vector<ClassicEntityState> CreateEntityStateList( const std::vector<
     AllEntityChanges.reserve(entitys.size());
 
     for(const auto& entity : entitys )
+    {
         AllEntityChanges.push_back(entity.getEntityStateCopy());
+        AllEntityChanges.back().PotentialEnergy = 0.0;
+        AllEntityChanges.back().m_Force = Vec3D();
+    }
 
     return AllEntityChanges;
 }

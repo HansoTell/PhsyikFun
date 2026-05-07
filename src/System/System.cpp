@@ -13,7 +13,8 @@ namespace Physik
 ClassicalSystem::ClassicalSystem() : m_running(false)
 {
     m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<VelocityVerleit>()));
-    m_Printer = std::make_unique<ConsolePrinter>(m_Core);
+    //PRINTER
+    m_Printer = std::make_unique<FilePrinter>(m_Core, "data.csv");
 }
 
 ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_running(false) {}
@@ -21,7 +22,7 @@ ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer
 ClassicalSystem::ClassicalSystem( const ClassicalSystem& other ) 
 {
     m_Core = std::make_shared<ClassicalSystemCore>(*other.m_Core);
-    m_Printer = other.m_Printer->clone(m_Core);
+    m_Printer = other.m_Printer->clone();
 }
 
 ClassicalSystem::~ClassicalSystem() 

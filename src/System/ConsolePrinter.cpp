@@ -1,4 +1,5 @@
 #include "Printer.h"
+#include <cstddef>
 #include <iostream>
 
 
@@ -21,6 +22,15 @@ void ConsolePrinter::printEntityPositions() const
     }
 
 } 
+void ConsolePrinter::printForce() const 
+{
+    const auto& entitys = m_SystemCore->getEntitys();
+    for( size_t i = 0; i < entitys.size(); i++ )
+    {
+        std::cout << "Entity " << i+1 << " With Force: " << entitys[i].getForce() << " N" << "\n";
+    }
+
+}
 
 void ConsolePrinter::printEnergy() const 
 {

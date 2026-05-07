@@ -16,6 +16,7 @@ class Vector
 {
 static_assert(std::is_arithmetic_v<T>);
 public:
+    size_t size() const { return data.size(); }
     T& at ( size_t i ) { return data.at(i); }
     const T& at( size_t i ) const { return data.at(i); }
     void fill( T value ) { data.fill(value); }

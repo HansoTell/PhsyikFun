@@ -70,6 +70,7 @@ public:
     Vector<Dim, T> getPosition() const { return *m_State.m_Position; }
     Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
     Vector<Dim, T> getAcceleration() const { return m_State.m_Acceleration; }
+    Vector<Dim, T> getForce() const { return m_State.m_Force; }
     T getMass() const { return m_State.m_Mass; }
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
     EntityState<Dim, T> getEntityStateCopy() const { return m_State; }
