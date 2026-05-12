@@ -50,6 +50,7 @@ void ClassicalSystem::Pause()
 {
     std::lock_guard<std::mutex> _lock( m_Mutex );
     m_running = false;
+
 }
 
 void ClassicalSystem::Clear()
@@ -116,11 +117,14 @@ void ClassicalSystem::setTimeIncrement( double DeltaTime )
     Start();
 }
 
+//TODO: Restarting shouldnt work --> ig need cv
 void ClassicalSystem::run() 
 {
     m_Printer->printEntityPositions();
     while( m_running )
         tick();
+
+    m_Printer->flush();
 }
 
 void ClassicalSystem::tick() 
