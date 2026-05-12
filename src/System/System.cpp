@@ -14,7 +14,7 @@ ClassicalSystem::ClassicalSystem() : m_running(false)
 {
     m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<VelocityVerleit>()));
     //PRINTER
-    m_Printer = std::make_unique<FilePrinter>(m_Core, "data.csv");
+    m_Printer = std::make_unique<CSVPrinter>(m_Core, "data.csv");
 }
 
 ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_running(false) {}
@@ -127,7 +127,6 @@ void ClassicalSystem::tick()
 {
     m_Core->MakeTimeStep();
 
-    m_Printer->printEnergy();
-    m_Printer->printEntityPositions();
+    m_Printer->printAll();
 }
 }

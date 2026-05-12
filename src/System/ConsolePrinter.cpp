@@ -36,4 +36,14 @@ void ConsolePrinter::printEnergy() const
 {
     std::cout << "Energy: " << m_SystemCore->getEnergy() << "J\n";
 }
+
+//TODO richtig machen uznd missing methoden adden das man wirklich entschiedne kannw as man printet
+void ConsolePrinter::printAll() const 
+{
+    printEntityPositions();
+    printForce();
+    printEnergy();
 }
+}
+
+
