@@ -3,9 +3,11 @@
 #include "SystemCore.h"
 #include "Vector.h"
 
+#include <charconv>
 #include <cstdint>
 #include <fstream>
 #include <memory>
+#include <type_traits>
 
 //TODO anpassen alles so dass es unterschieldich3e formate unterstützt
 namespace Physik 
@@ -64,6 +66,16 @@ private:
     void PrintVector( const Vec3D& vector ) const;
     void PrintSeperator() const;
     void PrintLineEnd() const; 
+    template<typename T>
+    void AppendNumberToBuffer( T number ) const
+    {
+        static_assert(std::is_arithmetic_v<T>);
+
+        char buffer[128];
+        auto[end, erc] = std::to_chars(buffer, buffer+sizeof(buffer), number);
+
+        m_Buffer.append(buffer, end);
+    }
 private:
     mutable std::ofstream m_File;
     std::string m_FilePath;
