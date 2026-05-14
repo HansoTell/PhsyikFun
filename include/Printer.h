@@ -1,12 +1,17 @@
 #pragma once
 
+#include "Datastructures/ThreadSaveQueue.h"
 #include "SystemCore.h"
 #include "Vector.h"
 
+#include <atomic>
 #include <charconv>
+#include <condition_variable>
 #include <cstdint>
 #include <fstream>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <type_traits>
 
 //TODO anpassen alles so dass es unterschieldich3e formate unterstützt
@@ -83,6 +88,32 @@ private:
     mutable uint32_t counter;
 
     std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
+};
+
+class AsyncCSVPrinter : public IPrinter 
+{
+public:
+    void printEntityPositions() const{}
+    void printForce() const{}
+    void printEnergy() const{}
+    void printAll() const;
+    void flush() const;
+    std::unique_ptr<IPrinter> clone() const { return std::make_unique<AsyncCSVPrinter>(*this); }
+public:
+    AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath );
+    AsyncCSVPrinter( const AsyncCSVPrinter& other );
+    AsyncCSVPrinter( AsyncCSVPrinter&& other );
+    ~AsyncCSVPrinter();
+private:
+    void Run();
+private:
+    CSVPrinter m_Printer;
+    const std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
+    mutable http::ThreadSaveQueue<ClassicEntityState> m_Queue;
+    std::atomic<bool> m_running;
+    std::mutex m_Mutex;
+    std::condition_variable m_CV;
+    std::thread m_Thread;
 };
     
 }

@@ -16,7 +16,7 @@ void ClassicPropCalc::ApplyAllNewtonIntegration( const std::vector<ClassicEntity
     for( size_t i = 0; i < entitys.size(); i++ )
     {
         outPropertys[i].m_Velocity = m_DGLSolver->CalcNewVelocity(entitys[i], outPropertys[i], deltaTime);
-        *outPropertys[i].m_Position = m_DGLSolver->CalcNewPosition(entitys[i], outPropertys[i], deltaTime);
+        outPropertys[i].m_Position = m_DGLSolver->CalcNewPosition(entitys[i], outPropertys[i], deltaTime);
     }
 
 }

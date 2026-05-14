@@ -2,6 +2,7 @@
 #include "Printer.h"
 #include <cstddef>
 #include <cstdio>
+#include <mutex>
 #include <string>
 #include <iostream>
 #include <ios>
@@ -67,8 +68,6 @@ void CSVPrinter::PrintVector( const Vec3D& vector ) const
     }
 }
 
-//TODO: NExt time: POsition gucken ob das ganze auch ohne shared ptr möglich ist was ich glaube + AsyncCSVLogger
-
 void CSVPrinter::printAll() const 
 {
     if( m_Buffer.size() > BUFF_SIZE )
@@ -79,7 +78,7 @@ void CSVPrinter::printAll() const
         const auto& State = AllEntitys[i].getEntityState();
         AppendNumberToBuffer(i+1);
         PrintSeperator();
-        PrintVector(*State.m_Position);
+        PrintVector(State.m_Position);
         PrintSeperator();
         PrintVector(State.m_Velocity);
         PrintSeperator();
@@ -113,6 +112,63 @@ void CSVPrinter::flush() const
     m_Buffer.clear();
     m_File.flush();
 }
-    
+
+AsyncCSVPrinter::AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath ) 
+    : m_Printer(CSVPrinter(SystemCore, std::move(FilePath))), m_Queue(), m_SystemCore(SystemCore), m_running(true)
+{
+    m_Thread = std::thread([this](){ this->Run(); });
 }
+
+//AsyncCSVPrinter::AsyncCSVPrinter( const AsyncCSVPrinter& other ){}
+
+//AsyncCSVPrinter::AsyncCSVPrinter( AsyncCSVPrinter&& other ) {}
+
+AsyncCSVPrinter::~AsyncCSVPrinter()
+{
+    {
+        std::lock_guard<std::mutex> _lock(m_Mutex);
+        m_running = false;
+    }
+    m_CV.notify_all();
+
+    if( m_Thread.joinable() )
+        m_Thread.join();
+}
+
+void AsyncCSVPrinter::printAll() const
+{
+    const auto& AllEntitys = m_SystemCore->getEntitys();
+    for( size_t i = 0; i < AllEntitys.size(); i++ )
+        m_Queue.push(AllEntitys[i].getEntityStateCopy());
+
+}
+void AsyncCSVPrinter::flush() const
+{
+
+}
+
+void AsyncCSVPrinter::Run()
+{
+    std::unique_lock<std::mutex> _lock(m_Mutex);
+    while( m_running )
+    {
+        m_CV.wait(_lock, [this](){
+            return !m_Queue.empty() || !m_running;
+        });
+
+        _lock.unlock();
+
+        while ( !m_Queue.empty() ) 
+        {
+            //Index problem
+            //Print problem... Können es eigentlihc nciht mit dem Csv Printer machen funktioniert einfach nicht außer ich habe einen eigenen seperaten core was verrückt wäre
+            auto State = m_Queue.try_pop().value();
+
+        }
+
+        _lock.lock();
+    }
+}
+}
+
 

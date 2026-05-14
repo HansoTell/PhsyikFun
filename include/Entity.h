@@ -2,7 +2,6 @@
 
 #include "Vector.h"
 #include <cstddef>
-#include <memory>
 
 
 namespace Physik 
@@ -11,7 +10,7 @@ namespace Physik
 template <size_t Dim = 3, typename T = double> 
 struct EntityState 
 {
-    std::shared_ptr<Vector<Dim, T>> m_Position;
+    Vector<Dim, T> m_Position;
     Vector<Dim, T> m_Velocity;
     Vector<Dim, T> m_Acceleration;
     Vector<Dim, T> m_Force;
@@ -22,9 +21,9 @@ struct EntityState
 
 public:
     EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass ) 
-        : m_Mass(Mass), m_Position(std::make_shared<Vector<Dim, T>>(position)), m_Velocity(velocity) {}
+        : m_Mass(Mass), m_Position(position), m_Velocity(velocity) {}
     EntityState( const EntityState& other )  
-        : m_Mass(other.m_Mass), m_Velocity(other.m_Velocity), m_Position(std::make_shared<Vector<Dim, T>>(*other.m_Position)), 
+        : m_Mass(other.m_Mass), m_Velocity(other.m_Velocity), m_Position(other.m_Position), 
         m_Force(other.m_Force), m_Acceleration(other.m_Acceleration), KineticEnergy(other.KineticEnergy), PotentialEnergy(other.PotentialEnergy) {}
     EntityState( EntityState&& other ) : 
         m_Position(std::move(other.m_Position)), m_Velocity(std::move(other.m_Velocity)), m_Acceleration(std::move(other.m_Acceleration)),
@@ -51,7 +50,7 @@ public:
             return *this;
         m_Mass = other.m_Mass;
         m_Velocity = other.m_Velocity;
-        m_Position = std::make_shared<Vector<Dim, T>>(*other.m_Position);
+        m_Position = other.m_Position;
         m_Force = other.m_Force;
         m_Acceleration = other.m_Acceleration;
         KineticEnergy = other.KineticEnergy;
@@ -67,7 +66,7 @@ template <size_t Dim = 3, typename T = double>
 class Entity 
 {
 public:
-    Vector<Dim, T> getPosition() const { return *m_State.m_Position; }
+    Vector<Dim, T> getPosition() const { return m_State.m_Position; }
     Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
     Vector<Dim, T> getAcceleration() const { return m_State.m_Acceleration; }
     Vector<Dim, T> getForce() const { return m_State.m_Force; }
@@ -77,7 +76,7 @@ public:
     T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialEnergy; }
 
     void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
-    void setPosition( const Vector<Dim, T>& newPosition ) { *m_State.m_Position = newPosition; }
+    void setPosition( const Vector<Dim, T>& newPosition ) { m_State.m_Position = newPosition; }
     void setMass( T newMass ){ m_State.m_Mass = newMass; }
     void setKineticEnergy( T newEKin ) { m_State.KineticEnergy = newEKin; } 
     void setPotentialEnergy( T newEPot ) { m_State.PotentialEnergy = newEPot; }

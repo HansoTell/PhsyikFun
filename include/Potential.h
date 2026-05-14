@@ -27,7 +27,7 @@ public:
     //distance muss riochtig gemacht werden wenn distance --> 0 geht was dann??? Kann nicht einfach error machen
     Vector<Dim, T> getForce( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = *ent1.m_Position - *ent2.m_Position;
+        Vector<Dim, T> offset = ent1.m_Position - ent2.m_Position;
         T distance = offset.EukNorm();
 
         double constant = - m_Beta / (distance*distance*distance);
@@ -36,7 +36,7 @@ public:
     }
     T getPotentialEnergy( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override 
     {
-        Vector<Dim, T> offset = *ent1.m_Position - *ent2.m_Position;
+        Vector<Dim, T> offset = ent1.m_Position - ent2.m_Position;
 
         return - m_Beta / offset.EukNorm(); 
     }
@@ -56,13 +56,13 @@ class GravitationalPotential : public IPotential<Dim, T>
 public:
     Vector<Dim, T> getForce( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = *ent2.m_Position - *ent1.m_Position;
+        Vector<Dim, T> offset = ent2.m_Position - ent1.m_Position;
         double constant  =  GravtationalKonstant * ent1.m_Mass * ent2.m_Mass /(offset.EukNorm() * offset.EukNorm() * offset.EukNorm());
         return offset * constant;
     }
     T getPotentialEnergy( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = *ent1.m_Position - *ent2.m_Position;
+        Vector<Dim, T> offset = ent1.m_Position - ent2.m_Position;
 
         return - GravtationalKonstant * ent1.m_Mass * ent2.m_Mass / offset.EukNorm();
     }
