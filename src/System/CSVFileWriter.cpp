@@ -6,7 +6,18 @@
 #define BUFF_SIZE 5000000
 namespace Physik 
 {
-CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(FilePath)) 
+CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(FilePath)), m_Options(PrintOptions::eAll) 
+{
+    m_Buffer.reserve(BUFF_SIZE);
+
+    m_File.open(m_FilePath, std::ios::trunc);
+    if(!m_File.is_open())
+        std::cerr << "Filed to open File" << "\n";
+
+    printEntityStateHeader();
+}
+
+CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_FilePath(std::move(FilePath)), m_Options(options)
 {
     m_Buffer.reserve(BUFF_SIZE);
 
@@ -23,30 +34,75 @@ void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID ) c
         flush();
     
     PrintNumber(ID);
-    PrintSeperator();
-    PrintVector(State.m_Position);
-    PrintSeperator();
-    PrintVector(State.m_Velocity);
-    PrintSeperator();
-    PrintVector(State.m_Acceleration);
-    PrintSeperator();
-    PrintVector(State.m_Force);
-    PrintSeperator();
-    PrintNumber(State.m_Mass);
-    PrintSeperator();
-    PrintNumber(State.KineticEnergy);
-    PrintSeperator();
-    PrintNumber(State.PotentialEnergy);
+    if( has(m_Options, PrintOptions::ePosition ))
+    {
+        PrintSeperator();
+        PrintVector(State.m_Position);
+    }
+    if( has(m_Options, PrintOptions::eVelocity ))
+    {
+        PrintSeperator();
+        PrintVector(State.m_Velocity);
+    }
+    if( has(m_Options, PrintOptions::eAcceleration ))
+    {
+        PrintSeperator();
+        PrintVector(State.m_Acceleration);
+    }
+    if( has(m_Options, PrintOptions::eForce ))
+    {
+        PrintSeperator();
+        PrintVector(State.m_Force);
+    }
+    if( has(m_Options, PrintOptions::eKinEnergy ))
+    {
+        PrintSeperator();
+        PrintNumber(State.KineticEnergy);
+    }
+    if( has(m_Options, PrintOptions::ePotEnergy ))
+    {
+        PrintSeperator();
+        PrintNumber(State.PotentialEnergy);
+    }
+
     PrintLineEnd();
 }
 
 void CSVFileWriter::printEntityStateHeader() const 
 {
-    m_Buffer.append("index, pos_x, pos_y, pox_z, " 
-         "veloc_x, veloc_y, veloc_z, " 
-         "acc_x, acc_y, acc_z, " 
-         "F_x, F_y, F_z, " 
-         "Mass, EKin, EPot\n");
+    m_Buffer.append("index");
+    if( has(m_Options, PrintOptions::ePosition ))
+    {
+        PrintSeperator();
+        m_Buffer.append("pos_x,pos_y,pox_z");
+    }
+    if( has(m_Options, PrintOptions::eVelocity ))
+    {
+        PrintSeperator();
+        m_Buffer.append("veloc_x,veloc_y,veloc_z");
+    }
+    if( has(m_Options, PrintOptions::eAcceleration ))
+    {
+        PrintSeperator();
+        m_Buffer.append("acc_x,acc_y,acc_z");
+    }
+    if( has(m_Options, PrintOptions::eForce ))
+    {
+        PrintSeperator();
+        m_Buffer.append("F_x,F_y,F_z");
+    }
+    if( has(m_Options, PrintOptions::eKinEnergy ))
+    {
+        PrintSeperator();
+        m_Buffer.append("Ekin");
+    }
+    if( has(m_Options, PrintOptions::ePotEnergy ))
+    {
+        PrintSeperator();
+        m_Buffer.append("EPot");
+    }
+
+    PrintLineEnd();
 }
 
 void CSVFileWriter::PrintVector( const Vec3D& vector ) const
@@ -55,11 +111,11 @@ void CSVFileWriter::PrintVector( const Vec3D& vector ) const
     {
         PrintNumber( vector[i] );
         if( i != vector.size()-1 )
-            m_Buffer += ", ";
+           PrintSeperator(); 
     }
 }
 
-void CSVFileWriter::PrintSeperator() const { m_Buffer += ", "; }
+void CSVFileWriter::PrintSeperator() const { m_Buffer += ","; }
 void CSVFileWriter::PrintLineEnd() const { m_Buffer += "\n"; }
 
 void CSVFileWriter::flush() const

@@ -10,7 +10,6 @@
 #include <condition_variable>
 #include <cstdint>
 #include <fstream>
-#include <initializer_list>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -30,43 +29,48 @@ struct ClassicEntityInfo
 
 enum class PrintOptions : uint16_t 
 {
+    eNone = 0b0,
     ePosition = 0b1,
     eVelocity = 0b10,
     eAcceleration = 0b100,
     eForce = 0b1000,
     eKinEnergy = 0b10000,
-    ePotEnergy = 0b100000
+    ePotEnergy = 0b100000,
+    eAll = 0b111111
 };
+
+constexpr PrintOptions operator|( PrintOptions a, PrintOptions b ) { return static_cast<PrintOptions>( static_cast<uint16_t>(a) | static_cast<uint16_t>(b) ); }
+constexpr PrintOptions operator&( PrintOptions a, PrintOptions b ) { return static_cast<PrintOptions>( static_cast<uint16_t>(a) & static_cast<uint16_t>(b) ); }
+constexpr bool has( PrintOptions set, PrintOptions flag ) { return (set & flag) != PrintOptions::eNone; }
 
 
 class IPrinter 
 {
 public:
     virtual ~IPrinter() = default;
-    virtual void printPosition() const = 0;
-    virtual void printVelocity() const = 0;
-    virtual void printAcceleration() const = 0;
-    virtual void printForce() const = 0;
-    virtual void printEnergy() const = 0;
-    virtual void printAll() const = 0;
+    virtual void Print() const = 0;
 };
 
 class ConsolePrinter : public IPrinter 
 {
 public:
-    void printPosition() const override; 
-    void printVelocity() const override;
-    void printAcceleration() const override;
-    void printEnergy() const override;
-    void printForce() const override;
-    void printAll() const override;
+    void Print() const override;
 
 public:
     ConsolePrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore );
+    ConsolePrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, PrintOptions options );
     ConsolePrinter( const ConsolePrinter& other ) = delete;
     ConsolePrinter( ConsolePrinter&& other ) = delete;
     ~ConsolePrinter() = default;
 private:
+    void printPosition() const; 
+    void printVelocity() const;
+    void printAcceleration() const;
+    void printKineticEnergy() const;
+    void printPotentialEnergy() const;
+    void printForce() const;
+private:
+    PrintOptions m_Options;
     std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
 };
 
@@ -78,6 +82,7 @@ public:
     void flush() const;
 public:
     CSVFileWriter( std::string FilePath );
+    CSVFileWriter( std::string FilePath, PrintOptions options );
     CSVFileWriter( const CSVFileWriter& other ) = delete;
     CSVFileWriter( CSVFileWriter&& other ) = delete;
     ~CSVFileWriter() = default;
@@ -102,6 +107,8 @@ private:
     void PrintSeperator() const;
     void PrintLineEnd() const;
 private:
+    PrintOptions m_Options;
+
     mutable std::ofstream m_File;
     std::string m_FilePath;
     mutable std::string m_Buffer;
@@ -110,20 +117,14 @@ private:
 class CSVPrinter : public IPrinter 
 {
 public:
-    void printPosition() const override; 
-    void printVelocity() const override;
-    void printAcceleration() const override;
-    void printEnergy() const override;
-    void printForce() const override;
-    void printAll() const override;
+    void Print() const override;
 public:
     CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string filepath );
+    CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string filepath, PrintOptions options );
     CSVPrinter( const CSVPrinter& other ) = delete;
     CSVPrinter( CSVPrinter&& other ) = delete;
     ~CSVPrinter() { m_FileWriter->flush(); } 
 private:
-    mutable uint32_t counter;
-
     std::unique_ptr<CSVFileWriter> m_FileWriter;
     std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
 };
@@ -131,24 +132,16 @@ private:
 class AsyncCSVPrinter : public IPrinter 
 {
 public:
-    void printPosition() const override{}
-    void printVelocity() const override{}
-    void printAcceleration() const override{}
-    void printForce() const override{}
-    void printEnergy() const override{}
-    void printAll() const override;
+    void Print() const override;
 public:
     AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath );
-    AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath, std::initializer_list<PrintOptions> options );
+    AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath, PrintOptions options );
     AsyncCSVPrinter( const AsyncCSVPrinter& other ) = delete;
     AsyncCSVPrinter( AsyncCSVPrinter&& other ) = delete;
     ~AsyncCSVPrinter();
 private:
     void Run();
 private:
-    uint16_t m_Options;
-
-    mutable std::atomic<uint32_t> counter;
     std::unique_ptr<CSVFileWriter> m_FileWriter;
     const std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
 

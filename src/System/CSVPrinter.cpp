@@ -7,18 +7,12 @@
 namespace Physik 
 {
 CSVPrinter::CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string filepath ) 
-    :  m_SystemCore(SystemCore), counter(0), m_FileWriter(std::make_unique<CSVFileWriter>(std::move(filepath))) {}
+    :  m_SystemCore(SystemCore), m_FileWriter(std::make_unique<CSVFileWriter>(std::move(filepath))) {}
 
-//TODO: Möglichkeiten: 
-//2. Also dass Man enum hat mit optionen -> 
-//3. --> 2. aber Man muss beim start das reingeben oder in konstruktor anbieten der einstellen lässt, daraus dann die optionen ergeben
-void CSVPrinter::printPosition() const{}
-void CSVPrinter::printVelocity() const {}
-void CSVPrinter::printAcceleration() const {}
-void CSVPrinter::printForce() const {}
-void CSVPrinter::printEnergy() const {}
+CSVPrinter::CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string filepath, PrintOptions options )
+    : m_SystemCore(SystemCore), m_FileWriter(std::make_unique<CSVFileWriter>(std::move(filepath), options)) {}
 
-void CSVPrinter::printAll() const 
+void CSVPrinter::Print() const 
 {
     const auto& AllEntitys = m_SystemCore->getEntitys();
     for( size_t i = 0; i < AllEntitys.size(); i++ )

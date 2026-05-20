@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "Interactions.h"
+#include "Printer.h"
 #include "PropertyCalculus.h"
 #include <System.h>
 #include <memory>
@@ -127,7 +128,7 @@ void ClassicalSystem::setTimeIncrement( double DeltaTime )
 
 void ClassicalSystem::run() 
 {
-    m_Printer->printAll();
+    m_Printer->Print();
     std::unique_lock<std::mutex> _lock(m_Mutex);
     while( m_running )
     {
@@ -150,6 +151,6 @@ void ClassicalSystem::tick()
 {
     m_Core->MakeTimeStep();
 
-    m_Printer->printAll();
+    m_Printer->Print();
 }
 }
