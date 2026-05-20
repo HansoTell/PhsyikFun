@@ -10,26 +10,24 @@
 
 namespace Physik 
 {
-ClassicalSystem::ClassicalSystem() : m_running(false)
+ClassicalSystem::ClassicalSystem() : m_Calculating (false), m_running(false)
 {
     m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<VelocityVerleit>()));
     //PRINTER
-    m_Printer = std::make_unique<CSVPrinter>(m_Core, "data.csv");
+    m_Printer = std::make_unique<AsyncCSVPrinter>(m_Core, "data.csv");
 }
 
-ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_running(false) {}
+ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_Calculating (false), m_running(false) {}
 
 ClassicalSystem::ClassicalSystem( const ClassicalSystem& other ) 
 {
     m_Core = std::make_shared<ClassicalSystemCore>(*other.m_Core);
-    m_Printer = other.m_Printer->clone();
+    //m_Printer = other.m_Printer->clone();
 }
 
 ClassicalSystem::~ClassicalSystem() 
 {
-    Pause();
-    if( m_Thread.joinable() )
-        m_Thread.join();
+    Clear();
 
     m_Core.reset();
     m_Printer.reset(nullptr);
@@ -39,23 +37,33 @@ void ClassicalSystem::Start()
 {
     {
         std::lock_guard<std::mutex> _lock ( m_Mutex );
+        m_Calculating = true;
         m_running = true;
     }
 
     if( !m_Thread.joinable() )
         m_Thread = std::thread([this](){ this->run(); }); 
+
+    m_SystemCV.notify_all();
 }
 
 void ClassicalSystem::Pause() 
 {
     std::lock_guard<std::mutex> _lock( m_Mutex );
-    m_running = false;
+    m_Calculating = false;
 
+    //kann man iwie garantieren dass hier aufgehalten wird bis er in cv gelaufen ist?
 }
 
 void ClassicalSystem::Clear()
 {
-    Pause();
+    {
+        std::lock_guard<std::mutex> _lock( m_Mutex );
+        m_running = false;
+        m_Calculating = false;
+    }
+    m_SystemCV.notify_all();
+
     if( m_Thread.joinable() )
         m_Thread.join();
 
@@ -117,14 +125,25 @@ void ClassicalSystem::setTimeIncrement( double DeltaTime )
     Start();
 }
 
-//TODO: Restarting shouldnt work --> ig need cv
 void ClassicalSystem::run() 
 {
-    m_Printer->printEntityPositions();
+    m_Printer->printAll();
+    std::unique_lock<std::mutex> _lock(m_Mutex);
     while( m_running )
-        tick();
+    {
+        m_SystemCV.wait(_lock, [this](){
+            return m_Calculating || !m_running;
+        });
 
-    m_Printer->flush();
+        if( !m_running )
+            break;
+
+        _lock.unlock();
+        while( m_Calculating )
+            tick();
+
+        _lock.lock();
+    }
 }
 
 void ClassicalSystem::tick() 

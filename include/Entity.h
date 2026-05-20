@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 #include <cstddef>
+#include <cstdint>
 
 
 namespace Physik 
@@ -74,6 +75,7 @@ public:
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
     EntityState<Dim, T> getEntityStateCopy() const { return m_State; }
     T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialEnergy; }
+    uint64_t getID() const { return m_ID; }
 
     void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
     void setPosition( const Vector<Dim, T>& newPosition ) { m_State.m_Position = newPosition; }
@@ -84,12 +86,15 @@ public:
     void setEntityState( EntityState<Dim, T> NewEntityState ){ m_State = NewEntityState; }
 public:
     Entity(){}
-    Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ){}
-    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity),  mass } ) {}
-    Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ) {}
-    Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ){}
+    Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ), m_ID(nextID++) {}
+    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity),  mass } ), m_ID(nextID++) {}
+    Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ), m_ID(nextID++) {}
+    Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;
 private:
+    inline static uint64_t nextID = 1;
+private:
+    uint64_t m_ID;
     EntityState<Dim, T> m_State;
 };
 

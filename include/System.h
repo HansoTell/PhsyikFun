@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Interactions.h"
 #include "Printer.h"
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -56,6 +57,8 @@ private:
 
     std::thread m_Thread;
     std::mutex m_Mutex;
-    bool m_running;
+    std::condition_variable m_SystemCV;
+    bool m_Calculating;
+    std::atomic<bool> m_running;
 };
 }
