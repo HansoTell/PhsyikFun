@@ -6,26 +6,41 @@ import pandas as pd
 mpl.use("TkAgg")
 
 
-data = np.loadtxt("../build/apps/data.csv", delimiter=",")
 
-def PrintTrajek(fileName):
-    df = pd.read_csv("")
-    indexes = df["index"].unique()
-    EntitysDfs = []
-    plt.figure() #muss 3d sein
-    for i in indexes:
-        EntitysDfs.append(df.where(df["index"] == i))
+def PrintTrajek(dataFrame):
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+
+    idx = dataFrame["index"].unique()
+    
+    for i in idx:
+       dfi = dataFrame.where(i == dataFrame["index"])
+       xPos = dfi["pos_x"]
+       yPos = dfi["pos_y"]
+       zPos = dfi["pox_z"]
+
+       ax.plot(xPos,yPos,zPos)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    fig.suptitle("Trajek")
+
+    plt.show()
 
 
-entitys = np.unique(data[:,0])
+def PrintEnergy(fig):
+    pass
 
-plt.figure(figsize=(10, 6))
 
-for ent in entitys:
-    subset = data[data[:, 0] == ent]
-    xPos = subset[:, 1]
-    yPos = subset[:, 2]
-    plt.plot(xPos, yPos)
+def Print(FilePath):
+    df = pd.read_csv(FilePath)
+    fig = plt.figure()
 
-plt.grid(True)
-plt.show()
+    PrintTrajek(df)
+    PrintEnergy(fig)
+
+
+Print("../build/apps/data.csv")
+
+
