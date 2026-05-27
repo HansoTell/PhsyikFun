@@ -1,4 +1,3 @@
-from uuid import main
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -47,7 +46,9 @@ def Print(FilePath):
     df = pd.read_csv(FilePath)
 
     PrintTrajek(df)
-    PlotData(df["Time"], [df["Ekin"], df["EPot"], df["Ekin"]+df["EPot"]], "Time / [s]", ["Ekin", "EPot", "Eges"], "Energy Plot")
+    PlotData(df["Time"], [df["Ekin"]], "Time / [s]", ["Ekin"], "Kinetic Energy")
+    PlotData(df["Time"], [df["EPot"]], "Time / [s]", ["Epot"], "Potential Energy")
+    PlotData(df["Time"], [df["Ekin"]+df["EPot"]], "Time / [s]", ["Eges"], "Energy Plot")
 
 
 
