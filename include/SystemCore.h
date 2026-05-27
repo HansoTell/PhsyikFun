@@ -29,6 +29,7 @@ public:
 
     const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
     double getEnergy() const { return Energy; }
+    double getTime() const { return m_Time; }
 
 public:
     ClassicalSystemCore( std::unique_ptr<IPropertyCalculus> PropertyCalcer );

@@ -1,11 +1,10 @@
+from uuid import main
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 
 mpl.use("TkAgg")
-
-
 
 def PrintTrajek(dataFrame):
     fig = plt.figure()
@@ -28,19 +27,29 @@ def PrintTrajek(dataFrame):
 
     plt.show()
 
+def PlotData(x_col, y_col, xlabels, ylabels, title = None):
+    plt.figure(figsize=(10, 6))
 
-def PrintEnergy(fig):
+    for (i, lbl) in zip(y_col, ylabels):
+        plt.plot(x_col, i, label = lbl )
+    plt.xlabel(xlabels)
+    plt.ylabel("Value")
+    plt.title(title or f"{', '.join(ylabels)} over {xlabels}")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def Plot3D(firsts, secounds, thirds, labels, title = None):
     pass
 
 
 def Print(FilePath):
     df = pd.read_csv(FilePath)
-    fig = plt.figure()
 
     PrintTrajek(df)
-    PrintEnergy(fig)
+    PlotData(df["Time"], [df["Ekin"], df["EPot"], df["Ekin"]+df["EPot"]], "Time / [s]", ["Ekin", "EPot", "Eges"], "Energy Plot")
 
 
-Print("../build/apps/data.csv")
 
-
+if __name__ == "__main__":
+    Print("../build/apps/data.csv")

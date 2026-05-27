@@ -25,6 +25,7 @@ struct ClassicEntityInfo
 {
     uint64_t EntityID;
     ClassicEntityState State;
+    double Time;
 };
 
 enum class PrintOptions : uint16_t 
@@ -78,7 +79,7 @@ private:
 class CSVFileWriter 
 {
 public:
-    void WriteState( const ClassicEntityState& state, uint64_t ID ) const;
+    void WriteState( const ClassicEntityState& state, uint64_t ID, double t ) const;
     void flush() const;
 public:
     CSVFileWriter( std::string FilePath );
