@@ -14,10 +14,8 @@ WorldEvaluator::WorldEvaluator( const WorldEvaluator& other ){}
 WorldEvaluator::WorldEvaluator( WorldEvaluator&& other ){}
 
 
-
-void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Time, Vec3D outAccelerations[] ) const 
+void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const 
 {
-    assert(outAccelerations != NULL);
     for( auto& interaction : m_EntityPotentials )
     {
         for( size_t i = 0; i < state.size(); i++ )
@@ -33,12 +31,12 @@ void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Tim
         }
     }
 
-    for( size_t i = 0; i < m_ExtPotentials.size(); i++ )
+    for( auto& field : m_ExtPotentials )
     {
-        for( size_t j = 0; j < state.size(); j++ )
+        for( size_t i = 0; i < state.size(); i++ )
         {
-            const auto& ent1 = state[j];
-            Vec3D force = m_ExtPotentials[i].getForce(ent1.getEntityState(), Time);
+            const auto& ent1 = state[i];
+            Vec3D force = field.getForce(ent1.getEntityState(), Time);
             outAccelerations[i] += force;
         }
     }
@@ -47,9 +45,8 @@ void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Tim
         outAccelerations[i] /= state[i].getMass();
 }
 
-void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, double outEpots[] ) const 
+void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const 
 {
-    assert(outEpots != NULL);
     for( auto& interaction : m_EntityPotentials )
     {
         for( size_t i = 0; i < state.size(); i++ )
@@ -71,43 +68,41 @@ void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, d
         {
             const auto& ent1 = state[j];
             double E = m_ExtPotentials[i].getPotentialEnergy(ent1.getEntityState(), Time);
-            outEpots[i] += E;
+            outEpots[j] += E;
         }
     }
 }
 
-void WorldEvaluator::CalcKineticEnergy( const SimulationState& state, double Time, double outEKins[] ) const 
+void WorldEvaluator::CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const 
 {
-    assert(outEKins != NULL);
     for( size_t i = 0; i < state.size(); i++ )
         outEKins[i] = 0.5 * state[i].getMass() * state[i].getVelocity().BetragsQuadrat();
 }
 
 void WorldEvaluator::UpdateAccelerations( SimulationState& state, double Time ) 
 {
-    Vec3D newAccelerations[state.size()];
-    CalcAccelerations(state, Time, newAccelerations);
+    m_AccScratch.assign(state.size(), Vec3D{});
+    CalcAccelerations(state, Time, m_AccScratch);
 
     for( size_t i = 0; i < state.size(); i++ )
-        state[i].setAcceleration(newAccelerations[i]);
+        state[i].setAcceleration(m_AccScratch[i]);
 }
-void WorldEvaluator::UpdateKineticEnergys( SimulationState& state, double Time ) 
+void WorldEvaluator::UpdateKineticEnergys( SimulationState& state ) 
 {
-    double newEkins[state.size()];
-    CalcKineticEnergy(state, Time, newEkins);
+    m_EkinScratch.assign(state.size(), double{});
+    CalcKineticEnergy(state, m_EkinScratch);
 
     for( size_t i = 0; i < state.size(); i++ )
-        state[i].setKineticEnergy(newEkins[i]);
+        state[i].setKineticEnergy(m_EkinScratch[i]);
 }
 void WorldEvaluator::UpdatePotentialEnergys( SimulationState& state, double Time ) 
 {
-    double newEpots[state.size()];
-    CalcPotEnergy(state, Time, newEpots);
+    m_EPotScratch.assign(state.size(), double{});
+    CalcPotEnergy(state, Time, m_EkinScratch);
 
     for( size_t i = 0; i < state.size(); i++ )
-        state[i].setKineticEnergy(newEpots[i]);
+        state[i].setPotentialEnergy(m_EkinScratch[i]);
 }
-
 
 void WorldEvaluator::addExternPotential( ClassicField potential ) { m_ExtPotentials.push_back(ClassicField(std::move(potential))); }
 void WorldEvaluator::addMulitpleExternPotentials( std::vector<ClassicField> potentials ) { for( int i = 0; i < potentials.size(); i++ ) m_ExtPotentials.push_back(std::move(potentials[i])); }

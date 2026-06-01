@@ -2,6 +2,7 @@
 #include "Vector.h"
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace Physik 
 {
@@ -34,11 +35,11 @@ void VelocityVerleit::step( const SimulationState& current, SimulationState& nex
         next[i].setPosition(newPos);
     }
 
-    Vec3D newAccelerations[next.size()];
-    evaluator->CalcAccelerations(next, Time+dt, newAccelerations);
+    m_AccScratch.assign(next.size(), Vec3D{});
+    evaluator->CalcAccelerations(next, Time+dt, m_AccScratch);
     for( size_t i = 0; i < next.size(); i++ )
     {
-        Vec3D newVeloc = next[i].getVelocity() + 0.5 * newAccelerations[i] * dt;
+        Vec3D newVeloc = next[i].getVelocity() + 0.5 * m_AccScratch[i] * dt;
         next[i].setVelocity(newVeloc);
     }
 }

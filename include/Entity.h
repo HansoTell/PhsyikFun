@@ -93,7 +93,7 @@ public:
     Entity(){}
     Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ), m_ID(nextID++) {}
     Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity),  mass } ), m_ID(nextID++) {}
-    Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ), m_ID(nextID++) {}
+    Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ), m_ID(other.m_ID) {}
     Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;
 private:

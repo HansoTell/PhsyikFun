@@ -14,12 +14,12 @@ class IAccelerationEveluater
 public:
     virtual ~IAccelerationEveluater() = default;
 
-    virtual void CalcAccelerations( const SimulationState& state, double Time, Vec3D outAccelerations[] ) const  = 0;
-    virtual void CalcPotEnergy( const SimulationState& state, double Time, double outEpots[] ) const = 0;
-    virtual void CalcKineticEnergy( const SimulationState& state, double Time, double outEKins[] ) const = 0;
+    virtual void CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const  = 0;
+    virtual void CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const = 0;
+    virtual void CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const = 0;
 
     virtual void UpdateAccelerations( SimulationState& state, double Time ) = 0;
-    virtual void UpdateKineticEnergys( SimulationState& state, double Time ) = 0;
+    virtual void UpdateKineticEnergys( SimulationState& state ) = 0;
     virtual void UpdatePotentialEnergys( SimulationState& state, double Time ) = 0;
 
     virtual void addExternPotential( ClassicField potential ) = 0;
@@ -35,12 +35,12 @@ public:
 class WorldEvaluator : public IAccelerationEveluater 
 {
 public:
-    void CalcAccelerations( const SimulationState& state, double Time, Vec3D outAccelerations[] ) const override;
-    void CalcPotEnergy( const SimulationState& state, double Time, double outEpots[] ) const override;
-    void CalcKineticEnergy( const SimulationState& state, double Time, double outEKins[] ) const override;
+    void CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const override;
+    void CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const override;
+    void CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const override;
 
     void UpdateAccelerations( SimulationState& state, double Time ) override;
-    void UpdateKineticEnergys( SimulationState& state, double Time ) override;
+    void UpdateKineticEnergys( SimulationState& state ) override;
     void UpdatePotentialEnergys( SimulationState& state, double Time ) override;
 
     void addExternPotential( ClassicField potential ) override;
@@ -58,6 +58,9 @@ public:
 private:
     std::vector<ClassicField> m_ExtPotentials;
     std::vector<ClassicInteraction> m_EntityPotentials;
+
+    mutable std::vector<Vec3D> m_AccScratch;
+    mutable std::vector<double> m_EkinScratch;
+    mutable std::vector<double> m_EPotScratch;
 };
-    
 }

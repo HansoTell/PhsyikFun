@@ -66,20 +66,20 @@ void ClassicalSystemCore::addMultipleEntityPotentials( std::vector<ClassicIntera
 void ClassicalSystemCore::Step()
 {
     m_Integrator->step(m_CurrentState, m_NextState, m_Evaluater, m_Time, m_DeltaTime);
+    advanceTimeIncrement();
     
     m_Evaluater->UpdateAccelerations(m_NextState, m_Time);
-    m_Evaluater->UpdateKineticEnergys(m_NextState, m_Time);
+    m_Evaluater->UpdateKineticEnergys(m_NextState);
     m_Evaluater->UpdatePotentialEnergys(m_NextState, m_Time);
 
     std::swap(m_NextState, m_CurrentState);
 
-    advanceTimeIncrement();
 }
 
 void ClassicalSystemCore::UpdateEntityPropertys()
 {
     m_Evaluater->UpdateAccelerations(m_CurrentState, m_Time);
-    m_Evaluater->UpdateKineticEnergys(m_CurrentState, m_Time);
+    m_Evaluater->UpdateKineticEnergys(m_CurrentState);
     m_Evaluater->UpdatePotentialEnergys(m_CurrentState, m_Time);
 }
 

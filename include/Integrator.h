@@ -41,6 +41,8 @@ public:
     VelocityVerleit( const VelocityVerleit& other ) = default;
     VelocityVerleit( VelocityVerleit&& other ) = default;
     ~VelocityVerleit() = default;
+private:
+    mutable std::vector<Vec3D> m_AccScratch;
 };
 
 }

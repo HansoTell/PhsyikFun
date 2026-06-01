@@ -36,6 +36,7 @@ def PlotData(x_col, y_col, xlabels, ylabels, title = None):
     plt.title(title or f"{', '.join(ylabels)} over {xlabels}")
     plt.legend()
     plt.grid(True)
+    plt.ticklabel_format(useOffset=False, style='plain')
     plt.show()
 
 def Plot3D(firsts, secounds, thirds, labels, title = None):
