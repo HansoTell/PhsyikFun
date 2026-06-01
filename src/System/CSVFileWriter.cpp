@@ -74,7 +74,7 @@ void CSVFileWriter::printEntityStateHeader() const
     if( has(m_Options, PrintOptions::ePosition ))
     {
         PrintSeperator();
-        m_Buffer.append("pos_x,pos_y,pox_z");
+        m_Buffer.append("pos_x,pos_y,pos_z");
     }
     if( has(m_Options, PrintOptions::eVelocity ))
     {
