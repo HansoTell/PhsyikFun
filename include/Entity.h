@@ -4,44 +4,54 @@
 #include <cstddef>
 #include <cstdint>
 
-
 namespace Physik 
 {
 
 template <size_t Dim = 3, typename T = double> 
-struct EntityState 
+struct KinematicState 
 {
     Vector<Dim, T> m_Position;
     Vector<Dim, T> m_Velocity;
     Vector<Dim, T> m_Acceleration;
-    Vector<Dim, T> m_Force;
-    T m_Mass;
+};
+
+template <typename T = double>
+struct EnergyPropertys 
+{
     T KineticEnergy;
     T PotentialEnergy;
+};
 
+template <typename T = double>
+struct ConstantPrtopertys
+{
+    T m_Mass;
+};
+
+template <size_t Dim = 3, typename T = double> 
+class EntityState 
+{
+public:
+    KinematicState<Dim, T> m_KinState;
+    EnergyPropertys<T> m_Energys;
+    ConstantPrtopertys<T> m_Constants;
 
 public:
     EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass ) 
-        : m_Mass(Mass), m_Position(position), m_Velocity(velocity) {}
+        : m_Constants({ Mass }), m_KinState( { position, velocity, Vector<Dim, T>() } ) {}
     EntityState( const EntityState& other )  
-        : m_Mass(other.m_Mass), m_Velocity(other.m_Velocity), m_Position(other.m_Position), 
-        m_Force(other.m_Force), m_Acceleration(other.m_Acceleration), KineticEnergy(other.KineticEnergy), PotentialEnergy(other.PotentialEnergy) {}
-    EntityState( EntityState&& other ) : 
-        m_Position(std::move(other.m_Position)), m_Velocity(std::move(other.m_Velocity)), m_Acceleration(std::move(other.m_Acceleration)),
-        m_Mass(std::move(other.m_Mass)), m_Force(std::move(other.m_Force)), KineticEnergy(std::move(other.KineticEnergy)), PotentialEnergy(std::move(other.PotentialEnergy)) {}
+        : m_Constants(other.m_Constants), m_KinState(other.m_KinState), m_Energys(other.m_Energys) {} 
+    EntityState( EntityState&& other ) 
+        : m_Constants(std::move(other.m_Constants)), m_Energys(std::move(other.m_Energys)), m_KinState(std::move(other.m_KinState)) {} 
     ~EntityState() = default;
     EntityState<Dim, T>& operator=( EntityState<Dim, T>&& other ) noexcept
     {
         if( this == &other)
             return *this;
 
-        m_Mass = std::move(other.m_Mass);
-        m_Velocity = std::move(other.m_Velocity);
-        m_Position = std::move(other.m_Position);
-        m_Force = std::move(other.m_Force);
-        m_Acceleration = std::move(other.m_Acceleration);
-        KineticEnergy = std::move(other.KineticEnergy);
-        PotentialEnergy = std::move(other.PotentialEnergy);
+        m_Constants = std::move(other.m_Constants);
+        m_KinState = std::move(other.m_KinState);
+        m_Energys = std::move(other.m_Energys);
 
         return *this;
     }
@@ -49,13 +59,10 @@ public:
     {
         if( this == &other)
             return *this;
-        m_Mass = other.m_Mass;
-        m_Velocity = other.m_Velocity;
-        m_Position = other.m_Position;
-        m_Force = other.m_Force;
-        m_Acceleration = other.m_Acceleration;
-        KineticEnergy = other.KineticEnergy;
-        PotentialEnergy = other.PotentialEnergy;
+
+        m_Constants = other.m_Constants;
+        m_Energys = other.m_Energys;
+        m_KinState = other.m_KinState;
 
         return *this;
     }
@@ -67,23 +74,21 @@ template <size_t Dim = 3, typename T = double>
 class Entity 
 {
 public:
-    Vector<Dim, T> getPosition() const { return m_State.m_Position; }
-    Vector<Dim, T> getVelocity() const { return m_State.m_Velocity; }
-    Vector<Dim, T> getAcceleration() const { return m_State.m_Acceleration; }
-    Vector<Dim, T> getForce() const { return m_State.m_Force; }
-    T getMass() const { return m_State.m_Mass; }
+    Vector<Dim, T> getPosition() const { return m_State.m_KinState.m_Position; }
+    Vector<Dim, T> getVelocity() const { return m_State.m_KinState.m_Velocity; }
+    Vector<Dim, T> getAcceleration() const { return m_State.m_KinState.m_Acceleration; }
+    T getMass() const { return m_State.m_Constants.m_Mass; }
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
     EntityState<Dim, T> getEntityStateCopy() const { return m_State; }
-    T getEnergy() const { return m_State.KineticEnergy + m_State.PotentialEnergy; }
+    T getEnergy() const { return m_State.m_Energys.KineticEnergy + m_State.m_Energys.PotentialEnergy; }
     uint64_t getID() const { return m_ID; }
 
-    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_Velocity = newVelocity; }
-    void setPosition( const Vector<Dim, T>& newPosition ) { m_State.m_Position = newPosition; }
-    void setMass( T newMass ){ m_State.m_Mass = newMass; }
-    void setKineticEnergy( T newEKin ) { m_State.KineticEnergy = newEKin; } 
-    void setPotentialEnergy( T newEPot ) { m_State.PotentialEnergy = newEPot; }
-
-    void setEntityState( EntityState<Dim, T> NewEntityState ){ m_State = NewEntityState; }
+    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_KinState.m_Velocity = newVelocity; }
+    void setPosition( const Vector<Dim, T>& newPosition ) { m_State.m_KinState.m_Position = newPosition; }
+    void setAcceleration( const Vector<Dim, T>& newAcceleration ) { m_State.m_KinState.m_Acceleration = newAcceleration; }
+    void setMass( T newMass ){ m_State.m_Constants.m_Mass = newMass; }
+    void setKineticEnergy( T newEKin ) { m_State.m_Energys.KineticEnergy = newEKin; } 
+    void setPotentialEnergy( T newEPot ) { m_State.m_Energys.PotentialEnergy = newEPot; }
 public:
     Entity(){}
     Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ), m_ID(nextID++) {}

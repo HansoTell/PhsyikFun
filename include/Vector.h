@@ -20,16 +20,30 @@ public:
     T& at ( size_t i ) { return data.at(i); }
     const T& at( size_t i ) const { return data.at(i); }
     void fill( T value ) { data.fill(value); }
-    void skalarProduct( T skalar ) { for( int i = 0; i < Dim; i++ ) at(i) *= skalar; }
+    T skalarProduct( const Vector<Dim, T>& other ) const 
+    { 
+        T erg = 0;
+        for( size_t i = 0; i < Dim; i++ )
+        {
+            erg += data[i] * other[i];
+        }
+        return erg;
+    }
     T EukNorm() const 
     { 
         T betragsquadrat = 0;
         for( int i = 0; i < Dim; i++ )
-        {
             betragsquadrat += data[i] * data[i];
 
-        }
         return std::sqrt(betragsquadrat); 
+    }
+    T BetragsQuadrat() const 
+    {
+        T erg = 0;
+        for( size_t i = 0; i < Dim; i++ )
+            erg += data[i] * data[i];
+
+        return erg;
     }
     Vector<Dim, T>& operator=( Vector<Dim, T>&& other ) noexcept 
     {
@@ -70,6 +84,12 @@ public:
 
         return *this;
     }
+    Vector<Dim, T>& operator/=( T scalar )
+    {
+        for( size_t i = 0; i < data.size(); i++ )
+            data[i] /= scalar;
+        return *this;
+    }
     Vector<Dim, T> operator+(const Vector<Dim, T>& other) const 
     { 
         Vector<Dim, T> tmp = *this;
@@ -86,6 +106,12 @@ public:
     { 
         Vector<Dim, T> tmp = *this;
         tmp *= skalar;
+        return tmp;
+    }
+    Vector<Dim, T> operator/( T skalar ) const
+    {
+        Vector<Dim, T> tmp = *this;
+        tmp /= skalar;
         return tmp;
     }
     friend Vector<Dim, T> operator*(T scalar, const Vector<Dim, T>& vec) 

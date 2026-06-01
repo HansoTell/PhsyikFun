@@ -1,27 +1,45 @@
-#include "NumericNewontDGLSolver.h"
+#include "Integrator.h"
 #include "Vector.h"
+#include <cstddef>
+#include <memory>
 
 namespace Physik 
 {
-Vec3D EulerCauchy::CalcNewVelocity( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const
+void EulerCauchy::step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const 
 {
-    Vec3D newVelocity = entity.getVelocity() + deltaTime * newState.m_Acceleration;
-    return newVelocity;
-}
-Vec3D EulerCauchy::CalcNewPosition( const ClassicEntity& state, const ClassicEntityState& newState, double deltaTime ) const
-{
-    Vec3D newPos = state.getPosition() +  deltaTime * newState.m_Velocity;
-    return newPos;
+    for( size_t i = 0; i < next.size(); i++ )
+    {
+        Vec3D newVelocity = current[i].getVelocity() + dt * current[i].getAcceleration();
+        next[i].setVelocity(newVelocity);
+    }
+
+    for( size_t i = 0; i < next.size(); i++ )
+    {
+        Vec3D newPos = current[i].getPosition() + dt * next[i].getVelocity();
+        next[i].setPosition(newPos);
+    }
 }
 
-Vec3D VelocityVerleit::CalcNewVelocity( const ClassicEntity& state, const ClassicEntityState& newState, double deltaTime ) const
+void VelocityVerleit::step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const 
 {
-    Vec3D newVelocity = state.getVelocity() + 0.5 * ( state.getAcceleration() + newState.m_Acceleration) * deltaTime;
-    return newVelocity;
-}
-Vec3D VelocityVerleit::CalcNewPosition( const ClassicEntity& state, const ClassicEntityState& newState, double deltaTime ) const
-{
-    Vec3D newPos = state.getPosition() + state.getVelocity() * deltaTime + 0.5 * state.getAcceleration() * deltaTime *  deltaTime;
-    return newPos;
+    for( size_t i = 0; i < next.size(); i++ )
+    {
+        Vec3D halfVelc = current[i].getVelocity() + 0.5 * current[i].getAcceleration() * dt;
+        next[i].setVelocity(halfVelc);
+    }
+
+    for( size_t i = 0; i < next.size(); i++ )
+    {
+        Vec3D newPos = current[i].getPosition() + next[i].getVelocity() * dt;
+        next[i].setPosition(newPos);
+    }
+
+    Vec3D newAccelerations[next.size()];
+    evaluator->CalcAccelerations(next, Time+dt, newAccelerations);
+    for( size_t i = 0; i < next.size(); i++ )
+    {
+        Vec3D newVeloc = next[i].getVelocity() + 0.5 * newAccelerations[i] * dt;
+        next[i].setVelocity(newVeloc);
+    }
 }
 }

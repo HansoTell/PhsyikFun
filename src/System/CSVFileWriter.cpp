@@ -39,32 +39,32 @@ void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID, do
     if( has(m_Options, PrintOptions::ePosition ))
     {
         PrintSeperator();
-        PrintVector(State.m_Position);
+        PrintVector(State.m_KinState.m_Position);
     }
     if( has(m_Options, PrintOptions::eVelocity ))
     {
         PrintSeperator();
-        PrintVector(State.m_Velocity);
+        PrintVector(State.m_KinState.m_Velocity);
     }
     if( has(m_Options, PrintOptions::eAcceleration ))
     {
         PrintSeperator();
-        PrintVector(State.m_Acceleration);
+        PrintVector(State.m_KinState.m_Acceleration);
     }
     if( has(m_Options, PrintOptions::eForce ))
     {
         PrintSeperator();
-        PrintVector(State.m_Force);
+        PrintVector(State.m_KinState.m_Acceleration * State.m_Constants.m_Mass);
     }
     if( has(m_Options, PrintOptions::eKinEnergy ))
     {
         PrintSeperator();
-        PrintNumber(State.KineticEnergy);
+        PrintNumber(State.m_Energys.KineticEnergy);
     }
     if( has(m_Options, PrintOptions::ePotEnergy ))
     {
         PrintSeperator();
-        PrintNumber(State.PotentialEnergy);
+        PrintNumber(State.m_Energys.PotentialEnergy);
     }
 
     PrintLineEnd();

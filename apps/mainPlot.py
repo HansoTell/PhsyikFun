@@ -15,7 +15,7 @@ def PrintTrajek(dataFrame):
        dfi = dataFrame.where(i == dataFrame["index"])
        xPos = dfi["pos_x"]
        yPos = dfi["pos_y"]
-       zPos = dfi["pox_z"]
+       zPos = dfi["pos_z"]
 
        ax.plot(xPos,yPos,zPos)
 

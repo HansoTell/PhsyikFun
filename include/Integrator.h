@@ -1,17 +1,18 @@
 #pragma once
 
 #include "Entity.h"
-#include "Vector.h"
+#include "Evaluator.h"
 #include <memory>
+#include <vector>
+
 namespace Physik 
 {
-
+using SimulationState = std::vector<ClassicEntity>;
 class IDGLSolver 
 {
 public:
-    ~IDGLSolver() = default;
-    virtual Vec3D CalcNewVelocity( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const = 0;
-    virtual Vec3D CalcNewPosition( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const = 0;
+    virtual ~IDGLSolver() = default;
+    virtual void step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const = 0;
 
     virtual std::unique_ptr<IDGLSolver> clone() const = 0;
 };
@@ -19,8 +20,8 @@ public:
 class EulerCauchy : public IDGLSolver 
 {
 public:
-    Vec3D CalcNewVelocity( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const override;
-    Vec3D CalcNewPosition( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const override;
+    void step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const override;
+
     std::unique_ptr<IDGLSolver> clone() const override { return std::make_unique<EulerCauchy>(); }
 public:
     EulerCauchy() {}
@@ -32,8 +33,8 @@ public:
 class VelocityVerleit : public IDGLSolver 
 {
 public:
-    Vec3D CalcNewVelocity( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const override;
-    Vec3D CalcNewPosition( const ClassicEntity& entity, const ClassicEntityState& newState, double deltaTime ) const override;
+    void step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const override;
+
     std::unique_ptr<IDGLSolver> clone() const override { return std::make_unique<VelocityVerleit>(); }
 public:
     VelocityVerleit() {}

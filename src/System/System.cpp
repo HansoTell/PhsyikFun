@@ -1,7 +1,6 @@
 #include "Entity.h"
 #include "Interactions.h"
 #include "Printer.h"
-#include "PropertyCalculus.h"
 #include <System.h>
 #include <memory>
 #include <mutex>
@@ -13,7 +12,8 @@ namespace Physik
 {
 ClassicalSystem::ClassicalSystem() : m_Calculating (false), m_running(false)
 {
-    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<ClassicPropCalc>(std::make_unique<VelocityVerleit>()));
+    //INTEGRATOR
+    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<VelocityVerleit>());
     //PRINTER
     m_Printer = std::make_unique<AsyncCSVPrinter>(m_Core, "data.csv");
 }
@@ -149,7 +149,7 @@ void ClassicalSystem::run()
 
 void ClassicalSystem::tick() 
 {
-    m_Core->MakeTimeStep();
+    m_Core->Step();
 
     m_Printer->Print();
 }
