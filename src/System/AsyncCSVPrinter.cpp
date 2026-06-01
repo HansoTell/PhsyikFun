@@ -30,7 +30,7 @@ void AsyncCSVPrinter::Print() const
 {
     const auto& AllEntitys = m_SystemCore->getEntitys();
     for( size_t i = 0; i < AllEntitys.size(); i++ )
-        m_Queue.push( { AllEntitys[i].getID(), AllEntitys[i].getEntityStateCopy() } );
+        m_Queue.push( { AllEntitys[i].getID(), AllEntitys[i].getEntityStateCopy(), m_SystemCore->getTime() } );
 
     m_CV.notify_all();
 }
@@ -47,7 +47,7 @@ void AsyncCSVPrinter::Run()
         _lock.unlock();
 
         while (auto EntityInfo = m_Queue.try_pop()) 
-            m_FileWriter->WriteState(EntityInfo->State, EntityInfo->EntityID);
+            m_FileWriter->WriteState(EntityInfo->State, EntityInfo->EntityID, EntityInfo->Time);
 
         _lock.lock();
     }

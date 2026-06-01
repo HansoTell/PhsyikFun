@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <iostream>
 
-#define BUFF_SIZE 5000000
 namespace Physik 
 {
+static constexpr uint64_t buff_size = 5'000'000;
 CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(FilePath)), m_Options(PrintOptions::eAll) 
 {
-    m_Buffer.reserve(BUFF_SIZE);
+    m_Buffer.reserve(buff_size);
 
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
@@ -19,7 +19,7 @@ CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(File
 
 CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_FilePath(std::move(FilePath)), m_Options(options)
 {
-    m_Buffer.reserve(BUFF_SIZE);
+    m_Buffer.reserve(buff_size);
 
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
@@ -28,12 +28,14 @@ CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_F
     printEntityStateHeader();
 }
 
-void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID ) const
+void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID, double Time ) const
 {
-    if( m_Buffer.size() + 300 > BUFF_SIZE )
+    if( m_Buffer.size() + 300 > buff_size )
         flush();
     
     PrintNumber(ID);
+    PrintSeperator();
+    PrintNumber(Time);
     if( has(m_Options, PrintOptions::ePosition ))
     {
         PrintSeperator();
@@ -70,7 +72,7 @@ void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID ) c
 
 void CSVFileWriter::printEntityStateHeader() const 
 {
-    m_Buffer.append("index");
+    m_Buffer.append("index,Time");
     if( has(m_Options, PrintOptions::ePosition ))
     {
         PrintSeperator();

@@ -18,7 +18,7 @@ void CSVPrinter::Print() const
     for( size_t i = 0; i < AllEntitys.size(); i++ )
     {
         const auto& entity = AllEntitys[i];
-        m_FileWriter->WriteState(entity.getEntityState(), entity.getID());
+        m_FileWriter->WriteState(entity.getEntityState(), entity.getID(), m_SystemCore->getTime());
     }
 }
 }
