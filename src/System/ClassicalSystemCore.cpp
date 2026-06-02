@@ -1,93 +1,88 @@
+#include "Entity.h"
+#include "Interactions.h"
 #include "SystemCore.h"
+
+#include <cassert>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Physik 
 {
 
-ClassicalSystemCore::ClassicalSystemCore() : m_DeltaTime(DEFAULT_DELTA_TIME) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
+    : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Time(0.0) 
+{
+    UpdateEntityPropertys();
+}
 
-ClassicalSystemCore::ClassicalSystemCore( double deltaTime ) : m_DeltaTime( deltaTime ) {}
+ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) 
+    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Time(0.0) 
+{
+    UpdateEntityPropertys();
+}
 
-ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) {}
+ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) 
+    : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy),
+    m_CurrentState(other.m_CurrentState),  m_Integrator(other.m_Integrator->clone()), m_Evaluater(other.m_Evaluater->clone()) {}
 
-ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) {}
+ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) 
+    : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy), 
+    m_Integrator(std::move(other.m_Integrator)), 
+    m_CurrentState(std::move(other.m_CurrentState)),
+    m_Evaluater(std::move(other.m_Evaluater)) {}
 
 void ClassicalSystemCore::Clear() 
 {
-    m_Entitys.clear();
-    m_ExtPotentials.clear();
+    m_CurrentState.clear();
+    m_NextState.clear();
+    m_Evaluater->Clear();
     m_Time = 0.0;
-    m_DeltaTime = DEFAULT_DELTA_TIME;
+    m_DeltaTime = default_delta_time;
     Energy = 0.0; 
 }
 
-void ClassicalSystemCore::addEntity( ClassicEntity entity ) { m_Entitys.push_back(std::move(entity)); }
-void ClassicalSystemCore::addPotential( std::unique_ptr<ClassicIPotential> potential ) { m_ExtPotentials.push_back(std::move(potential)); }
-void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) { for( int i = 0; i < entitys.size(); i++ ) m_Entitys.push_back(std::move(entitys[i])); }
-void ClassicalSystemCore::addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials ) { for( int i = 0; i < potentials.size(); i++ ) m_ExtPotentials.push_back(std::move(potentials[i])); }
+void ClassicalSystemCore::addEntity( ClassicEntity entity ) 
+{ 
+    ClassicEntity EntityCopy = entity;
+    m_NextState.push_back(std::move(EntityCopy));
+    m_CurrentState.push_back(std::move(entity)); 
+}
+void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) 
+{ 
+    for( int i = 0; i < entitys.size(); i++ )
+    {
+        ClassicEntity EntCopy = entitys[i];
+        m_NextState.push_back(std::move(EntCopy));
+        m_CurrentState.swap(entitys);
+    } 
+}
+void ClassicalSystemCore::addExternPotential( ClassicField extPotential ) { m_Evaluater->addExternPotential(std::move(extPotential)); }
+void ClassicalSystemCore::addMulitpleExternPotentials( std::vector<ClassicField> potentials ) { m_Evaluater->addMulitpleExternPotentials(std::move(potentials)); }
+void ClassicalSystemCore::addEntityPotential( ClassicInteraction potential ) { m_Evaluater->addEntityPotential(std::move(potential)); }
+void ClassicalSystemCore::addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials ) { m_Evaluater->addMultipleEntityPotentials(std::move(potentials)); }
 
+
+void ClassicalSystemCore::Step()
+{
+    m_Integrator->step(m_CurrentState, m_NextState, m_Evaluater, m_Time, m_DeltaTime);
+    advanceTimeIncrement();
+    
+    m_Evaluater->UpdateAccelerations(m_NextState, m_Time);
+    m_Evaluater->UpdateKineticEnergys(m_NextState);
+    m_Evaluater->UpdatePotentialEnergys(m_NextState, m_Time);
+
+    std::swap(m_NextState, m_CurrentState);
+
+}
+
+void ClassicalSystemCore::UpdateEntityPropertys()
+{
+    m_Evaluater->UpdateAccelerations(m_CurrentState, m_Time);
+    m_Evaluater->UpdateKineticEnergys(m_CurrentState);
+    m_Evaluater->UpdatePotentialEnergys(m_CurrentState, m_Time);
+}
 
 void ClassicalSystemCore::advanceTimeIncrement() { m_Time += m_DeltaTime; }
 
-void ClassicalSystemCore::moveEntitys()
-{
-    const auto EntityChanges = ClacEffektOfPotentials();
-
-    ApplyMovementOnEntitys(EntityChanges);
-}
-
-std::vector<ClassicEntityPropertys> ClassicalSystemCore::ClacEffektOfPotentials() const 
-{
-    std::vector<ClassicEntityPropertys> AllEntityChanges;
-    AllEntityChanges.reserve(m_Entitys.size());
-    for( int i = 0; i < m_Entitys.size(); i++ )
-    {
-        const auto& entitys = m_Entitys[i]; 
-
-        ClassicEntityPropertys Propertys = CalcEffectOnEntity( entitys, i );
-        AllEntityChanges.push_back(Propertys);
-    }
-
-    return AllEntityChanges;
-}
-
-ClassicEntityPropertys ClassicalSystemCore::CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx ) const
-{
-    ClassicEntityPropertys Propertys;
-    Propertys.EntityIndex = idx;
-
-    for( int j = 0; j < m_Entitys.size(); j++ )
-    {
-        if( Propertys.EntityIndex == j)
-            continue;
-
-        const auto& IntrinsicPotentials = m_Entitys[j].getIntrinsicPotentials();
-        CalcForceOfPotentialsOnEntity(IntrinsicPotentials, entitys, Propertys);
-    }
-    CalcForceOfPotentialsOnEntity(m_ExtPotentials, entitys, Propertys);
-
-
-    Propertys.Acceleration = Propertys.Force * (1/entitys.getMass());
-    Propertys.deltaVelocity = Propertys.Acceleration * m_DeltaTime;
-    Propertys.deltaPosition = (entitys.getVelocity() + Propertys.deltaVelocity) * m_DeltaTime;
-
-    return Propertys;
-}
-
-void ClassicalSystemCore::CalcForceOfPotentialsOnEntity( const std::vector<std::unique_ptr<IPotential<3, double>>>& potentials, const ClassicEntity& entity, ClassicEntityPropertys& outPropertys ) const
-{
-    for( const auto& potential : potentials ) 
-    {
-        outPropertys.Force += potential->getForce(entity.getPosition(), entity.getMass(), m_Time);
-    }
-}
-
-void ClassicalSystemCore::ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys )
-{
-    for( const auto& prop : Propertys )
-    {
-        auto& entity = m_Entitys[prop.EntityIndex];
-        entity.setVelocity(entity.getVelocity() + prop.deltaVelocity);
-        entity.setPosition(entity.getPosition() + prop.deltaPosition);
-    }
-}
 }

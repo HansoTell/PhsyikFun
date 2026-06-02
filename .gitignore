@@ -7,12 +7,14 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
+pyrightconfig.json
 CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 build/
 .cache/
 .vscode/
+.venv/
 
 # CLion
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

@@ -1,55 +1,54 @@
 #pragma once
 
+#include "Interactions.h"
 #include "Entity.h"
-
-#define DEFAULT_DELTA_TIME 0.001
+#include "Integrator.h"
+#include <vector>
 
 namespace Physik 
 {
-template<size_t Dim = 3, typename T = double> 
-struct EntityPropertys 
-{
-    size_t EntityIndex;
-    Vector<Dim, T> Force;
-    Vector<Dim, T> Acceleration;
-    Vector<Dim, T> deltaVelocity;
-    Vector<Dim, T> deltaPosition;
-};
+using SimulationState = std::vector<ClassicEntity>;
 
-using ClassicEntityPropertys = EntityPropertys<3, double>;
 class ClassicalSystemCore 
 {
+    static constexpr double default_delta_time = 0.001;
 public:
     void Clear();
-    void addPotential( std::unique_ptr<ClassicIPotential> potential );
-    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials );
+    void addExternPotential( ClassicField potential );
+    void addMulitpleExternPotentials( std::vector<ClassicField> potentials );
+
+    void addEntityPotential( ClassicInteraction potential);
+    void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
+
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
+
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
 
-    void advanceTimeIncrement();
-    void moveEntitys();
+    void UpdateEntityPropertys();
+    void Step();
 
-    const std::vector<ClassicEntity>& getEntitys() const { return m_Entitys; }
+    const std::vector<ClassicEntity>& getEntitys() const { return m_CurrentState; }
+    double getEnergy() const { return Energy; }
+    double getTime() const { return m_Time; }
 
 public:
-    ClassicalSystemCore();
-    ClassicalSystemCore( double DeltaTime );
+    ClassicalSystemCore( std::unique_ptr<IDGLSolver> PropertyCalcer );
+    ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
     ClassicalSystemCore(const ClassicalSystemCore& other);
     ClassicalSystemCore( ClassicalSystemCore&& other);
     ~ClassicalSystemCore() = default;
 private:
-    std::vector<ClassicEntityPropertys> ClacEffektOfPotentials() const;
-    ClassicEntityPropertys CalcEffectOnEntity( const ClassicEntity& entitys, size_t idx ) const;
-    void CalcForceOfPotentialsOnEntity( const std::vector<std::unique_ptr<ClassicIPotential>>& potentials, const ClassicEntity& entity, ClassicEntityPropertys& outPropertys ) const;
-    void ApplyMovementOnEntitys( const std::vector<ClassicEntityPropertys>& Propertys );
+    void advanceTimeIncrement();
 private:
-    std::vector<ClassicEntity> m_Entitys;
-    std::vector<std::unique_ptr<ClassicIPotential>> m_ExtPotentials;
+    SimulationState m_CurrentState;
+    SimulationState m_NextState;
 
     double m_Time;
     double m_DeltaTime;
     double Energy;
+    
+    std::unique_ptr<IDGLSolver> m_Integrator;
+    std::shared_ptr<IAccelerationEveluater> m_Evaluater;
 };
-
 }

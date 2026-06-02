@@ -1,62 +1,106 @@
 #pragma once
 
 #include "Vector.h"
-#include "Potential.h"
 #include <cstddef>
-#include <memory>
-#include <vector>
-
-#define CREATE_POSITON_VEC3D(x, y, z) std::make_shared<Vec3D>(Vec3D { x, y, z} )
+#include <cstdint>
 
 namespace Physik 
 {
+
+template <size_t Dim = 3, typename T = double> 
+struct KinematicState 
+{
+    Vector<Dim, T> m_Position;
+    Vector<Dim, T> m_Velocity;
+    Vector<Dim, T> m_Acceleration;
+};
+
+template <typename T = double>
+struct EnergyPropertys 
+{
+    T KineticEnergy;
+    T PotentialEnergy;
+};
+
+template <typename T = double>
+struct ConstantPrtopertys
+{
+    T m_Mass;
+};
+
+template <size_t Dim = 3, typename T = double> 
+class EntityState 
+{
+public:
+    KinematicState<Dim, T> m_KinState;
+    EnergyPropertys<T> m_Energys;
+    ConstantPrtopertys<T> m_Constants;
+
+public:
+    EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass ) 
+        : m_Constants({ Mass }), m_KinState( { position, velocity, Vector<Dim, T>() } ) {}
+    EntityState( const EntityState& other )  
+        : m_Constants(other.m_Constants), m_KinState(other.m_KinState), m_Energys(other.m_Energys) {} 
+    EntityState( EntityState&& other ) 
+        : m_Constants(std::move(other.m_Constants)), m_Energys(std::move(other.m_Energys)), m_KinState(std::move(other.m_KinState)) {} 
+    ~EntityState() = default;
+    EntityState<Dim, T>& operator=( EntityState<Dim, T>&& other ) noexcept
+    {
+        if( this == &other)
+            return *this;
+
+        m_Constants = std::move(other.m_Constants);
+        m_KinState = std::move(other.m_KinState);
+        m_Energys = std::move(other.m_Energys);
+
+        return *this;
+    }
+    EntityState<Dim, T>& operator=( const EntityState<Dim, T>& other )
+    {
+        if( this == &other)
+            return *this;
+
+        m_Constants = other.m_Constants;
+        m_Energys = other.m_Energys;
+        m_KinState = other.m_KinState;
+
+        return *this;
+    }
+};
+
+using ClassicEntityState = EntityState<3, double>;
 
 template <size_t Dim = 3, typename T = double>
 class Entity 
 {
 public:
-    Vector<Dim, T> getPosition() const { return *m_Position; }
-    Vector<Dim, T> getVelocity() const { return m_Velocity; }
-    T getMass() const { return m_Mass; }
-    const std::vector<std::unique_ptr<ClassicIPotential>>& getIntrinsicPotentials() const { return m_OwnPotentials; }
+    Vector<Dim, T> getPosition() const { return m_State.m_KinState.m_Position; }
+    Vector<Dim, T> getVelocity() const { return m_State.m_KinState.m_Velocity; }
+    Vector<Dim, T> getAcceleration() const { return m_State.m_KinState.m_Acceleration; }
+    T getMass() const { return m_State.m_Constants.m_Mass; }
+    const EntityState<Dim, T>& getEntityState() const { return m_State; }
+    EntityState<Dim, T> getEntityStateCopy() const { return m_State; }
+    T getEnergy() const { return m_State.m_Energys.KineticEnergy + m_State.m_Energys.PotentialEnergy; }
+    uint64_t getID() const { return m_ID; }
 
-    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_Velocity = newVelocity; }
-    void setPosition( const Vector<Dim, T>& newPosition ) { *m_Position = newPosition; }
-    void setMass( T newMass ){ m_Mass = newMass; }
-    void addIntrinsivPotential( std::unique_ptr<ClassicIPotential> newPotential ){ m_OwnPotentials.push_back(std::move(newPotential)); }
+    void setVelocity( const Vector<Dim, T>& newVelocity ) { m_State.m_KinState.m_Velocity = newVelocity; }
+    void setPosition( const Vector<Dim, T>& newPosition ) { m_State.m_KinState.m_Position = newPosition; }
+    void setAcceleration( const Vector<Dim, T>& newAcceleration ) { m_State.m_KinState.m_Acceleration = newAcceleration; }
+    void setMass( T newMass ){ m_State.m_Constants.m_Mass = newMass; }
+    void setKineticEnergy( T newEKin ) { m_State.m_Energys.KineticEnergy = newEKin; } 
+    void setPotentialEnergy( T newEPot ) { m_State.m_Energys.PotentialEnergy = newEPot; }
 public:
     Entity(){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass ) : m_Position(startPosition), m_Mass(mass){}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, Vector<Dim, T> startVelocity ) : m_Position(startPosition), m_Velocity(std::move(startVelocity)) {}
-    Entity( std::shared_ptr<Vector<Dim, T>> startPosition, T mass, Vector<Dim, T> startVelocity ) : m_Position(startPosition), m_Velocity(std::move(startVelocity)), m_Mass(mass) {}
-    Entity( const Entity<Dim, T>& other ) : 
-        m_Mass(other.m_Mass), 
-        m_Velocity(other.m_Velocity), 
-        m_Position(std::make_shared<Vec3D>(*other.m_Position)) 
-    {
-        m_OwnPotentials.reserve(other.m_OwnPotentials.size());
-        for( int i = 0; i < other.m_OwnPotentials.size(); i++ )
-        {
-            m_OwnPotentials.push_back(other.m_OwnPotentials[i]->clone());
-        }
-    }
-    Entity( Entity<Dim, T>&& other ) : 
-        m_Mass(other.m_Mass), 
-        m_Velocity(std::move(other.m_Velocity)), 
-        m_Position(other.m_Position), 
-        m_OwnPotentials(std::move(other.m_OwnPotentials))
-    {
-        other.m_Mass = 0.0;
-        other.m_Velocity.fill(0.0);
-        other.m_Position = nullptr;
-    }
+    Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ), m_ID(nextID++) {}
+    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity),  mass } ), m_ID(nextID++) {}
+    Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ), m_ID(other.m_ID) {}
+    Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;
 private:
-    std::shared_ptr<Vector<Dim, T>> m_Position;
-    Vector<Dim, T> m_Velocity;
-    T m_Mass;
-
-    std::vector<std::unique_ptr<ClassicIPotential>> m_OwnPotentials;
+    inline static uint64_t nextID = 1;
+private:
+    uint64_t m_ID;
+    EntityState<Dim, T> m_State;
 };
 
 using ClassicEntity = Entity<3, double>;

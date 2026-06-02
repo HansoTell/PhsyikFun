@@ -1,14 +1,18 @@
 #pragma once
 
 #include "Entity.h"
+#include "Interactions.h"
 #include "Printer.h"
-#include "Potential.h"
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <vector>
 
-#define CREATE_CLASSIC_GRAVITATIONAL_POTENTIAL(Mass, x, y, z) std::make_unique<ClassicGravitationPotential>(Mass, CREATE_POSITON_VEC3D(x,y,z)) 
+#define CREATE_CLASSIC_EXT_STANDART_POTENTIAL( beta, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicStandartPotential>(beta),  ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, 0.0 ) ) 
+#define CREATE_CLASSIC_ENTITY__STANDART_POTENTIAL( beta ) ClassicInteraction( std::make_unique<ClassicStandartPotential>(beta) )
+#define CREATE_CLASSIC_EXT_GRAVITATIONAL_POTENTIAL( Mass, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicGravitationPotential>(), ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, Mass) ) 
+#define CREATE_CLASSIC_ENTITY_GRAVITATIONAL_POTENTIAL() ClassicInteraction( std::make_unique<ClassicGravitationPotential>() ) 
 
 //idee für später: Einen allgemeinen system thread machen und dann kann man sein systemcore rein geben als dependeciy dann rbaucht man kein thread je nach system
 namespace Physik 
@@ -30,12 +34,13 @@ public:
     void Start() override;
     void Pause() override;
     void Clear() override;
-    void addPotential( std::unique_ptr<ClassicIPotential> potential );
-    void addMulitpPotentials( std::vector<std::unique_ptr<ClassicIPotential>> potentials );
+    void addExternPotential( ClassicField potential );
+    void addEntityPotential( ClassicInteraction potential );
+    void addMulitpleExternPotentials( std::vector<ClassicField> potentials );
+    void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 
-
 public:
     //more Konstruktores
     ClassicalSystem();
@@ -52,6 +57,8 @@ private:
 
     std::thread m_Thread;
     std::mutex m_Mutex;
-    bool m_running;
+    std::condition_variable m_SystemCV;
+    bool m_Calculating;
+    std::atomic<bool> m_running;
 };
 }
