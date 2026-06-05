@@ -19,7 +19,7 @@ int main()
     sys.addEntity(std::move(Planet2));
     sys.addEntityPotential(CREATE_CLASSIC_ENTITY_GRAVITATIONAL_POTENTIAL());
 
-    sys.setTimeIncrement(0.01);
+    sys.setTimeIncrement(0.5);
 
     sys.Start();
 
