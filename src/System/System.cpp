@@ -2,6 +2,8 @@
 #include "Interactions.h"
 #include "Printer.h"
 #include <System.h>
+#include <cmath>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -41,6 +43,8 @@ void ClassicalSystem::Start()
         m_Calculating = true;
         m_running = true;
     }
+    m_Finished = std::promise<void>();
+    m_Future = m_Finished.get_future();
 
     if( !m_Thread.joinable() )
         m_Thread = std::thread([this](){ this->run(); }); 
@@ -125,12 +129,17 @@ void ClassicalSystem::setTimeIncrement( double DeltaTime )
     m_Core->setTimeIncrement( DeltaTime );
     Start();
 }
+void ClassicalSystem::setTmax( double Tmax )
+{
+    assert(std::isfinite(Tmax));
+    m_Core->setTmax(Tmax);
+}
 
 void ClassicalSystem::run() 
 {
     m_Printer->Print();
     std::unique_lock<std::mutex> _lock(m_Mutex);
-    while( m_running )
+    while( m_running && m_Core->getTime() < m_Core->getTmax() )
     {
         m_SystemCV.wait(_lock, [this](){
             return m_Calculating || !m_running;
@@ -140,11 +149,14 @@ void ClassicalSystem::run()
             break;
 
         _lock.unlock();
-        while( m_Calculating )
+        while( m_Calculating && m_Core->getTime() < m_Core->getTmax() )
             tick();
 
         _lock.lock();
     }
+    m_running = false;
+    m_Calculating = false;
+    m_Finished.set_value();
 }
 
 void ClassicalSystem::tick() 

@@ -4,6 +4,7 @@
 #include "Interactions.h"
 #include "Printer.h"
 #include <condition_variable>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -41,6 +42,10 @@ public:
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 
+    void setTmax( double Tmax ); 
+    bool isRunning() const { return m_running; }
+
+    const std::future<void>& getFuture() const { return m_Future; }
 public:
     //more Konstruktores
     ClassicalSystem();
@@ -56,6 +61,8 @@ private:
     std::shared_ptr<ClassicalSystemCore> m_Core;
 
     std::thread m_Thread;
+    std::promise<void> m_Finished;
+    std::future<void> m_Future;
     std::mutex m_Mutex;
     std::condition_variable m_SystemCV;
     bool m_Calculating;

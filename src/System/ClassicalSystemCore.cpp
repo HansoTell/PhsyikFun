@@ -3,6 +3,7 @@
 #include "SystemCore.h"
 
 #include <cassert>
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -11,7 +12,7 @@ namespace Physik
 {
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
-    : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Time(0.0) 
+    : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
 }

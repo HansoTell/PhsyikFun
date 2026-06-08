@@ -24,6 +24,7 @@ public:
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
+    void setTmax( double Tmax ) { m_Tmax = Tmax; }
 
     void UpdateEntityPropertys();
     void Step();
@@ -31,6 +32,7 @@ public:
     const std::vector<ClassicEntity>& getEntitys() const { return m_CurrentState; }
     double getEnergy() const { return Energy; }
     double getTime() const { return m_Time; }
+    double getTmax() const { return m_Tmax; }
 
 public:
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> PropertyCalcer );
@@ -45,6 +47,7 @@ private:
     SimulationState m_NextState;
 
     double m_Time;
+    double m_Tmax;
     double m_DeltaTime;
     double Energy;
     

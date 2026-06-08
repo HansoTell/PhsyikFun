@@ -52,7 +52,7 @@ def PrintEnergie(df:pd.DataFrame, options):
             plt.grid(True)
 
 def Plot(FilePath, options):
-    df = pd.read_csv(FilePath, delimiter=",")
+    df = pd.read_csv(FilePath, delimiter=",", dtype="float")
     PrintTrajek(df, options)
     PrintEnergie(df, options)
 
