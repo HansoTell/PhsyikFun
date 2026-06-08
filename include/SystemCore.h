@@ -20,6 +20,9 @@ public:
     void addEntityPotential( ClassicInteraction potential);
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
 
+    void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
+    void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
+
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
 
@@ -37,7 +40,7 @@ public:
 public:
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> PropertyCalcer );
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
-    ClassicalSystemCore(const ClassicalSystemCore& other);
+    ClassicalSystemCore( const ClassicalSystemCore& other );
     ClassicalSystemCore( ClassicalSystemCore&& other);
     ~ClassicalSystemCore() = default;
 private:

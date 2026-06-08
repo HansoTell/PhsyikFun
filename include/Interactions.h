@@ -5,6 +5,7 @@
 #include "Vector.h"
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <memory>
 
 namespace Physik 
@@ -40,6 +41,21 @@ private:
     std::unique_ptr<IPotential<Dim, T>> m_Potential;
 };
 
+template<size_t Dim = 3, typename T = double>
+class NonPotentialForce 
+{
+public:
+    Vector<Dim, T> getForce( const EntityState<Dim, T>& entity, double time ) const { return m_ForceCalcer(entity, time); }
+public:
+    NonPotentialForce( std::function<Vector<Dim, T>( const EntityState<Dim, T>& entity, double time )> force ) : m_ForceCalcer(std::move(force)) {}
+    NonPotentialForce( const NonPotentialForce& other ) : m_ForceCalcer(other.m_ForceCalcer) {}
+    NonPotentialForce( NonPotentialForce&& other ) : m_ForceCalcer(std::move(other.m_ForceCalcer)) {}
+    ~NonPotentialForce() = default;
+private:
+    std::function<Vector<Dim, T>( const EntityState<Dim, T>& entity, double time )> m_ForceCalcer;
+};
+
 using ClassicField = Field<3, double>;
 using ClassicInteraction = Interaction<3, double>;
+using ClassicNonPotentialForce = NonPotentialForce<3, double>;
 }

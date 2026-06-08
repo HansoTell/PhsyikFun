@@ -62,7 +62,8 @@ void ClassicalSystemCore::addExternPotential( ClassicField extPotential ) { m_Ev
 void ClassicalSystemCore::addMulitpleExternPotentials( std::vector<ClassicField> potentials ) { m_Evaluater->addMulitpleExternPotentials(std::move(potentials)); }
 void ClassicalSystemCore::addEntityPotential( ClassicInteraction potential ) { m_Evaluater->addEntityPotential(std::move(potential)); }
 void ClassicalSystemCore::addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials ) { m_Evaluater->addMultipleEntityPotentials(std::move(potentials)); }
-
+void ClassicalSystemCore::addNonPotentialForce( ClassicNonPotentialForce NonPotForce ) { m_Evaluater->addNonPotentialForce(std::move(NonPotForce)); }
+void ClassicalSystemCore::addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce ) { m_Evaluater->addMulitpleNonPotentialForce(std::move(NonPotForce)); }
 
 void ClassicalSystemCore::Step()
 {

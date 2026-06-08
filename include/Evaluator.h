@@ -26,6 +26,8 @@ public:
     virtual void addMulitpleExternPotentials( std::vector<ClassicField> potentials ) = 0;
     virtual void addEntityPotential( ClassicInteraction potential) = 0;
     virtual void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials ) = 0;
+    virtual void addNonPotentialForce( ClassicNonPotentialForce force ) = 0;
+    virtual void addMulitpleNonPotentialForce( std::vector<ClassicNonPotentialForce> force ) = 0;
 
     virtual void Clear() = 0;
     virtual std::shared_ptr<IAccelerationEveluater> clone() const = 0;
@@ -47,17 +49,28 @@ public:
     void addMulitpleExternPotentials( std::vector<ClassicField> potentials ) override;
     void addEntityPotential( ClassicInteraction potential) override;
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials ) override;
+    void addNonPotentialForce( ClassicNonPotentialForce force ) override;
+    void addMulitpleNonPotentialForce( std::vector<ClassicNonPotentialForce> force ) override;
+
 
     void Clear() override { m_EntityPotentials.clear(); m_ExtPotentials.clear(); }
     std::shared_ptr<IAccelerationEveluater> clone() const override { return std::make_shared<WorldEvaluator>(*this); }
 public:
     WorldEvaluator();
+    WorldEvaluator( std::vector<ClassicField> extFields );
+    WorldEvaluator( std::vector<ClassicInteraction> entityFields );
+    WorldEvaluator( std::vector<ClassicNonPotentialForce> NonPotentialForces );
+    WorldEvaluator( std::vector<ClassicField> extFields, std::vector<ClassicInteraction> entityFields );
+    WorldEvaluator( std::vector<ClassicField> extFields, std::vector<ClassicNonPotentialForce> NonPotentialForces );
+    WorldEvaluator( std::vector<ClassicInteraction> entityFields, std::vector<ClassicNonPotentialForce> NonPotentialForces );
+    WorldEvaluator( std::vector<ClassicField> extFields, std::vector<ClassicInteraction> entityFields, std::vector<ClassicNonPotentialForce> NonPotentialForces );
     WorldEvaluator( const WorldEvaluator& other );
     WorldEvaluator( WorldEvaluator&& other );
     ~WorldEvaluator() = default;
 private:
     std::vector<ClassicField> m_ExtPotentials;
     std::vector<ClassicInteraction> m_EntityPotentials;
+    std::vector<ClassicNonPotentialForce> m_NonPotForce;
 
     mutable std::vector<Vec3D> m_AccScratch;
     mutable std::vector<double> m_EkinScratch;

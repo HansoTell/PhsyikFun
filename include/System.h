@@ -15,7 +15,6 @@
 #define CREATE_CLASSIC_EXT_GRAVITATIONAL_POTENTIAL( Mass, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicGravitationPotential>(), ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, Mass) ) 
 #define CREATE_CLASSIC_ENTITY_GRAVITATIONAL_POTENTIAL() ClassicInteraction( std::make_unique<ClassicGravitationPotential>() ) 
 
-//idee für später: Einen allgemeinen system thread machen und dann kann man sein systemcore rein geben als dependeciy dann rbaucht man kein thread je nach system
 namespace Physik 
 {
 
@@ -39,6 +38,8 @@ public:
     void addEntityPotential( ClassicInteraction potential );
     void addMulitpleExternPotentials( std::vector<ClassicField> potentials );
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
+    void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
+    void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
     void addEntity( ClassicEntity entity );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 

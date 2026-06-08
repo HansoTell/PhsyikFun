@@ -107,6 +107,21 @@ void ClassicalSystem::addMultipleEntityPotentials( std::vector<ClassicInteractio
     Start();
 }
 
+void ClassicalSystem::addNonPotentialForce( ClassicNonPotentialForce NonPotForce ) 
+{
+    Pause();
+    m_Core->addNonPotentialForce(std::move(NonPotForce)); 
+    m_Core->UpdateEntityPropertys();
+    Start();
+}
+void ClassicalSystem::addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce ) 
+{
+    Pause();
+    m_Core->addMultipleNonPotentialForce(std::move(NonPotForce));
+    m_Core->UpdateEntityPropertys();
+    Start();
+}
+
 void ClassicalSystem::addEntity( ClassicEntity entity )
 {
     Pause();
