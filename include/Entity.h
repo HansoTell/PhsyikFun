@@ -26,6 +26,7 @@ template <typename T = double>
 struct ConstantPrtopertys
 {
     T m_Mass;
+    T M_Radius;
 };
 
 template <size_t Dim = 3, typename T = double> 
@@ -37,8 +38,8 @@ public:
     ConstantPrtopertys<T> m_Constants;
 
 public:
-    EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass ) 
-        : m_Constants({ Mass }), m_KinState( { position, velocity, Vector<Dim, T>() } ) {}
+    EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass, T Radius ) 
+        : m_Constants({ Mass, Radius }), m_KinState( { position, velocity, Vector<Dim, T>() } ) {}
     EntityState( const EntityState& other )  
         : m_Constants(other.m_Constants), m_KinState(other.m_KinState), m_Energys(other.m_Energys) {} 
     EntityState( EntityState&& other ) 
@@ -78,6 +79,7 @@ public:
     Vector<Dim, T> getVelocity() const { return m_State.m_KinState.m_Velocity; }
     Vector<Dim, T> getAcceleration() const { return m_State.m_KinState.m_Acceleration; }
     T getMass() const { return m_State.m_Constants.m_Mass; }
+    T getRadius() const { return m_State.m_Constants.M_Radius; }
     const EntityState<Dim, T>& getEntityState() const { return m_State; }
     EntityState<Dim, T> getEntityStateCopy() const { return m_State; }
     T getEnergy() const { return m_State.m_Energys.KineticEnergy + m_State.m_Energys.PotentialEnergy; }
@@ -91,8 +93,9 @@ public:
     void setPotentialEnergy( T newEPot ) { m_State.m_Energys.PotentialEnergy = newEPot; }
 public:
     Entity(){}
-    Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass } ), m_ID(nextID++) {}
-    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass ) : m_State( { startPosition, std::move(startVelocity),  mass } ), m_ID(nextID++) {}
+    Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass, 1.0 } ), m_ID(nextID++) {}
+    Entity(Vector<Dim, T> startPosition, T mass, T Radius ) : m_State( { startPosition, Vector<Dim, T>(), mass, Radius } ), m_ID(nextID++) {}
+    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, T Radius ) : m_State( { startPosition, std::move(startVelocity),  mass, Radius } ), m_ID(nextID++) {}
     Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ), m_ID(other.m_ID) {}
     Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;
