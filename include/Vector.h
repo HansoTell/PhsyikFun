@@ -8,7 +8,6 @@
 #include <ostream>
 #include <type_traits>
 
-//interaces für noemen und skalarprodukte??
 namespace Physik 
 {
 template <size_t Dim = 3, typename T = double>
