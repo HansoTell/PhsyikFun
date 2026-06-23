@@ -2,9 +2,11 @@
 
 #include "Entity.h"
 #include "Vector.h"
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <map>
+#include <functional>
+#include <unordered_map>
 #include <vector>
 
 namespace Physik
@@ -36,26 +38,41 @@ private:
 
 class AdvancedElasticImpact : public IImpactEvaluator 
 {
-    struct StateKoords
+    struct CellKoords
     {
         int32_t x_Koord, y_Koord, z_Koord;
+        bool operator == ( const CellKoords& other ) const { return  this->x_Koord == other.x_Koord && this->y_Koord == other.y_Koord && this->z_Koord == other.z_Koord; }
+        static CellKoords getCell( const Vec3D& pos ) 
+        { 
+            return { 
+                static_cast<int32_t>(std::floor(pos[0]/1.0)), 
+                static_cast<int32_t>(std::floor(pos[1]/1.0)), 
+                static_cast<int32_t>(std::floor(pos[2]/1.0)) 
+            }; 
+        }
     };
-    struct StateKoordsHash
+    struct CellHash 
     {
-        std::size_t operator() ( const StateKoords& key ) const 
+        std::size_t operator() (const CellKoords& c) const 
         {
-            return 1;
+            size_t h1 = std::hash<int32_t>{}(c.x_Koord);
+            size_t h2 = std::hash<int32_t>{}(c.y_Koord);
+            size_t h3 = std::hash<int32_t>{}(c.z_Koord);
+            return h1 ^ (h2 << 1) ^ (h3 << 2);
         }
     };
 public:
     void ApplyImpacts( SimulationState& state );
 public:
-    AdvancedElasticImpact( const std::vector<const ClassicEntity>& entitys ); 
+    AdvancedElasticImpact(  std::vector<ClassicEntity>& entitys ); 
     AdvancedElasticImpact( const AdvancedElasticImpact& ) = default;
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
 private:
-    const std::vector<const ClassicEntity>& m_Entitys;
-    std::map<StateKoords, ClassicEntity*> m_Map;
+    void BuildMap();
+private:
+    std::vector<ClassicEntity>& m_Entitys;
+    std::unordered_map<CellKoords, ClassicEntity*, CellHash> m_Map;
+    uint32_t m_CellSize;
 }; 
 }

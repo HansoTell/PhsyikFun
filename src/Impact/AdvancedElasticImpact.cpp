@@ -1,12 +1,31 @@
 #include "Impact.h"
+#include <cstddef>
+#include <limits>
 
 namespace Physik 
 {
-//Wie instanziert man die map richtig ig müssen ahs doer so definieren hahah miesbock darauf
-AdvancedElasticImpact::AdvancedElasticImpact( const std::vector<const ClassicEntity>& entitys ) : m_Entitys(entitys) {}
+AdvancedElasticImpact::AdvancedElasticImpact( std::vector<ClassicEntity>& entitys ) : m_Entitys(entitys) {}
 
 void AdvancedElasticImpact::ApplyImpacts( SimulationState& state )
 {
+
+}
+
+void AdvancedElasticImpact::BuildMap()
+{
+    m_Map.clear();
+
+    //Find Max Radius -> O(n)
+    double MaxRadius = std::numeric_limits<double>::min();
+    for( size_t i = 0; i < m_Entitys.size(); ++i )
+    {
+        auto rad = m_Entitys[i].getRadius();
+        if( rad > MaxRadius) MaxRadius = rad;
+    }
+    m_CellSize = MaxRadius;
+
+    //Als nächstes zuteilen
+
 
 }
     
