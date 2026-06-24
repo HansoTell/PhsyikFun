@@ -61,6 +61,7 @@ class AdvancedElasticImpact : public IImpactEvaluator
             return h1 ^ (h2 << 1) ^ (h3 << 2);
         }
     };
+    static const std::array<CellKoords, 25> offsets;
 public:
     void ApplyImpacts( SimulationState& state );
 public:
@@ -70,9 +71,12 @@ public:
     ~AdvancedElasticImpact() = default;
 private:
     void BuildMap();
+    double FindMaxRadius() const;
 private:
     std::vector<ClassicEntity>& m_Entitys;
-    std::unordered_map<CellKoords, ClassicEntity*, CellHash> m_Map;
+    std::unordered_map<CellKoords, std::vector<const ClassicEntity*> , CellHash> m_Cells;
     uint32_t m_CellSize;
 }; 
+
+
 }
