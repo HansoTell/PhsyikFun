@@ -91,6 +91,8 @@ public:
     void setMass( T newMass ){ m_State.m_Constants.m_Mass = newMass; }
     void setKineticEnergy( T newEKin ) { m_State.m_Energys.KineticEnergy = newEKin; } 
     void setPotentialEnergy( T newEPot ) { m_State.m_Energys.PotentialEnergy = newEPot; }
+
+    bool operator == ( const Entity& other ){ return m_ID == other.m_ID; }
 public:
     Entity(){}
     Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass, 1.0 } ), m_ID(nextID++) {}

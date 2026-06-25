@@ -76,6 +76,10 @@ private:
     std::vector<ClassicEntity>& m_Entitys;
     std::unordered_map<CellKoords, std::vector<const ClassicEntity*> , CellHash> m_Cells;
     uint32_t m_CellSize;
+
+    std::vector<const ClassicEntity*> m_EntityStash;
+    std::vector<std::vector<const ClassicEntity*>> m_Components;
+
 }; 
 
 
