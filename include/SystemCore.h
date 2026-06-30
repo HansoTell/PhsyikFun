@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EntityRegistry.h"
 #include "Interactions.h"
 #include "Entity.h"
 #include "Integrator.h"
@@ -32,7 +33,7 @@ public:
     void UpdateEntityPropertys();
     void Step();
 
-    const std::vector<ClassicEntity>& getEntitys() const { return m_CurrentState; }
+    const EntityRegistry& getEntityRegister() const { return m_CurrentState; }
     double getEnergy() const { return Energy; }
     double getTime() const { return m_Time; }
     double getTmax() const { return m_Tmax; }
@@ -46,8 +47,8 @@ public:
 private:
     void advanceTimeIncrement();
 private:
-    SimulationState m_CurrentState;
-    SimulationState m_NextState;
+    EntityRegistry m_CurrentState;
+    EntityRegistry m_NextState;
 
     double m_Time;
     double m_Tmax;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.h"
+#include "EntityRegistry.h"
 #include "Vector.h"
 #include <cmath>
 #include <cstddef>
@@ -36,6 +37,9 @@ private:
     double CalcVelocAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
 };
 
+
+struct CollisionPair { EntityRegistry::ID ent1, ent2; };
+
 class AdvancedElasticImpact : public IImpactEvaluator 
 {
     struct CellKoords
@@ -65,21 +69,21 @@ class AdvancedElasticImpact : public IImpactEvaluator
 public:
     void ApplyImpacts( SimulationState& state );
 public:
-    AdvancedElasticImpact(  std::vector<ClassicEntity>& entitys ); 
+    AdvancedElasticImpact(  EntityRegistry& entitys ); 
     AdvancedElasticImpact( const AdvancedElasticImpact& ) = default;
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
 private:
+    //Beides eher Public methoden eines anderen moduls... -> wegen testing wäre schöneres desogn -> auch die eine static methode
     void BuildMap();
     double FindMaxRadius() const;
+    void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2 );
 private:
-    //Entity* durch ids ersetzten wäre einfach besser --> zentral verwaltete entity Map
-    std::vector<ClassicEntity>& m_Entitys;
-    std::unordered_map<CellKoords, std::vector<const ClassicEntity*> , CellHash> m_Cells;
+    EntityRegistry& m_Entitys;
+    std::unordered_map<CellKoords, std::vector<EntityRegistry::ID> , CellHash> m_Cells;
     uint32_t m_CellSize;
 
-    std::vector<const ClassicEntity*> m_CellEntitysStash;
-
+    std::vector<CollisionPair> m_Kollision;
 }; 
 
 

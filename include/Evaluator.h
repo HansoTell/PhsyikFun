@@ -1,26 +1,25 @@
 #pragma once
 
 #include "Vector.h"
-#include "Entity.h"
 #include "Interactions.h"
+#include "EntityRegistry.h"
 
 #include <vector>
 
 namespace Physik 
 {
-using SimulationState = std::vector<ClassicEntity>;
 class IAccelerationEveluater 
 {
 public:
     virtual ~IAccelerationEveluater() = default;
 
-    virtual void CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const  = 0;
-    virtual void CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const = 0;
-    virtual void CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const = 0;
+    virtual void CalcAccelerations( const EntityRegistry& state, double Time, std::vector<Vec3D>& outAccelerations ) const  = 0;
+    virtual void CalcPotEnergy( const EntityRegistry& state, double Time, std::vector<double>& outEpots ) const = 0;
+    virtual void CalcKineticEnergy( const EntityRegistry& state, std::vector<double>& outEKins ) const = 0;
 
-    virtual void UpdateAccelerations( SimulationState& state, double Time ) = 0;
-    virtual void UpdateKineticEnergys( SimulationState& state ) = 0;
-    virtual void UpdatePotentialEnergys( SimulationState& state, double Time ) = 0;
+    virtual void UpdateAccelerations( EntityRegistry& state, double Time ) = 0;
+    virtual void UpdateKineticEnergys( EntityRegistry& state ) = 0;
+    virtual void UpdatePotentialEnergys( EntityRegistry& state, double Time ) = 0;
 
     virtual void addExternPotential( ClassicField potential ) = 0;
     virtual void addMulitpleExternPotentials( std::vector<ClassicField> potentials ) = 0;
@@ -37,13 +36,13 @@ public:
 class WorldEvaluator : public IAccelerationEveluater 
 {
 public:
-    void CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const override;
-    void CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const override;
-    void CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const override;
+    void CalcAccelerations( const EntityRegistry& state, double Time, std::vector<Vec3D>& outAccelerations ) const override;
+    void CalcPotEnergy( const EntityRegistry& state, double Time, std::vector<double>& outEpots ) const override;
+    void CalcKineticEnergy( const EntityRegistry& state, std::vector<double>& outEKins ) const override;
 
-    void UpdateAccelerations( SimulationState& state, double Time ) override;
-    void UpdateKineticEnergys( SimulationState& state ) override;
-    void UpdatePotentialEnergys( SimulationState& state, double Time ) override;
+    void UpdateAccelerations( EntityRegistry& state, double Time ) override;
+    void UpdateKineticEnergys( EntityRegistry& state ) override;
+    void UpdatePotentialEnergys( EntityRegistry& state, double Time ) override;
 
     void addExternPotential( ClassicField potential ) override;
     void addMulitpleExternPotentials( std::vector<ClassicField> potentials ) override;

@@ -1,5 +1,4 @@
 #include "Evaluator.h"
-#include "SystemCore.h"
 #include "Vector.h"
 #include <cassert>
 #include <climits>
@@ -45,7 +44,7 @@ WorldEvaluator::WorldEvaluator( WorldEvaluator&& other ) :
     m_NonPotForce(std::move(other.m_NonPotForce)){}
 
 
-void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const 
+void WorldEvaluator::CalcAccelerations( const EntityRegistry& state, double Time, std::vector<Vec3D>& outAccelerations ) const 
 {
     //Entity Potentials
     for( auto& interaction : m_EntityPotentials )
@@ -90,7 +89,7 @@ void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Tim
 
 }
 
-void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const 
+void WorldEvaluator::CalcPotEnergy( const EntityRegistry& state, double Time, std::vector<double>& outEpots ) const 
 {
     for( auto& interaction : m_EntityPotentials )
     {
@@ -118,13 +117,13 @@ void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, s
     }
 }
 
-void WorldEvaluator::CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const 
+void WorldEvaluator::CalcKineticEnergy( const EntityRegistry& state, std::vector<double>& outEKins ) const 
 {
     for( size_t i = 0; i < state.size(); i++ )
         outEKins[i] = 0.5 * state[i].getMass() * state[i].getVelocity().BetragsQuadrat();
 }
 
-void WorldEvaluator::UpdateAccelerations( SimulationState& state, double Time ) 
+void WorldEvaluator::UpdateAccelerations( EntityRegistry& state, double Time ) 
 {
     m_AccScratch.assign(state.size(), Vec3D{});
     CalcAccelerations(state, Time, m_AccScratch);
@@ -132,7 +131,7 @@ void WorldEvaluator::UpdateAccelerations( SimulationState& state, double Time )
     for( size_t i = 0; i < state.size(); i++ )
         state[i].setAcceleration(m_AccScratch[i]);
 }
-void WorldEvaluator::UpdateKineticEnergys( SimulationState& state ) 
+void WorldEvaluator::UpdateKineticEnergys( EntityRegistry& state ) 
 {
     m_EkinScratch.assign(state.size(), double{});
     CalcKineticEnergy(state, m_EkinScratch);
@@ -140,7 +139,7 @@ void WorldEvaluator::UpdateKineticEnergys( SimulationState& state )
     for( size_t i = 0; i < state.size(); i++ )
         state[i].setKineticEnergy(m_EkinScratch[i]);
 }
-void WorldEvaluator::UpdatePotentialEnergys( SimulationState& state, double Time ) 
+void WorldEvaluator::UpdatePotentialEnergys( EntityRegistry& state, double Time ) 
 {
     m_EPotScratch.assign(state.size(), double{});
     CalcPotEnergy(state, Time, m_EkinScratch);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.h"
+#include "EntityRegistry.h"
 #include "Evaluator.h"
 #include <memory>
 #include <vector>
@@ -12,7 +13,7 @@ class IDGLSolver
 {
 public:
     virtual ~IDGLSolver() = default;
-    virtual void step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const = 0;
+    virtual void step( const EntityRegistry& current, EntityRegistry& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const = 0;
 
     virtual std::unique_ptr<IDGLSolver> clone() const = 0;
 };
@@ -20,7 +21,7 @@ public:
 class EulerCauchy : public IDGLSolver 
 {
 public:
-    void step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const override;
+    void step( const EntityRegistry& current, EntityRegistry& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const override;
 
     std::unique_ptr<IDGLSolver> clone() const override { return std::make_unique<EulerCauchy>(); }
 public:
@@ -33,7 +34,7 @@ public:
 class VelocityVerleit : public IDGLSolver 
 {
 public:
-    void step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const override;
+    void step( const EntityRegistry& current, EntityRegistry& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const override;
 
     std::unique_ptr<IDGLSolver> clone() const override { return std::make_unique<VelocityVerleit>(); }
 public:
@@ -44,5 +45,4 @@ public:
 private:
     mutable std::vector<Vec3D> m_AccScratch;
 };
-
 }

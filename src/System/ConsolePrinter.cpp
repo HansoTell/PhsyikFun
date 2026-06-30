@@ -27,7 +27,7 @@ void ConsolePrinter::Print() const
 
 void ConsolePrinter::printPosition() const 
 {
-    const auto& entitys = m_SystemCore->getEntitys();
+    const auto& entitys = m_SystemCore->getEntityRegister();
     for( int i = 0; i < entitys.size(); i++ )
     {
         const auto& entity = entitys[i];
@@ -38,7 +38,7 @@ void ConsolePrinter::printPosition() const
 } 
 void ConsolePrinter::printVelocity() const 
 {
-    const auto& entitys = m_SystemCore->getEntitys();
+    const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
     {
         const auto& entity = entitys[i];
@@ -49,7 +49,7 @@ void ConsolePrinter::printVelocity() const
 
 void ConsolePrinter::printAcceleration() const 
 {
-    const auto& entitys = m_SystemCore->getEntitys();
+    const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
     {
         const auto& entity = entitys[i];
@@ -60,7 +60,7 @@ void ConsolePrinter::printAcceleration() const
 
 void ConsolePrinter::printForce() const 
 {
-    const auto& entitys = m_SystemCore->getEntitys();
+    const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
     {
         std::cout << "Entity " << entitys[i].getID() << " With Force: " << entitys[i].getAcceleration() * entitys[i].getMass() << " N" << "\n";
@@ -69,14 +69,14 @@ void ConsolePrinter::printForce() const
 
 void ConsolePrinter::printKineticEnergy() const 
 {
-    const auto& entitys = m_SystemCore->getEntitys();
+    const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
         std::cout << "Entity " << entitys[i].getID() << " With Kinetic Energy: " << entitys[i].getEntityState().m_Energys.KineticEnergy << " J" << "\n";
 }
 
 void ConsolePrinter::printPotentialEnergy() const
 {
-    const auto& entitys = m_SystemCore->getEntitys();
+    const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
         std::cout << "Entity " << entitys[i].getID() << " With Potential Energy: " << entitys[i].getEntityState().m_Energys.PotentialEnergy<< " J" << "\n";
 }

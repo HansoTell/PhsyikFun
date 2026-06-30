@@ -101,6 +101,8 @@ public:
     Entity( const Entity<Dim, T>& other ) : m_State( other.m_State ), m_ID(other.m_ID) {}
     Entity( Entity<Dim, T>&& other ) : m_State( std::move(other.m_State) ), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;
+    Entity& operator=(const Entity&) = default;
+    Entity& operator=(Entity&&) = default;
 private:
     inline static uint64_t nextID = 1;
 private:

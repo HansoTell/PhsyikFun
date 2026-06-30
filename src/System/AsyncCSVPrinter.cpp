@@ -28,7 +28,7 @@ AsyncCSVPrinter::~AsyncCSVPrinter()
 
 void AsyncCSVPrinter::Print() const
 {
-    const auto& AllEntitys = m_SystemCore->getEntitys();
+    const auto& AllEntitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < AllEntitys.size(); i++ )
         m_Queue.push( { AllEntitys[i].getID(), AllEntitys[i].getEntityStateCopy(), m_SystemCore->getTime() } );
 

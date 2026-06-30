@@ -1,5 +1,7 @@
 #include "Entity.h"
+#include "EntityRegistry.h"
 #include "Impact.h"
+#include "Datastructures/DisjointSets.h"
 #include <array>
 #include <cstddef>
 #include <limits>
@@ -8,9 +10,9 @@
 
 namespace Physik 
 {
-AdvancedElasticImpact::AdvancedElasticImpact( std::vector<ClassicEntity>& entitys ) : m_Entitys(entitys) 
+AdvancedElasticImpact::AdvancedElasticImpact( EntityRegistry& entitys ) : m_Entitys(entitys) 
 { 
-    m_CellEntitysStash.reserve(entitys.size());
+    m_Kollision.reserve(entitys.size() * 2);
 }
 
 const std::array<AdvancedElasticImpact::CellKoords, 25> AdvancedElasticImpact::offsets = 
@@ -20,7 +22,7 @@ const std::array<AdvancedElasticImpact::CellKoords, 25> AdvancedElasticImpact::o
     AdvancedElasticImpact::CellKoords{ 1, 1, 0 },
 
     AdvancedElasticImpact::CellKoords{ -1, 0, 0 },
-    AdvancedElasticImpact::CellKoords{ 0, 0, 0 },
+    AdvancedElasticImpact::CellKoords{ 0, 0, 0 }, 
     AdvancedElasticImpact::CellKoords{ 1, 0, 0 },
 
     AdvancedElasticImpact::CellKoords{ -1, -1, -1 },
@@ -36,18 +38,25 @@ const std::array<AdvancedElasticImpact::CellKoords, 25> AdvancedElasticImpact::o
     AdvancedElasticImpact::CellKoords{ 1, 1, 1 }
 };
 
-struct CollisionPair { const ClassicEntity* ent1; const ClassicEntity* ent2; };
-static void CollectCollisions( const std::vector<const ClassicEntity*>& entitys, std::vector<CollisionPair>& outPairs )
+void AdvancedElasticImpact::CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2 )
 {
-    for( size_t i = 0; i < entitys.size(); ++i )
+    for( size_t i = 0; i < cell1.size(); ++i )
     {
-        for( size_t j = i+1; j < entitys.size(); ++i )
+        auto& ent1ID = cell1[i];
+        for( size_t j = 0; j < cell2.size(); ++j )
         {
-            auto& ent1 = entitys[i];
-            auto& ent2 = entitys[j];
-            Vec3D diff = ent2->getPosition() - ent1->getPosition();
-            if( diff.EukNorm() <= ent1->getRadius() + ent2->getRadius() )
-                outPairs.push_back( { ent1, ent2 } );
+            auto& ent2ID = cell2[j];
+            if( ent1ID == ent2ID )
+                continue;
+
+            auto& ent1 = m_Entitys.getById(ent1ID);
+            auto& ent2 = m_Entitys.getById(ent2ID);
+            
+            Vec3D diff = ent2.getPosition() - ent1.getPosition();
+            if( diff.EukNorm() > ent1.getRadius() + ent2.getRadius() )
+                continue;
+
+            m_Kollision.push_back( { ent1ID, ent2ID } );
         }
     }
 }
@@ -59,20 +68,32 @@ void AdvancedElasticImpact::ApplyImpacts( SimulationState& state )
 
     BuildMap();
     
-    //Hier ist jetzt das Problem nur noch doppelte komponenten... Also wenn bei einem die nicht drinnenn waren das die zusammen gepackt werden
-    
+    //find all Kollision pairs
     for( auto&[Cell, Entitys] : m_Cells )
     {
+        auto& cellEntitys = m_Cells[Cell];
         for( const auto& offset : AdvancedElasticImpact::offsets)
         {
             CellKoords neighbour { Cell.x_Koord + offset.x_Koord, Cell.y_Koord+offset.y_Koord, Cell.z_Koord+offset.z_Koord };
 
-            auto& cellEntitys = m_Cells[neighbour];
-            for( auto& ent : cellEntitys ) m_CellEntitysStash.push_back(ent);
+            auto& neighbourEntitys = m_Cells[neighbour];
+            CollectCollisions(cellEntitys, neighbourEntitys);
         }
     }
 
+    //find Komponents with Union datastrucutre
+    ds::DisjointSets Union(m_Entitys.size());
+    for( auto&[ent1ID, ent2ID] : m_Kollision )
+    {
+        size_t ent1Idx = m_Entitys.getEntityIdx(ent1ID);
+        size_t ent2Idx = m_Entitys.getEntityIdx(ent2ID);
 
+        Union.unite(ent1Idx, ent2Idx);
+    }
+    m_Kollision.clear();
+
+
+    //In der disjoint sets iwie methode bauen die die einzelnen sets zurück gibt
     //impacts auflösen
     //Bessere anpassung an drift weg
 }
@@ -101,7 +122,7 @@ void AdvancedElasticImpact::BuildMap()
         if(m_Cells.find(CellKey) == m_Cells.end())
             m_Cells[CellKey].reserve(avrg_bucketsize);
 
-        m_Cells[CellKey].push_back(&ent);
+        m_Cells[CellKey].push_back(ent.getID());
     }
 }
     

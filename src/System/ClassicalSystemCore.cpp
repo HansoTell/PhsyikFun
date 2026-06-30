@@ -46,16 +46,16 @@ void ClassicalSystemCore::Clear()
 void ClassicalSystemCore::addEntity( ClassicEntity entity ) 
 { 
     ClassicEntity EntityCopy = entity;
-    m_NextState.push_back(std::move(EntityCopy));
-    m_CurrentState.push_back(std::move(entity)); 
+    m_NextState.add(std::move(EntityCopy));
+    m_CurrentState.add(std::move(entity));
 }
 void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) 
 { 
     for( int i = 0; i < entitys.size(); i++ )
     {
         ClassicEntity EntCopy = entitys[i];
-        m_NextState.push_back(std::move(EntCopy));
-        m_CurrentState.swap(entitys);
+        m_NextState.add(std::move(EntCopy));
+        m_CurrentState.add(std::move(entitys[i]));
     } 
 }
 void ClassicalSystemCore::addExternPotential( ClassicField extPotential ) { m_Evaluater->addExternPotential(std::move(extPotential)); }
