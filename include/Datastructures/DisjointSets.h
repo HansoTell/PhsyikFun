@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <cstddef>
+#include <unordered_map>
 #include <vector>
 
 namespace ds
@@ -72,6 +74,16 @@ public:
             }
             --mNbSets; 
         }
+    }
+
+    std::unordered_map<size_t, std::vector<size_t>> getSets() const
+    {
+        std::unordered_map<size_t, std::vector<size_t>> groups;
+        groups.reserve(getNbSets());
+        for( size_t i = 0; i < getSize(); ++i )
+            groups[find(i)].push_back(i);
+
+        return groups;
     }
 
     bool same(std::size_t x, std::size_t y) const

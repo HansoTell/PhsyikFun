@@ -12,46 +12,50 @@
 
 namespace Physik
 {
-using SimulationState = std::vector<ClassicEntity>;
-
+class ImpactVelocityOperattions 
+{
+public:
+    Vec3D CalcVeclocityNormal( const Vec3D& veclocity, const Vec3D& normal ) const;
+    Vec3D CalcVelocityTangential( const Vec3D& veclocity, const Vec3D& normal ) const;
+    double CalcVelocAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
+};
 
 class IImpactEvaluator  
 {
 public:
     virtual ~IImpactEvaluator() = default;
-    virtual void ApplyImpacts( SimulationState& state ) = 0;
+    virtual void ApplyImpacts( EntityRegistry& state ) = 0;
 };
 
 class ElasticImpact : public IImpactEvaluator 
 {
 public:
-    void ApplyImpacts( SimulationState& state ) override;
+    void ApplyImpacts( EntityRegistry& state ) override;
 public:
     ElasticImpact() = default;
     ElasticImpact( const ElasticImpact& other ) = default;
     ElasticImpact( ElasticImpact&& other ) = default;
     ~ElasticImpact() = default;
 private:
-    Vec3D CalcVeclocityNormal( const Vec3D& veclocity, const Vec3D& normal ) const;
-    Vec3D CalcVelocityTangential( const Vec3D& veclocity, const Vec3D& normal ) const;
-    double CalcVelocAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
+    ImpactVelocityOperattions ops;
 };
 
 
 struct CollisionPair { EntityRegistry::ID ent1, ent2; };
 
-class AdvancedElasticImpact : public IImpactEvaluator 
+class SpartialHashGrid
 {
+private:
     struct CellKoords
     {
         int32_t x_Koord, y_Koord, z_Koord;
         bool operator == ( const CellKoords& other ) const { return  this->x_Koord == other.x_Koord && this->y_Koord == other.y_Koord && this->z_Koord == other.z_Koord; }
-        static CellKoords getCell( const Vec3D& pos ) 
+        static CellKoords getCell( const Vec3D& pos, double cellSize ) 
         { 
             return { 
-                static_cast<int32_t>(std::floor(pos[0]/1.0)), 
-                static_cast<int32_t>(std::floor(pos[1]/1.0)), 
-                static_cast<int32_t>(std::floor(pos[2]/1.0)) 
+                static_cast<int32_t>(std::floor(pos[0]/cellSize)), 
+                static_cast<int32_t>(std::floor(pos[1]/cellSize)), 
+                static_cast<int32_t>(std::floor(pos[2]/cellSize)) 
             }; 
         }
     };
@@ -67,23 +71,42 @@ class AdvancedElasticImpact : public IImpactEvaluator
     };
     static const std::array<CellKoords, 25> offsets;
 public:
-    void ApplyImpacts( SimulationState& state );
+    void BuildMap( const EntityRegistry& Entitys );
+    void FindAllKollisionPairs( const EntityRegistry& Entitys );
+    std::unordered_map<size_t, std::vector<size_t>> getZusammenhangskomponenten( const EntityRegistry& Entitys ) const;
 public:
-    AdvancedElasticImpact(  EntityRegistry& entitys ); 
-    AdvancedElasticImpact( const AdvancedElasticImpact& ) = default;
+    SpartialHashGrid();
+    SpartialHashGrid( const SpartialHashGrid&) = default;
+    SpartialHashGrid( SpartialHashGrid&& ) = default;
+    ~SpartialHashGrid() = default;
+private:
+    void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& entitys );
+private:
+    std::unordered_map<CellKoords, std::vector<EntityRegistry::ID> , CellHash> m_Cells;
+    std::vector<CollisionPair> m_Kollision;
+};
+
+class ImpactApplier
+{
+public:
+    void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx );
+private:
+    ImpactVelocityOperattions ops;
+};
+
+
+class AdvancedElasticImpact : public IImpactEvaluator 
+{
+public:
+    void ApplyImpacts( EntityRegistry& state );
+public:
+    AdvancedElasticImpact(); 
+    AdvancedElasticImpact( const AdvancedElasticImpact& other );
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
 private:
-    //Beides eher Public methoden eines anderen moduls... -> wegen testing wäre schöneres desogn -> auch die eine static methode
-    void BuildMap();
-    double FindMaxRadius() const;
-    void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2 );
-private:
-    EntityRegistry& m_Entitys;
-    std::unordered_map<CellKoords, std::vector<EntityRegistry::ID> , CellHash> m_Cells;
-    uint32_t m_CellSize;
-
-    std::vector<CollisionPair> m_Kollision;
+    SpartialHashGrid m_Grid;
+    ImpactApplier m_ImpactApplier;
 }; 
 
 

@@ -1,21 +1,19 @@
-#include "Entity.h"
-#include "EntityRegistry.h"
 #include "Impact.h"
+
 #include "Math/Math.h"
-#include "Vector.h"
-#include <cmath>
-#include <cstddef>
+
 
 namespace Physik 
 {
-void ElasticImpact::ApplyImpacts( EntityRegistry& state ) 
+
+//Bessere anpassung an drift weg
+void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<size_t>& EntitysIdx )
 {
-    for( size_t i = 0; i < state.size(); ++i )
+    for( size_t i = 0; i < EntitysIdx.size(); ++i )
     {
         ClassicEntity& ent1 = state[i];
-        for( size_t j = i; j < state.size(); ++j )
+        for( size_t j = i; j < EntitysIdx.size(); ++j )
         {
-
             ClassicEntity& ent2 = state[j];
             Vec3D diff = ent2.getPosition() - ent1.getPosition();
             if( diff.EukNorm() <= ent1.getRadius() + ent2.getRadius() )
