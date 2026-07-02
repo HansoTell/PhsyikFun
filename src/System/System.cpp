@@ -130,11 +130,21 @@ void ClassicalSystem::addEntity( ClassicEntity entity )
     Start();
 }
 
+bool ClassicalSystem::addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius )
+{
+    Pause();
+    bool succes = m_Core->addEntity(std::move(startPosition), std::move(startVelocity), mass, Radius);
+    m_Core->UpdateEntityPropertys();
+    Start();
+
+    return succes;
+}
+
 void ClassicalSystem::addMulipleEntitys( std::vector<ClassicEntity> entitys )
 {
     Pause();
-    m_Core->UpdateEntityPropertys();
     m_Core->addMulipleEntitys( std::move(entitys) );
+    m_Core->UpdateEntityPropertys();
     Start();
 }
 

@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Interactions.h"
 #include "Printer.h"
+#include "Vector.h"
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -41,6 +42,7 @@ public:
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
     void addEntity( ClassicEntity entity );
+    bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 
     void setTmax( double Tmax ); 

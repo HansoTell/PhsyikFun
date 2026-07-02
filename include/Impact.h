@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -15,9 +16,9 @@ namespace Physik
 class ImpactVelocityOperattions 
 {
 public:
-    Vec3D CalcVeclocityNormal( const Vec3D& veclocity, const Vec3D& normal ) const;
+    Vec3D CalcVelocityNormal( const Vec3D& veclocity, const Vec3D& normal ) const;
     Vec3D CalcVelocityTangential( const Vec3D& veclocity, const Vec3D& normal ) const;
-    double CalcVelocAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
+    double CalcVelocityAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
 };
 
 class IImpactEvaluator  
@@ -25,12 +26,14 @@ class IImpactEvaluator
 public:
     virtual ~IImpactEvaluator() = default;
     virtual void ApplyImpacts( EntityRegistry& state ) = 0;
+    virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
 };
 
 class ElasticImpact : public IImpactEvaluator 
 {
 public:
     void ApplyImpacts( EntityRegistry& state ) override;
+    std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<ElasticImpact>(); }
 public:
     ElasticImpact() = default;
     ElasticImpact( const ElasticImpact& other ) = default;
@@ -69,7 +72,7 @@ private:
             return h1 ^ (h2 << 1) ^ (h3 << 2);
         }
     };
-    static const std::array<CellKoords, 25> offsets;
+    static const std::array<CellKoords, 14> offsets;
 public:
     void BuildMap( const EntityRegistry& Entitys );
     void FindAllKollisionPairs( const EntityRegistry& Entitys );
@@ -91,6 +94,9 @@ class ImpactApplier
 public:
     void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx );
 private:
+    Vec3D CalcVAfter(  const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal ) const;
+    Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal, double Penetration, double sign ) const;
+private:
     ImpactVelocityOperattions ops;
 };
 
@@ -98,10 +104,11 @@ private:
 class AdvancedElasticImpact : public IImpactEvaluator 
 {
 public:
-    void ApplyImpacts( EntityRegistry& state );
+    void ApplyImpacts( EntityRegistry& state ) override;
+    std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(); }
 public:
-    AdvancedElasticImpact(); 
-    AdvancedElasticImpact( const AdvancedElasticImpact& other );
+    AdvancedElasticImpact() = default;
+    AdvancedElasticImpact( const AdvancedElasticImpact& other ) = default;
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
 private:

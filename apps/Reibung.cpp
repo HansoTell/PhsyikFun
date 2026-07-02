@@ -10,7 +10,7 @@ int main()
 {
     ClassicalSystem sys;
 
-    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 100.0, 0.0, 0.0 }, 1);
+    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 100.0, 0.0, 0.0 }, 1.0, 1.0);
 
     sys.addEntity(std::move(Sun));
     sys.addNonPotentialForce(ClassicNonPotentialForce([]( const ClassicEntityState& state, double Time ){ 

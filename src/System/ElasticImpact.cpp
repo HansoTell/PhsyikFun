@@ -23,14 +23,14 @@ void ElasticImpact::ApplyImpacts( EntityRegistry& state )
                 using namespace Math::VectorCalc;
                 Vec3D normal = VectorNormal(ent1.getPosition(), ent2.getPosition());
 
-                Vec3D v1n = ops.CalcVeclocityNormal(ent1.getVelocity(), normal);
-                Vec3D v2n = ops.CalcVeclocityNormal(ent2.getVelocity(), normal);
+                Vec3D v1n = ops.CalcVelocityNormal(ent1.getVelocity(), normal);
+                Vec3D v2n = ops.CalcVelocityNormal(ent2.getVelocity(), normal);
 
                 Vec3D v1t = ops.CalcVelocityTangential(ent1.getVelocity(), normal);
                 Vec3D v2t = ops.CalcVelocityTangential(ent2.getVelocity(), normal);
 
-                double vAfter1n = ops.CalcVelocAfter(ent1, v1n, ent2, v2n);
-                double vAfter2n = ops.CalcVelocAfter(ent2, v2n, ent1, v1n);
+                double vAfter1n = ops.CalcVelocityAfter(ent1, v1n, ent2, v2n);
+                double vAfter2n = ops.CalcVelocityAfter(ent2, v2n, ent1, v1n);
 
                 Vec3D vAfter1 = vAfter1n * v1n + v1t;
                 Vec3D vAfter2 = vAfter2n * v2n + v2t;

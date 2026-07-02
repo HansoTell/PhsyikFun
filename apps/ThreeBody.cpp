@@ -9,9 +9,9 @@ int main()
 {
     ClassicalSystem sys;
 
-    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 0.0, 0.0, 0.0 }, 5.683e26);
-    ClassicEntity Planet1( Vec3D{ 1.2098e7, 0.0, 0.0 }, Vec3D{ 0.0, 6.9262e4, 0.0 }, 1.35e24);
-    ClassicEntity Planet2( Vec3D{ 1.2342e7, 0.0, 0.0 }, Vec3D{ 0.0, 4.2158e4, 0.0 }, 1.35e24);
+    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 0.0, 0.0, 0.0 }, 5.683e26, 6.957e8);
+    ClassicEntity Planet1( Vec3D{ 1.2098e7, 0.0, 0.0 }, Vec3D{ 0.0, 6.9262e4, 0.0 }, 1.35e24, 6.37e6);
+    ClassicEntity Planet2( Vec3D{ 1.2342e7, 0.0, 0.0 }, Vec3D{ 0.0, 4.2158e4, 0.0 }, 1.35e24, 1.738e6);
 
     sys.addEntity(std::move(Sun));
     sys.addEntity(std::move(Planet1));

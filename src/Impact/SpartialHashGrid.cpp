@@ -1,25 +1,25 @@
 #include "Impact.h"
 
 #include "Datastructures/DisjointSets.h"
+#include <cstddef>
 
 
 namespace Physik 
 {
-const std::array<SpartialHashGrid::CellKoords, 25> SpartialHashGrid::offsets = 
+const std::array<SpartialHashGrid::CellKoords, 14> SpartialHashGrid::offsets = 
 {
     SpartialHashGrid::CellKoords{ -1, 1, 0 },
-    SpartialHashGrid::CellKoords{ 0, 1, 0 },
-    SpartialHashGrid::CellKoords{ 1, 1, 0 },
+    SpartialHashGrid::CellKoords{ 0, 1, 0 }, 
+    SpartialHashGrid::CellKoords{ 1, 1, 0 }, 
 
-    SpartialHashGrid::CellKoords{ -1, 0, 0 },
     SpartialHashGrid::CellKoords{ 0, 0, 0 }, 
     SpartialHashGrid::CellKoords{ 1, 0, 0 },
 
-    SpartialHashGrid::CellKoords{ -1, -1, -1 },
+    SpartialHashGrid::CellKoords{ -1, -1, 1 },
     SpartialHashGrid::CellKoords{ 0, -1, 1 },
     SpartialHashGrid::CellKoords{ 1, -1, 1 },
 
-    SpartialHashGrid::CellKoords{ -1, 0, 1 },
+    SpartialHashGrid::CellKoords{ -1, 0, 1 }, 
     SpartialHashGrid::CellKoords{ 0, 0, 1 },
     SpartialHashGrid::CellKoords{ 1, 0, 1 },
 
@@ -32,6 +32,13 @@ SpartialHashGrid::SpartialHashGrid() {}
 
 void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
 {
+    if( Entitys.empty() )
+    {
+        m_Cells.clear();
+        return;
+    }
+
+
     size_t avrg_bucketsize = Entitys.size()/4;
     auto maxRadius = std::max_element(Entitys.begin(), Entitys.end(), [](const ClassicEntity& ent1, const ClassicEntity& ent2){
         return ent1.getRadius() < ent2.getRadius();
@@ -61,8 +68,10 @@ void SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Entitys )
         {
             CellKoords neighbour { Cell.x_Koord + offset.x_Koord, Cell.y_Koord+offset.y_Koord, Cell.z_Koord+offset.z_Koord };
 
-            auto& neighbourEntitys = m_Cells.at(neighbour);
-            CollectCollisions(cellEntitys, neighbourEntitys, Entitys);
+            auto neighbour_it = m_Cells.find(neighbour);
+            if( neighbour_it == m_Cells.end() ) continue;
+
+            CollectCollisions(cellEntitys, neighbour_it->second, Entitys);
         }
     }
 }
@@ -72,7 +81,8 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
     for( size_t i = 0; i < cell1.size(); ++i )
     {
         auto& ent1ID = cell1[i];
-        for( size_t j = 0; j < cell2.size(); ++j )
+        size_t startIndex = cell1 == cell2 ? i+1 : 0;
+        for( size_t j = startIndex; j < cell2.size(); ++j )
         {
             auto& ent2ID = cell2[j];
             if( ent1ID == ent2ID )

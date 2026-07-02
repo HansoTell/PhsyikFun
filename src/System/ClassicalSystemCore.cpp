@@ -10,28 +10,36 @@
 
 namespace Physik 
 {
+ClassicalSystemCore::ClassicalSystemCore()
+    : m_DeltaTime(default_delta_time), m_Integrator(std::make_unique<VelocityVerleit>()), 
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
+    m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
+{}
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
-    : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
+    : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), 
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
+    m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
 }
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) 
-    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Time(0.0) 
+    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()), m_Time(0.0) 
 {
     UpdateEntityPropertys();
 }
 
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) 
     : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy),
-    m_CurrentState(other.m_CurrentState),  m_Integrator(other.m_Integrator->clone()), m_Evaluater(other.m_Evaluater->clone()) {}
+    m_CurrentState(other.m_CurrentState),  m_Integrator(other.m_Integrator->clone()), m_Evaluater(other.m_Evaluater->clone()), m_Impact(other.m_Impact->clone()) {}
 
 ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) 
     : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy), 
     m_Integrator(std::move(other.m_Integrator)), 
     m_CurrentState(std::move(other.m_CurrentState)),
-    m_Evaluater(std::move(other.m_Evaluater)) {}
+    m_Evaluater(std::move(other.m_Evaluater)),
+    m_Impact(std::move(other.m_Impact)){}
 
 void ClassicalSystemCore::Clear() 
 {
@@ -49,6 +57,14 @@ void ClassicalSystemCore::addEntity( ClassicEntity entity )
     m_NextState.add(std::move(EntityCopy));
     m_CurrentState.add(std::move(entity));
 }
+bool ClassicalSystemCore::addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius )
+{
+    ClassicEntity Entity(std::move(startPosition), std::move(startVelocity), mass, Radius);
+    ClassicEntity EntityCopy = Entity;
+
+    return  m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));
+}
+
 void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) 
 { 
     for( int i = 0; i < entitys.size(); i++ )
@@ -68,6 +84,8 @@ void ClassicalSystemCore::addMultipleNonPotentialForce( std::vector<ClassicNonPo
 void ClassicalSystemCore::Step()
 {
     m_Integrator->step(m_CurrentState, m_NextState, m_Evaluater, m_Time, m_DeltaTime);
+    m_Impact->ApplyImpacts(m_NextState);
+
     advanceTimeIncrement();
     
     m_Evaluater->UpdateAccelerations(m_NextState, m_Time);

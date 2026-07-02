@@ -4,6 +4,10 @@
 #include "Interactions.h"
 #include "Entity.h"
 #include "Integrator.h"
+#include "Impact.h"
+#include "Vector.h"
+
+#include <memory>
 #include <vector>
 
 namespace Physik 
@@ -25,6 +29,7 @@ public:
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
 
     void addEntity( ClassicEntity entity );
+    bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
@@ -39,6 +44,7 @@ public:
     double getTmax() const { return m_Tmax; }
 
 public:
+    ClassicalSystemCore();
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> PropertyCalcer );
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
     ClassicalSystemCore( const ClassicalSystemCore& other );
@@ -56,6 +62,7 @@ private:
     double Energy;
     
     std::unique_ptr<IDGLSolver> m_Integrator;
+    std::unique_ptr<IImpactEvaluator> m_Impact;
     std::shared_ptr<IAccelerationEveluater> m_Evaluater;
 };
 }

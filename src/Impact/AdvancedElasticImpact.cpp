@@ -8,20 +8,19 @@
 
 namespace Physik 
 {
-AdvancedElasticImpact::AdvancedElasticImpact() : m_Grid() {}
-
-//TODO
-AdvancedElasticImpact::AdvancedElasticImpact( const AdvancedElasticImpact& other ) : m_Grid(other.m_Grid){}
-
 void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state )
 {
+    //O(n)
     m_Grid.BuildMap( state );
     
+    //O(SizeofBuckets²)
     m_Grid.FindAllKollisionPairs( state );
 
+    //O(alpha * n)
     std::unordered_map<size_t, std::vector<size_t>> groups = m_Grid.getZusammenhangskomponenten( state );
 
     //resolveImpacts
+    //O(size of Zusammenhangskomponente)
     for( auto&[rep, set] : groups )
     {
         switch (set.size()) 
@@ -35,7 +34,8 @@ void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state )
         }
         default:
         {
-            for( int i = 0; i < 10; ++i )
+            constexpr int solver_iterations = 10; //Komplett heuristisch
+            for( int i = 0; i < solver_iterations; ++i )
                 m_ImpactApplier.ApplyImpacts(state, set);
             break;
         }

@@ -94,7 +94,6 @@ public:
 
     bool operator == ( const Entity& other ){ return m_ID == other.m_ID; }
 public:
-    Entity(){}
     Entity(Vector<Dim, T> startPosition, T mass ) : m_State( { startPosition, Vector<Dim, T>(), mass, 1.0 } ), m_ID(nextID++) {}
     Entity(Vector<Dim, T> startPosition, T mass, T Radius ) : m_State( { startPosition, Vector<Dim, T>(), mass, Radius } ), m_ID(nextID++) {}
     Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, T Radius ) : m_State( { startPosition, std::move(startVelocity),  mass, Radius } ), m_ID(nextID++) {}
