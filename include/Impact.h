@@ -21,6 +21,30 @@ public:
     double CalcVelocityAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
 };
 
+class IImpactApplier
+{
+public:
+    virtual ~IImpactApplier() = default;
+    virtual void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx ) = 0;
+};
+
+class ImpactApplier : public IImpactApplier
+{
+public:
+    void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx ) override;
+public:
+    ImpactApplier() = default;
+    ImpactApplier(const ImpactApplier&) = default;
+    ImpactApplier(ImpactApplier&&) = default;
+    ~ImpactApplier() = default;
+private:
+    Vec3D CalcVAfter(  const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal ) const;
+    Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal, double Penetration, double sign ) const;
+private:
+    ImpactVelocityOperattions ops;
+};
+
+
 class IImpactEvaluator  
 {
 public:
@@ -89,16 +113,6 @@ private:
     std::vector<CollisionPair> m_Kollision;
 };
 
-class ImpactApplier
-{
-public:
-    void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx );
-private:
-    Vec3D CalcVAfter(  const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal ) const;
-    Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal, double Penetration, double sign ) const;
-private:
-    ImpactVelocityOperattions ops;
-};
 
 
 class AdvancedElasticImpact : public IImpactEvaluator 
