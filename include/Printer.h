@@ -20,11 +20,9 @@
 //TODO anpassen alles so dass es unterschieldich3e formate unterstützt
 namespace Physik 
 {
-
 struct ClassicEntityInfo
 {
-    uint64_t EntityID;
-    ClassicEntityState State;
+    ClassicEntity State;
     double Time;
 };
 
@@ -79,7 +77,7 @@ private:
 class CSVFileWriter 
 {
 public:
-    void WriteState( const ClassicEntityState& state, uint64_t ID, double t ) const;
+    void WriteState( const ClassicEntity& state, double t ) const;
     void flush() const;
 public:
     CSVFileWriter( std::string FilePath );

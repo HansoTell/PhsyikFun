@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "Interactions.h"
+#include "Shapes.h"
 #include "SystemCore.h"
 
 #include <cassert>
@@ -59,7 +60,7 @@ void ClassicalSystemCore::addEntity( ClassicEntity entity )
 }
 bool ClassicalSystemCore::addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius )
 {
-    ClassicEntity Entity(std::move(startPosition), std::move(startVelocity), mass, Radius);
+    ClassicEntity Entity(std::move(startPosition), std::move(startVelocity), mass, Sphere<double>{Radius});
     ClassicEntity EntityCopy = Entity;
 
     return  m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));

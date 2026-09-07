@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <variant>
 
 namespace Physik 
 {
@@ -32,48 +31,6 @@ struct ConstantPrtopertys
     T m_inverseMass;
 };
 
-template <size_t Dim = 3, typename T = double> 
-class EntityState 
-{
-public:
-    KinematicState<Dim, T> m_KinState;
-    EnergyPropertys<T> m_Energys;
-    ConstantPrtopertys<T> m_Constants;
-
-public:
-    EntityState( Vector<Dim, T> position, Vector<Dim, T> velocity, T Mass, T Radius ) 
-        : m_Constants({ Mass, 1/Mass }), m_KinState( { position, velocity, Vector<Dim, T>() } ) {}
-    EntityState( const EntityState& other )  
-        : m_Constants(other.m_Constants), m_KinState(other.m_KinState), m_Energys(other.m_Energys) {} 
-    EntityState( EntityState&& other ) 
-        : m_Constants(std::move(other.m_Constants)), m_Energys(std::move(other.m_Energys)), m_KinState(std::move(other.m_KinState)) {} 
-    ~EntityState() = default;
-    EntityState<Dim, T>& operator=( EntityState<Dim, T>&& other ) noexcept
-    {
-        if( this == &other)
-            return *this;
-
-        m_Constants = std::move(other.m_Constants);
-        m_KinState = std::move(other.m_KinState);
-        m_Energys = std::move(other.m_Energys);
-
-        return *this;
-    }
-    EntityState<Dim, T>& operator=( const EntityState<Dim, T>& other )
-    {
-        if( this == &other)
-            return *this;
-
-        m_Constants = other.m_Constants;
-        m_Energys = other.m_Energys;
-        m_KinState = other.m_KinState;
-
-        return *this;
-    }
-};
-
-using ClassicEntityState = EntityState<3, double>;
-
 template <size_t Dim = 3, typename T = double>
 class Entity 
 {
@@ -83,6 +40,8 @@ public:
     Vector<Dim, T> getAcceleration() const { return m_KinState.m_Acceleration; }
     T getMass() const { return m_Constants.m_Mass; }
     T getEnergy() const { return m_Energy.KineticEnergy + m_Energy.PotentialEnergy; }
+    T getKineticEnergy() const { return m_Energy.KineticEnergy; }
+    T getPotentialEnergy() const { return m_Energy.PotentialEnergy; }
     const Shape<Dim, T>& getShape() const { return m_Shape; }
     uint64_t getID() const { return m_ID; }
 

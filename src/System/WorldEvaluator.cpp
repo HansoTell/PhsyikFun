@@ -54,7 +54,7 @@ void WorldEvaluator::CalcAccelerations( const EntityRegistry& state, double Time
             const auto& ent1 = state[i];
             for( size_t j = i+1; j < state.size(); j++ )
             {
-                Vec3D force = interaction.getForce(ent1.getEntityState(), state[j].getEntityState(), Time);
+                Vec3D force = interaction.getForce(ent1, state[j], Time);
 
                 outAccelerations[i] += force;
                 outAccelerations[j] -= force;
@@ -68,7 +68,7 @@ void WorldEvaluator::CalcAccelerations( const EntityRegistry& state, double Time
         for( size_t i = 0; i < state.size(); i++ )
         {
             const auto& ent1 = state[i];
-            Vec3D force = field.getForce(ent1.getEntityState(), Time);
+            Vec3D force = field.getForce(ent1, Time);
             outAccelerations[i] += force;
         }
     }
@@ -79,7 +79,7 @@ void WorldEvaluator::CalcAccelerations( const EntityRegistry& state, double Time
         for( size_t i = 0; i < state.size(); i++ )
         {
             const auto& ent1 = state[i];
-            Vec3D force = NonPotF.getForce(ent1.getEntityState(), Time);
+            Vec3D force = NonPotF.getForce(ent1, Time);
             outAccelerations[i] += force;
         }
     }
@@ -98,7 +98,7 @@ void WorldEvaluator::CalcPotEnergy( const EntityRegistry& state, double Time, st
             const auto& ent1 = state[i];
             for( size_t j = i+1; j < state.size(); j++ )
             {
-                double E = interaction.getPotentialEnergy(ent1.getEntityState(), state[j].getEntityState(), Time);
+                double E = interaction.getPotentialEnergy(ent1, state[j], Time);
 
                 outEpots[i] += E;
                 outEpots[j] -= E;
@@ -111,7 +111,7 @@ void WorldEvaluator::CalcPotEnergy( const EntityRegistry& state, double Time, st
         for( size_t j = 0; j < state.size(); j++ )
         {
             const auto& ent1 = state[j];
-            double E = m_ExtPotentials[i].getPotentialEnergy(ent1.getEntityState(), Time);
+            double E = m_ExtPotentials[i].getPotentialEnergy(ent1, Time);
             outEpots[j] += E;
         }
     }

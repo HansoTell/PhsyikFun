@@ -28,43 +28,43 @@ CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_F
     printEntityStateHeader();
 }
 
-void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID, double Time ) const
+void CSVFileWriter::WriteState( const ClassicEntity& State, double Time ) const
 {
     if( m_Buffer.size() + 300 > buff_size )
         flush();
     
-    PrintNumber(ID);
+    PrintNumber(State.getID());
     PrintSeperator();
     PrintNumber(Time);
     if( has(m_Options, PrintOptions::ePosition ))
     {
         PrintSeperator();
-        PrintVector(State.m_KinState.m_Position);
+        PrintVector(State.getPosition());
     }
     if( has(m_Options, PrintOptions::eVelocity ))
     {
         PrintSeperator();
-        PrintVector(State.m_KinState.m_Velocity);
+        PrintVector(State.getVelocity());
     }
     if( has(m_Options, PrintOptions::eAcceleration ))
     {
         PrintSeperator();
-        PrintVector(State.m_KinState.m_Acceleration);
+        PrintVector(State.getAcceleration());
     }
     if( has(m_Options, PrintOptions::eForce ))
     {
         PrintSeperator();
-        PrintVector(State.m_KinState.m_Acceleration * State.m_Constants.m_Mass);
+        PrintVector(State.getAcceleration() * State.getMass());
     }
     if( has(m_Options, PrintOptions::eKinEnergy ))
     {
         PrintSeperator();
-        PrintNumber(State.m_Energys.KineticEnergy);
+        PrintNumber(State.getKineticEnergy());
     }
     if( has(m_Options, PrintOptions::ePotEnergy ))
     {
         PrintSeperator();
-        PrintNumber(State.m_Energys.PotentialEnergy);
+        PrintNumber(State.getPotentialEnergy());
     }
 
     PrintLineEnd();

@@ -27,6 +27,8 @@ public:
 
     bool add(ClassicEntity entity)
     {
+//FÜr alles an sachen das die nicht ineinander stecken dürfen
+/*
         auto it = std::find_if(m_Entitys.begin(), m_Entitys.end(), [&entity](const ClassicEntity& cmpEnt){
             Vec3D diff = entity.getPosition() - cmpEnt.getPosition();
 
@@ -36,7 +38,7 @@ public:
         if( it != m_Entitys.end() )
             return false;
 
-
+*/
         m_IDtoIndex[entity.getID()] = m_Entitys.size();
         m_Entitys.push_back(std::move(entity));
 
