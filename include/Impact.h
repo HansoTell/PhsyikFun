@@ -21,17 +21,10 @@ public:
     double CalcVelocityAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
 };
 
-class IImpactApplier
+class ImpactApplier 
 {
 public:
-    virtual ~IImpactApplier() = default;
-    virtual void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx ) = 0;
-};
-
-class ImpactApplier : public IImpactApplier
-{
-public:
-    void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx ) override;
+    void ApplyImpacts( EntityRegistry& State, const std::vector<size_t>& EntityIdx );
 public:
     ImpactApplier() = default;
     ImpactApplier(const ImpactApplier&) = default;
@@ -43,30 +36,6 @@ private:
 private:
     ImpactVelocityOperattions ops;
 };
-
-
-class IImpactEvaluator  
-{
-public:
-    virtual ~IImpactEvaluator() = default;
-    virtual void ApplyImpacts( EntityRegistry& state ) = 0;
-    virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
-};
-
-class ElasticImpact : public IImpactEvaluator 
-{
-public:
-    void ApplyImpacts( EntityRegistry& state ) override;
-    std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<ElasticImpact>(); }
-public:
-    ElasticImpact() = default;
-    ElasticImpact( const ElasticImpact& other ) = default;
-    ElasticImpact( ElasticImpact&& other ) = default;
-    ~ElasticImpact() = default;
-private:
-    ImpactVelocityOperattions ops;
-};
-
 
 struct CollisionPair { EntityRegistry::ID ent1, ent2; };
 
@@ -113,7 +82,13 @@ private:
     std::vector<CollisionPair> m_Kollision;
 };
 
-
+class IImpactEvaluator  
+{
+public:
+    virtual ~IImpactEvaluator() = default;
+    virtual void ApplyImpacts( EntityRegistry& state ) = 0;
+    virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
+};
 
 class AdvancedElasticImpact : public IImpactEvaluator 
 {
@@ -126,9 +101,7 @@ public:
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
 private:
-    SpartialHashGrid m_Grid;
-    ImpactApplier m_ImpactApplier;
+    SpartialHashGrid m_Grid; //find Impacts
+    ImpactApplier m_ImpactApplier; //Apply Impacts
 }; 
-
-
 }
