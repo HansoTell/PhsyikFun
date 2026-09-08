@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "EntityRegistry.h"
 #include "Vector.h"
+
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +38,12 @@ private:
     ImpactVelocityOperattions ops;
 };
 
-struct CollisionPair { EntityRegistry::ID ent1, ent2; };
+struct CollisionPair 
+{ 
+    EntityRegistry::ID ent1, ent2; 
+    double Penetration;
+    Vec3D normal;
+};
 
 class SpartialHashGrid
 {

@@ -1,7 +1,11 @@
 #include "Impact.h"
 
 #include "Datastructures/DisjointSets.h"
+#include "CollisionDetction.h"
+
 #include <cstddef>
+#include <optional>
+#include <variant>
 
 
 namespace Physik 
@@ -30,6 +34,7 @@ const std::array<SpartialHashGrid::CellKoords, 14> SpartialHashGrid::offsets =
 
 SpartialHashGrid::SpartialHashGrid() {}
 
+//TODO: Problem wie mache ich die cell größe -> müssen eigentlich mehrere cells ein entity erlauben
 void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
 {
     if( Entitys.empty() )
@@ -38,13 +43,6 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
         return;
     }
 
-
-    size_t avrg_bucketsize = Entitys.size()/4;
-    auto maxRadius = std::max_element(Entitys.begin(), Entitys.end(), [](const ClassicEntity& ent1, const ClassicEntity& ent2){
-        return ent1.getRadius() < ent2.getRadius();
-    });   
-
-    double CellSize = 2 * maxRadius->getRadius() + 1; 
     m_Cells.clear();
     for( const auto& ent : Entitys )
     {
@@ -90,12 +88,14 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
 
             auto& ent1 = Entitys.getById(ent1ID);
             auto& ent2 = Entitys.getById(ent2ID);
-            
-            Vec3D diff = ent2.getPosition() - ent1.getPosition();
-            if( diff.EukNorm() > ent1.getRadius() + ent2.getRadius() )
-                continue;
 
-            m_Kollision.push_back( { ent1ID, ent2ID } );
+            auto collision = std::visit([&]( const auto& ShapeA, const auto& ShapeB ) -> std::optional<CollisionPair> 
+            { 
+                return detectCollision(ShapeA, ShapeB, ent1.getPosition(), ent2.getPosition()); 
+            }, ent1.getShape(), ent2.getShape());
+            
+
+            if( collision.has_value() ) m_Kollision.push_back(collision.value());
         }
     }
 }
