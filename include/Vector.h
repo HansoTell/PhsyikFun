@@ -133,7 +133,7 @@ public:
         return os;
     }
 public:
-    Vector() { data.fill(0.0); }
+    Vector() { data.fill(T{0}); }
     Vector(std::initializer_list<T> init)
     {
         size_t i = 0;
@@ -142,6 +142,7 @@ public:
             if( i >= Dim ) break;
             data[i++] = val;
         }
+        if( init.size() < Dim ){ for( size_t i = init.size(); i < Dim; ++i ) data[i] = T{0}; }
     }
     Vector( const Vector<Dim, T>& other ) : data( other.data ) {}
     Vector( Vector<Dim, T>&& other ) : data(std::move(other.data)) {}

@@ -14,12 +14,6 @@ struct Sphere
 };
 
 template <size_t Dim = 3, typename T = double>
-struct Plane 
-{
-    Vector<Dim, T> normal;
-};
-
-template <size_t Dim = 3, typename T = double>
 struct Box 
 {
     Vector<Dim, T> halfSize;
@@ -28,7 +22,6 @@ struct Box
 template <size_t Dim = 3, typename T = double>
 using Shape = std::variant<
     Sphere<T>, 
-    Plane<Dim, T>,
     Box<Dim, T>
 >;
 

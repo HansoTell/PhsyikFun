@@ -8,12 +8,7 @@ namespace Physik
 
 
     std::optional<CollisionPair> detectCollision(const Sphere<double>& A, const Sphere<double>& B, const Vec3D& posA, const Vec3D& posB); 
-    std::optional<CollisionPair> detectCollision(const Sphere<double>& A, const Plane<>& B, const Vec3D& posA, const Vec3D& posB); 
     std::optional<CollisionPair> detectCollision(const Sphere<double>& A, const Box<>& B, const Vec3D& posA, const Vec3D& posB); 
-    std::optional<CollisionPair> detectCollision(const Plane<>& A, const Sphere<>& B, const Vec3D& posA, const Vec3D& posB); 
-    std::optional<CollisionPair> detectCollision(const Plane<>& A, const Plane<>& B, const Vec3D& posA, const Vec3D& posB); 
-    std::optional<CollisionPair> detectCollision(const Plane<>& A, const Box<>& B, const Vec3D& posA, const Vec3D& posB); 
     std::optional<CollisionPair> detectCollision(const Box<>& A, const Box<>& B, const Vec3D& posA, const Vec3D& posB); 
     std::optional<CollisionPair> detectCollision(const Box<>& A, const Sphere<>& B, const Vec3D& posA, const Vec3D& posB); 
-    std::optional<CollisionPair> detectCollision(const Box<>& A, const Plane<>& B, const Vec3D& posA, const Vec3D& posB); 
 }
