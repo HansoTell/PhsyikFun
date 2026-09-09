@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Physik
@@ -43,6 +44,19 @@ struct CollisionPair
     EntityRegistry::ID ent1, ent2; 
     double Penetration;
     Vec3D normal;
+
+    bool operator==(const CollisionPair& other) const { return ent1 == other.ent1 && ent2 == other.ent2; }
+};
+
+struct CollisionPairHash
+{
+    std::size_t operator() (const CollisionPair& pair) const 
+    {
+        std::size_t h1 = std::hash<uint64_t>{}(pair.ent1);
+        std::size_t h2 = std::hash<uint64_t>{}(pair.ent2);
+
+        return h1 ^ (h2 << 1);
+    }
 };
 
 class SpartialHashGrid
@@ -76,8 +90,10 @@ public:
     void BuildMap( const EntityRegistry& Entitys );
     void FindAllKollisionPairs( const EntityRegistry& Entitys );
     std::unordered_map<size_t, std::vector<size_t>> getZusammenhangskomponenten( const EntityRegistry& Entitys ) const;
+
+    double getCellSize() const { return m_CellSize; }
 public:
-    SpartialHashGrid();
+    SpartialHashGrid(double CellSize) : m_CellSize(CellSize){}
     SpartialHashGrid( const SpartialHashGrid&) = default;
     SpartialHashGrid( SpartialHashGrid&& ) = default;
     ~SpartialHashGrid() = default;
@@ -85,7 +101,9 @@ private:
     void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& entitys );
 private:
     std::unordered_map<CellKoords, std::vector<EntityRegistry::ID> , CellHash> m_Cells;
-    std::vector<CollisionPair> m_Kollision;
+    std::unordered_set<CollisionPair, CollisionPairHash> m_KollisionPairs;
+
+    double m_CellSize;
 };
 
 class IImpactEvaluator  
@@ -100,9 +118,9 @@ class AdvancedElasticImpact : public IImpactEvaluator
 {
 public:
     void ApplyImpacts( EntityRegistry& state ) override;
-    std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(); }
+    std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(m_Grid.getCellSize()); }
 public:
-    AdvancedElasticImpact() = default;
+    AdvancedElasticImpact(double CellSize) : m_Grid(CellSize) {}
     AdvancedElasticImpact( const AdvancedElasticImpact& other ) = default;
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
