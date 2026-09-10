@@ -1,38 +1,28 @@
 #include "Impact.h"
 
-#include "Math/Math.h"
 #include "Vector.h"
 
 
 namespace Physik 
 {
-void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<size_t>& EntitysIdx )
+void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<CollisionManifold>& CollisionGroup )
 {
-    for( size_t i = 0; i < EntitysIdx.size(); ++i )
+    for( auto& Collision : CollisionGroup )
     {
-        ClassicEntity& ent1 = state[EntitysIdx[i]];
-        for( size_t j = i+1; j < EntitysIdx.size(); ++j )
-        {
-            ClassicEntity& ent2 = state[EntitysIdx[j]];
-            if( Vec3D diff = ent2.getPosition() - ent1.getPosition(); diff.EukNorm() <= ent1.getRadius() + ent2.getRadius() )
-            {
-                using namespace Math::VectorCalc;
-                Vec3D normal = VectorNormal(ent1.getPosition(), ent2.getPosition());
-                double penetration = ent1.getRadius() + ent2.getRadius() - diff.EukNorm();
+        ClassicEntity& ent1 = state.getById(Collision.ent1);
+        ClassicEntity& ent2 = state.getById(Collision.ent2);
 
-                Vec3D vAfter1 = CalcVAfter(ent1, ent2, normal);
-                Vec3D vAfter2 = CalcVAfter(ent2, ent1, normal);
+        Vec3D vAfter1 = CalcVAfter(ent1, ent2, Collision.normal);
+        Vec3D vAfter2 = CalcVAfter(ent2, ent1, Collision.normal);
 
-                Vec3D posAfter1 = CalcPositionCorrection(ent1, ent2, normal, penetration, 1.0);
-                Vec3D posAfter2 = CalcPositionCorrection(ent2, ent1, normal, penetration, -1.0);
+        Vec3D posAfter1 = CalcPositionCorrection(ent1, ent2, Collision.normal, Collision.Penetration, 1.0);
+        Vec3D posAfter2 = CalcPositionCorrection(ent2, ent1, Collision.normal, Collision.Penetration, -1.0);
 
-                ent1.setVelocity(vAfter1);
-                ent2.setVelocity(vAfter2);
+        ent1.setVelocity(vAfter1);
+        ent2.setVelocity(vAfter2);
 
-                ent1.setPosition(posAfter1);
-                ent2.setPosition(posAfter2);
-            }
-        }
+        ent1.setPosition(posAfter1);
+        ent2.setPosition(posAfter2);
     }
 }
   

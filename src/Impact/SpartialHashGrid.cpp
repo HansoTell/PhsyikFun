@@ -3,11 +3,13 @@
 #include "Datastructures/DisjointSets.h"
 #include "CollisionDetction.h"
 #include "AABB.h"
+#include "Vector.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <variant>
+#include <vector>
 
 
 namespace Physik 
@@ -104,9 +106,9 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
             auto& ent1 = Entitys.getById(ent1ID);
             auto& ent2 = Entitys.getById(ent2ID);
 
-            auto collision_or = std::visit([&]( const auto& ShapeA, const auto& ShapeB ) -> std::optional<CollisionPair> 
+            auto collision_or = std::visit([&]( const auto& ShapeA, const auto& ShapeB ) -> std::optional<CollisionManifold> 
             { 
-                return detectCollision(ShapeA, ShapeB, ent1.getPosition(), ent2.getPosition()); 
+                return detectCollision(ShapeA, ShapeB, ent1.getPosition(), ent2.getPosition(), ent1ID, ent2ID); 
             }, ent1.getShape(), ent2.getShape());
             
 
@@ -121,7 +123,7 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
     }
 }
 
-std::unordered_map<size_t, std::vector<size_t>> SpartialHashGrid::getZusammenhangskomponenten( const EntityRegistry& Entitys ) const
+ std::vector<std::vector<CollisionManifold>> SpartialHashGrid::getZusammenhangskomponenten( const EntityRegistry& Entitys ) const
 {
     ds::DisjointSets Union(Entitys.size());
     for( auto& pair : m_KollisionPairs)
@@ -133,8 +135,27 @@ std::unordered_map<size_t, std::vector<size_t>> SpartialHashGrid::getZusammenhan
     }
 
     std::unordered_map<size_t, std::vector<size_t>> groups = Union.getSets();
+//TODO: schön machen das ist alles noch nicht optimal hier auch nicht effizient
+    std::vector<std::vector<CollisionManifold>> KollisionGroups;
+    KollisionGroups.reserve(groups.size());
+    //O(groups.size)
+    size_t idx = 0;
+    for( auto&[_, group] : groups )
+    {
+        KollisionGroups[idx].reserve(group.size());
+        for( size_t i = 0; i < group.size(); ++i )
+        {
+            const auto ent1ID = Entitys.at(group[i]).getID();
+            for( size_t j = i+1; j < group.size(); ++j )
+            {
+                const auto ent2ID = Entitys.at(group[j]).getID();
+                CollisionManifold hash = (ent1ID < ent2ID) ? CollisionManifold{ ent1ID, ent2ID, 0.0, Vec3D(), Vec3D() } : CollisionManifold{ ent2ID, ent1ID, 0.0, Vec3D(), Vec3D() };
+                if( auto it = m_KollisionPairs.find(hash); it != m_KollisionPairs.cend() ) KollisionGroups[idx].push_back(*it);
+            }
+        }
+        ++idx;
+    }
 
-    return groups;
+    return KollisionGroups;
 }
-    
 }

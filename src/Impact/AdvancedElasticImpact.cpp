@@ -1,9 +1,5 @@
 #include "EntityRegistry.h"
 #include "Impact.h"
-#include <array>
-#include <cstddef>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace Physik 
@@ -17,11 +13,11 @@ void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state )
     m_Grid.FindAllKollisionPairs( state );
 
     //O(alpha * n)
-    std::unordered_map<size_t, std::vector<size_t>> groups = m_Grid.getZusammenhangskomponenten( state );
+    auto groups = m_Grid.getZusammenhangskomponenten( state );
 
     //resolveImpacts
     //O(size of Zusammenhangskomponente)
-    for( auto&[rep, set] : groups )
+    for( auto& set : groups )
     {
         switch (set.size()) 
         {
