@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -55,8 +56,8 @@ public:
     ImpactApplier(ImpactApplier&&) = default;
     ~ImpactApplier() = default;
 private:
-    Vec3D CalcVAfter(  const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal ) const;
-    Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal, double Penetration, double sign ) const;
+    std::optional<Vec3D> CalcImpulse(  const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
+    Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
 private:
     ImpactVelocityOperattions ops;
 };

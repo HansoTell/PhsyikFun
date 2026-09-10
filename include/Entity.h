@@ -31,6 +31,12 @@ struct ConstantPrtopertys
     T m_inverseMass;
 };
 
+template<typename T = double>
+struct Material 
+{
+    T Restitution;
+};
+
 template <size_t Dim = 3, typename T = double>
 class Entity 
 {
@@ -44,6 +50,7 @@ public:
     T getEnergy() const { return getKineticEnergy() + getPotentialEnergy(); }
     T getKineticEnergy() const { return m_Energy.KineticEnergy; }
     T getPotentialEnergy() const { return m_Energy.PotentialEnergy; }
+    T getRestitution() const { return m_Material.Restitution; }
     const Shape<Dim, T>& getShape() const { return m_Shape; }
     uint64_t getID() const { return m_ID; }
 
@@ -57,7 +64,7 @@ public:
     bool operator == ( const Entity& other ){ return m_ID == other.m_ID; }
 public:
     Entity(Vector<Dim, T> startPosition, T mass, Shape<Dim, T> shape, bool isStatic = false ) 
-        : m_KinState( { startPosition, Vector<Dim, T>(), Vector<Dim, T>() } ), m_Energy({ 0.0, 0.0 }), m_Shape(std::move(shape)), m_ID(nextID++) 
+        : m_KinState( { startPosition, Vector<Dim, T>(), Vector<Dim, T>() } ), m_Energy({ 0.0, 0.0 }), m_Shape(std::move(shape)), m_Material({ T{1} }), m_ID(nextID++) 
     {
         if( isStatic || mass == 0 )
             m_Constants = { mass, 0 };
@@ -65,7 +72,7 @@ public:
             m_Constants = { mass, 1/mass };
     }
     Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, Shape<Dim, T> shape, bool isStatic = false ) 
-        : m_Constants({ mass, 1/mass }), m_KinState( { startPosition, startVelocity, Vector<Dim, T>() } ), m_Energy({ 0.5 * mass * startVelocity * startVelocity, 0.0 }), m_Shape(std::move(shape)), m_ID(nextID++) 
+        : m_Constants({ mass, 1/mass }), m_KinState( { startPosition, startVelocity, Vector<Dim, T>() } ), m_Energy({ 0.5 * mass * startVelocity * startVelocity, 0.0 }), m_Shape(std::move(shape)), m_Material({ T{1.0} }), m_ID(nextID++) 
     {
         if( isStatic || mass == T{0} )
             m_Constants = { mass, T{0} };
@@ -84,6 +91,7 @@ private:
     KinematicState<Dim, T> m_KinState;
     EnergyPropertys<T> m_Energy;
     ConstantPrtopertys<T> m_Constants;
+    Material<T> m_Material;
 
     Shape<Dim, T> m_Shape;
 };

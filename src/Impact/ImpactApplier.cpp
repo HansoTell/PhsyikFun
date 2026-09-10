@@ -1,6 +1,9 @@
 #include "Impact.h"
 
 #include "Vector.h"
+#include "Math/Math.h"
+#include <cassert>
+#include <optional>
 
 
 namespace Physik 
@@ -12,21 +15,23 @@ void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<Colli
         ClassicEntity& ent1 = state.getById(Collision.ent1);
         ClassicEntity& ent2 = state.getById(Collision.ent2);
 
-        Vec3D vAfter1 = CalcVAfter(ent1, ent2, Collision.normal);
-        Vec3D vAfter2 = CalcVAfter(ent2, ent1, Collision.normal);
+        auto vAfter1 = CalcImpulse(ent1, ent2, Collision);
+        auto vAfter2 = CalcImpulse(ent2, ent1, Collision);
+        assert((vAfter1.has_value() && vAfter2.has_value()) || (!vAfter1.has_value() && !vAfter2.has_value()));
+        if(!vAfter1.has_value()) continue;
 
-        Vec3D posAfter1 = CalcPositionCorrection(ent1, ent2, Collision.normal, Collision.Penetration, 1.0);
-        Vec3D posAfter2 = CalcPositionCorrection(ent2, ent1, Collision.normal, Collision.Penetration, -1.0);
+        Vec3D posAfter1 = CalcPositionCorrection(ent1, ent2, Collision);
+        Vec3D posAfter2 = CalcPositionCorrection(ent2, ent1, Collision);
 
-        ent1.setVelocity(vAfter1);
-        ent2.setVelocity(vAfter2);
+        ent1.setVelocity(vAfter1.value());
+        ent2.setVelocity(vAfter2.value());
 
         ent1.setPosition(posAfter1);
         ent2.setPosition(posAfter2);
     }
 }
   
-Vec3D ImpactApplier::CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal, double Penetration, double sign ) const
+Vec3D ImpactApplier::CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision ) const
 {
     double weightHited = 1/hited.getMass(); 
     double weightHitee = 1/hitee.getMass(); 
@@ -35,17 +40,19 @@ Vec3D ImpactApplier::CalcPositionCorrection( const ClassicEntity& hited, const C
     return hited.getPosition() +sign * VectorNormal * Penetration * weightHited / weightGes;
 }
 
-Vec3D ImpactApplier::CalcVAfter(  const ClassicEntity& hited, const ClassicEntity& hitee, Vec3D VectorNormal ) const
+std::optional<Vec3D> ImpactApplier::CalcImpulse(  const ClassicEntity& ent1, const ClassicEntity& ent2, const CollisionManifold& collision ) const
 {
-    Vec3D velocityNormalHited = ops.CalcVelocityNormal(hited.getVelocity(), VectorNormal);
-    Vec3D velocityNormalHitee = ops.CalcVelocityNormal(hitee.getVelocity(), VectorNormal);
-    Vec3D velocityTangentail = ops.CalcVelocityTangential(hited.getVelocity(), VectorNormal);
+    using Math::VectorCalc::VectorProduct;
+    Vec3D relativVelocity = ent2.getVelocity() - ent1.getVelocity();
+    double relativVelocNormal = VectorProduct(relativVelocity, collision.normal);
+    if( relativVelocNormal < 0 ) return std::nullopt;
 
-    double velocityAfterNormal = ops.CalcVelocityAfter(hited, velocityNormalHited, hitee, velocityNormalHitee);
+    double inverseMassSum = ent1.getInverseMass() + ent2.getInverseMass();
 
-    Vec3D velocityAfter = velocityAfterNormal * VectorNormal + velocityTangentail;
+    double AbsImpulse = -()
 
-    return velocityAfter;
-   
+
+
+    return std::nullopt;
 }
 }
