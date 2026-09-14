@@ -51,15 +51,16 @@ class ImpactApplier
 public:
     void ApplyImpacts( EntityRegistry& State, const std::vector<CollisionManifold>& EntityIdx );
 public:
-    ImpactApplier() = default;
-    ImpactApplier(const ImpactApplier&) = default;
-    ImpactApplier(ImpactApplier&&) = default;
+    ImpactApplier() : m_Combiner(std::make_unique<BasicMaterialCombiner<>>()) {} 
+    ImpactApplier(const ImpactApplier& other) : m_Combiner(other.m_Combiner->clone()) {} 
+    ImpactApplier(ImpactApplier&& other): m_Combiner(std::move(other.m_Combiner)) {}
     ~ImpactApplier() = default;
 private:
     std::optional<Vec3D> CalcImpulse(  const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
     Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
 private:
     ImpactVelocityOperattions ops;
+    std::unique_ptr<IMaterialCombiner<>> m_Combiner;
 };
 
 

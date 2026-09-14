@@ -15,29 +15,23 @@ void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<Colli
         ClassicEntity& ent1 = state.getById(Collision.ent1);
         ClassicEntity& ent2 = state.getById(Collision.ent2);
 
-        auto vAfter1 = CalcImpulse(ent1, ent2, Collision);
-        auto vAfter2 = CalcImpulse(ent2, ent1, Collision);
-        assert((vAfter1.has_value() && vAfter2.has_value()) || (!vAfter1.has_value() && !vAfter2.has_value()));
-        if(!vAfter1.has_value()) continue;
+        auto Impulse = CalcImpulse(ent1, ent2, Collision);
 
-        Vec3D posAfter1 = CalcPositionCorrection(ent1, ent2, Collision);
-        Vec3D posAfter2 = CalcPositionCorrection(ent2, ent1, Collision);
+        if(!Impulse.has_value()) continue;
 
-        ent1.setVelocity(vAfter1.value());
-        ent2.setVelocity(vAfter2.value());
+        Vec3D positionCorrection = CalcPositionCorrection(ent1, ent2, Collision);
 
-        ent1.setPosition(posAfter1);
-        ent2.setPosition(posAfter2);
+        ent1.setVelocity(ent1.getVelocity() - ent1.getInverseMass() * (*Impulse));
+        ent2.setVelocity(ent2.getVelocity() + ent2.getInverseMass() * (*Impulse));
+
+        ent1.setPosition(ent1.getPosition() - positionCorrection * ent1.getInverseMass());
+        ent2.setPosition(ent2.getPosition() - positionCorrection * ent2.getInverseMass());
     }
 }
   
 Vec3D ImpactApplier::CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision ) const
 {
-    double weightHited = 1/hited.getMass(); 
-    double weightHitee = 1/hitee.getMass(); 
-    double weightGes = weightHited + weightHitee;
-
-    return hited.getPosition() +sign * VectorNormal * Penetration * weightHited / weightGes;
+    return (collision.normal * collision.Penetration) / (hited.getInverseMass() + hitee.getInverseMass());
 }
 
 std::optional<Vec3D> ImpactApplier::CalcImpulse(  const ClassicEntity& ent1, const ClassicEntity& ent2, const CollisionManifold& collision ) const
@@ -48,11 +42,10 @@ std::optional<Vec3D> ImpactApplier::CalcImpulse(  const ClassicEntity& ent1, con
     if( relativVelocNormal < 0 ) return std::nullopt;
 
     double inverseMassSum = ent1.getInverseMass() + ent2.getInverseMass();
+    auto CombinedMaterial = m_Combiner->CombineMaterials(ent1.getMaterial(), ent2.getMaterial());
 
-    double AbsImpulse = -()
+    double AbsImpulse = -((1.0 + CombinedMaterial.Restitution) * relativVelocNormal) / inverseMassSum;
 
-
-
-    return std::nullopt;
+    return AbsImpulse * collision.normal;
 }
 }

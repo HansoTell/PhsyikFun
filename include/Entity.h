@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 #include "Shapes.h"
+#include "Material.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -31,11 +32,6 @@ struct ConstantPrtopertys
     T m_inverseMass;
 };
 
-template<typename T = double>
-struct Material 
-{
-    T Restitution;
-};
 
 template <size_t Dim = 3, typename T = double>
 class Entity 
@@ -51,6 +47,7 @@ public:
     T getKineticEnergy() const { return m_Energy.KineticEnergy; }
     T getPotentialEnergy() const { return m_Energy.PotentialEnergy; }
     T getRestitution() const { return m_Material.Restitution; }
+    const Material<T>& getMaterial() const { return m_Material; }
     const Shape<Dim, T>& getShape() const { return m_Shape; }
     uint64_t getID() const { return m_ID; }
 
