@@ -1,5 +1,6 @@
 #include "Vector.h"
 #include <cmath>
+#include <cstddef>
 
 namespace Physik 
 {
@@ -60,6 +61,8 @@ public:
     friend Quaternion<T> operator*( const T& skalar, const Quaternion<T>& quat ) { return quat * skalar; }
     Quaternion<T> operator/( const T& skalar ) const { Quaternion<T> tmp = *this; tmp /= skalar; return tmp; }
 
+    T operator[](size_t i) const { return m_data[i]; }
+    T& operator[](size_t i) { return m_data[i]; }
 
     Quaternion<T>& operator=( Quaternion<T>&& other ) noexcept 
     {

@@ -50,7 +50,7 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
     {
         auto AABBBox = std::visit([&](const auto& Shape)
         {
-            return getAABB(Shape, ent.getPosition());
+            return getAABB(Shape, ent.getPosition(), ent.getRotation());
         }, ent.getShape());
 
 

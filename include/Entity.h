@@ -46,6 +46,7 @@ public:
     Vector<Dim, T> getPosition() const { return m_KinState.m_Position; }
     Vector<Dim, T> getVelocity() const { return m_KinState.m_Velocity; }
     Vector<Dim, T> getAcceleration() const { return m_KinState.m_Acceleration; }
+    Quaternion<T> getRotation() const { return m_KinState.m_Rotation; }
     T getMass() const { return m_Constants.m_Mass; }
     T getInverseMass() const { return m_Constants.m_inverseMass; }
     bool isStatic() const { return m_Constants.m_inverseMass == T{0}; }
