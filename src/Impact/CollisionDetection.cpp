@@ -49,4 +49,10 @@ std::optional<CollisionManifold> detectCollision(const Box<>& A, const Sphere<>&
     return detectCollision(B, A, posB, posA, idB, idA);
 }
 
+//TODO:
+std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B, const Vec3D &posA, const Vec3D &posB, EntityRegistry::ID idA, EntityRegistry::ID idB)
+{
+    return std::nullopt;
+}
+
 }

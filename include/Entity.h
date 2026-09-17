@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Math/Math.h"
 #include "Vector.h"
 #include "Shapes.h"
 #include "Material.h"
+#include "Math/Quaternion.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -16,6 +18,10 @@ struct KinematicState
     Vector<Dim, T> m_Position;
     Vector<Dim, T> m_Velocity;
     Vector<Dim, T> m_Acceleration;
+
+    Quaternion<T> m_Rotation;
+    Vector<Dim, T> m_AngularVelocity;
+    Vector<Dim, T> m_AngularAcceleration;
 };
 
 template <typename T = double>
@@ -68,8 +74,13 @@ public:
         else
             m_Constants = { mass, 1/mass };
     }
-    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, Shape<Dim, T> shape, bool isStatic = false ) 
-        : m_Constants({ mass, 1/mass }), m_KinState( { startPosition, startVelocity, Vector<Dim, T>() } ), m_Energy({ 0.5 * mass * startVelocity * startVelocity, 0.0 }), m_Shape(std::move(shape)), m_Material({ T{1.0} }), m_ID(nextID++) 
+    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, Shape<Dim, T> shape, bool isStatic = false ) : 
+        m_Constants({ mass, 1/mass }), 
+        m_KinState( { startPosition, startVelocity, Vector<Dim, T>(), Quaternion<T>(0.0, 1.0, 0.0, 0.0), Vector<Dim, T>(), Vector<Dim, T>() } ),
+        m_Energy({ 0.5 * mass * Math::VectorCalc::VectorProduct(startVelocity, startVelocity), 0.0 }), 
+        m_Shape(std::move(shape)), 
+        m_Material({ T{1.0} }), 
+        m_ID(nextID++) 
     {
         if( isStatic || mass == T{0} )
             m_Constants = { mass, T{0} };

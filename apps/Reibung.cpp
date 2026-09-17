@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "Interactions.h"
+#include "Shapes.h"
 #include "System.h"
 #include "Vector.h"
 #include <future>
@@ -10,13 +11,13 @@ int main()
 {
     ClassicalSystem sys;
 
-    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 100.0, 0.0, 0.0 }, 1.0, 1.0);
+    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 100.0, 0.0, 0.0 }, 1.0, Sphere<>{1.0});
 
     sys.addEntity(std::move(Sun));
-    sys.addNonPotentialForce(ClassicNonPotentialForce([]( const ClassicEntityState& state, double Time ){ 
+    sys.addNonPotentialForce(ClassicNonPotentialForce([]( const ClassicEntity& state, double Time ){ 
         constexpr double gamma = 0.01; 
 
-        return -gamma * state.m_KinState.m_Velocity; 
+        return -gamma * state.getVelocity(); 
     }));
 
     sys.setTimeIncrement(0.1);

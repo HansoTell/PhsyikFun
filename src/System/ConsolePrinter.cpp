@@ -71,14 +71,14 @@ void ConsolePrinter::printKineticEnergy() const
 {
     const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
-        std::cout << "Entity " << entitys[i].getID() << " With Kinetic Energy: " << entitys[i].getEntityState().m_Energys.KineticEnergy << " J" << "\n";
+        std::cout << "Entity " << entitys[i].getID() << " With Kinetic Energy: " << entitys[i].getKineticEnergy()<< " J" << "\n";
 }
 
 void ConsolePrinter::printPotentialEnergy() const
 {
     const auto& entitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < entitys.size(); i++ )
-        std::cout << "Entity " << entitys[i].getID() << " With Potential Energy: " << entitys[i].getEntityState().m_Energys.PotentialEnergy<< " J" << "\n";
+        std::cout << "Entity " << entitys[i].getID() << " With Potential Energy: " << entitys[i].getPotentialEnergy() << " J" << "\n";
 }
 
 }

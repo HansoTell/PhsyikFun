@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "Shapes.h"
 #include "System.h"
 #include "Vector.h"
 #include <chrono>
@@ -10,8 +11,8 @@ int main()
 {
     ClassicalSystem sys;
 
-    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 0.0, 0.0, 0.0 }, 1000.0, 6.957e8);
-    ClassicEntity Planet( Vec3D{ 10.0, 0.0, 0.0 }, Vec3D{ 0.0, 10.0, 0.0 }, 1.0, 6.37e6);
+    ClassicEntity Sun(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{ 0.0, 0.0, 0.0 }, 1000.0, Sphere<>{6.957e8});
+    ClassicEntity Planet( Vec3D{ 10.0, 0.0, 0.0 }, Vec3D{ 0.0, 10.0, 0.0 }, 1.0, Sphere<>{6.37e6});
 
     sys.addEntity(std::move(Sun));
     sys.addEntity(std::move(Planet));

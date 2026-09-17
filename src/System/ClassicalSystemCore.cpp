@@ -11,22 +11,23 @@
 
 namespace Physik 
 {
+constexpr double default_cellsize = 10.0;  
 ClassicalSystemCore::ClassicalSystemCore()
     : m_DeltaTime(default_delta_time), m_Integrator(std::make_unique<VelocityVerleit>()), 
-    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>(default_cellsize)),
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {}
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
     : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), 
-    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>(default_cellsize)),
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
 }
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) 
-    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()), m_Time(0.0) 
+    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>(default_cellsize)), m_Time(0.0) 
 {
     UpdateEntityPropertys();
 }
