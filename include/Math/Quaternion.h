@@ -1,14 +1,14 @@
 #include "Vector.h"
 #include <cmath>
+
 namespace Physik 
 {
-//-> Konstrukto: (x0: Eingabe Winkel alpha (zwischen 0, 2pi)-> x0 = cos(alpha/2), x1-x3: Eingabe Achsen -> zu normierten Achsen transformieren.  ) -> wie von normalen unterscheiden?
-///-> wie unterschiede von normalen Quaternionen?
 template<typename T = double>
 class Quaternion 
 {
 public:
-    T real() const { return m_data[0]; }
+    T Re() const { return m_data[0]; }
+    Vector<3, T> Im() const { return Vector<3, T>{ m_data[1], m_data[2], m_data[3] }; }
     T i() const { return m_data[1]; }
     T j() const { return m_data[2]; }
     T k() const { return m_data[3]; }
@@ -25,28 +25,77 @@ public:
     {
         return m_data/Betrag();
     }
-    Quaternion<T> Konjugation(){ return Quaternion<T>(real(), -i(), -j(), -k()); }
+    Quaternion<T> Konjugation() const { return Quaternion<T>(Re(), -i(), -j(), -k()); }
+    Quaternion<T> Inverse() const { return Konjugation()/Norm(); }
 
-    Quaternion<T>& operator+=( const Quaternion<T>& rhs ){ *this += rhs; return *this; }
-    Quaternion<T>& operator-=( const Quaternion<T>& rhs ){ *this -= rhs; return *this; }
-
-public:
-    Quaternion( T Drehwinkel, Vec3D Axis ) 
+    Vector<3, T> Rotate( const Vector<3, T>& PointToRotate ) const 
     {
-        T alpha = Drehwinkel/2;
-        T x0 = std::cos(alpha);
-        Vec3D epsilon = Axis/Axis.EukNorm();
-        Vec3D NormAxis = epsilon * std::sin(alpha);
-        m_data = { x0, NormAxis[0], NormAxis[1], NormAxis[2] };
+        Quaternion<T> PointQuaternion(T{0}, PointToRotate);
+        return ((*this * PointQuaternion) * this->Konjugation()).Im();
     }
-    explicit Quaternion( T real, T i, T j, T k ) : m_data({ real, i, j, k} ) {}
+
+    Quaternion<T>& operator+=( const Quaternion<T>& rhs ){ this->m_data += rhs.m_data; return *this; }
+    Quaternion<T>& operator-=( const Quaternion<T>& rhs ){ this->m_data -= rhs.m_data; return *this; }
+    Quaternion<T>& operator*=( const Quaternion<T>& rhs )
+    {
+        T x0 = m_data[0]*rhs.m_data[0] - m_data[1]*rhs.m_data[1] - m_data[2]*rhs.m_data[2] - m_data[3]*rhs.m_data[3];
+        T x1 = m_data[0]*rhs.m_data[1] + m_data[1]*rhs.m_data[0] + m_data[2]*rhs.m_data[3] - m_data[3]*rhs.m_data[2];
+        T x2 = m_data[0]*rhs.m_data[2] - m_data[1]*rhs.m_data[3] + m_data[2]*rhs.m_data[0] + m_data[3]*rhs.m_data[1];
+        T x3 = m_data[0]*rhs.m_data[3] + m_data[1]*rhs.m_data[2] - m_data[2]*rhs.m_data[1] + m_data[3]*rhs.m_data[0];
+
+        m_data[0] = x0;
+        m_data[1] = x1;
+        m_data[2] = x2;
+        m_data[3] = x3;
+
+        return *this;
+    }
+    Quaternion<T>& operator*=( const T& rhs ){ this->m_data *= rhs; return *this; }
+    Quaternion<T>& operator/=( const T& scalar ) { m_data/=scalar; return *this; }
+
+    Quaternion<T> operator+( const Quaternion<T>& rhs ) const { Quaternion<T> tmp = *this; tmp += rhs; return tmp; }
+    Quaternion<T> operator-( const Quaternion<T>& rhs ) const { Quaternion<T> tmp = *this; tmp -= rhs; return tmp; }
+    Quaternion<T> operator*( const Quaternion<T>& rhs ) const { Quaternion<T> tmp = *this; tmp *= rhs; return tmp; }
+    Quaternion<T> operator*( const T& skalar ) const { Quaternion<T> tmp = *this; tmp *= skalar; return tmp; }
+    friend Quaternion<T> operator*( const T& skalar, const Quaternion<T>& quat ) { return quat * skalar; }
+    Quaternion<T> operator/( const T& skalar ) const { Quaternion<T> tmp = *this; tmp /= skalar; return tmp; }
+
+
+    Quaternion<T>& operator=( Quaternion<T>&& other ) noexcept 
+    {
+        if( this == &other)
+            return *this;
+        m_data = std::move(other.m_data);
+
+        return *this;
+    }
+    Quaternion<T>& operator=( const Quaternion<T>& other ) 
+    {
+        if( this == &other)
+            return *this;
+
+        m_data = other.m_data;
+
+        return *this;
+    }
+public:
+    Quaternion( T real, T i, T j, T k ) : m_data({ real, i, j, k} ) {}
     Quaternion( Vector<4, T> data ) : m_data(std::move(data)) {}
     Quaternion( const Quaternion&) = default;
     Quaternion(Quaternion&&) = default;
     ~Quaternion() = default;
+public:
+    static Quaternion FromAxisAngle( T Angle, const Vector<3, T>& Axis )
+    {
+        T halfAngel = Angle/T{2};
+        T x0 = std::cos(halfAngel);
+        Vec3D epsilon = Axis/Axis.EukNorm();
+        Vec3D NormAxis = epsilon * std::sin(halfAngel);
+
+        return Quaternion{ x0, NormAxis[0], NormAxis[1], NormAxis[2] };
+
+    }
 private:
     Vector<4, T> m_data;
 };
-
-
 }
