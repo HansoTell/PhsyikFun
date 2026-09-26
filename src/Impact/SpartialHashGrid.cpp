@@ -108,14 +108,14 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
 
             auto collision_or = std::visit([&]( const auto& ShapeA, const auto& ShapeB ) -> std::optional<CollisionManifold> 
             { 
-                return detectCollision(ShapeA, ShapeB, ent1.getPosition(), ent2.getPosition(), ent1ID, ent2ID); 
+                return detectCollision(ShapeA, ShapeB, ent1, ent2); 
             }, ent1.getShape(), ent2.getShape());
             
 
             if( !collision_or.has_value() ) continue;
 
             auto& collision = collision_or.value();
-            if(collision.ent1 > collision.ent2 ) std::swap(collision.ent1, collision.ent2);
+            if(collision.ent1 > collision.ent2 ) { std::swap(collision.ent1, collision.ent2); collision.normal = -1 * collision.normal; }
             if(m_KollisionPairs.find(collision) != m_KollisionPairs.end()) continue;
 
             m_KollisionPairs.insert(collision);

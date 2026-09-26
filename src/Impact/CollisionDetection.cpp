@@ -23,9 +23,30 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     return CollisionManifold{ entA.getID(), entB.getID(), penetration, normal };
 }
 
-static Vec3D ProjectKoordOnBox( const Vec3D& BoxMin, const Vec3D& BoxMax, const Vec3D& posSphere )
+static double findShortestPointToSurface( const Vector<6, double> distances, const Vec3D& centerLocal, const Vec3D& BoxHalfSizes, Vec3D& outNormalLocal, Vec3D& outContactLocal )
 {
-    return Vec3D{ std::max(BoxMin.at(0), std::min(posSphere.at(0), BoxMax.at(0))), std::max(BoxMin.at(1), std::min(posSphere.at(1), BoxMax.at(1))), std::max(BoxMin.at(2), std::min(posSphere.at(2), BoxMax.at(2))) };
+    double minDistane = std::numeric_limits<double>::infinity();
+    for( size_t i = 0; i < distances.size(); ++i )
+    {
+        double distI = distances[i];
+        if( distI < minDistane )
+        {
+            minDistane = distI;
+
+            for( size_t j = 0; j < outContactLocal.size(); ++j )
+            {
+                if( (i%3) != j )
+                {
+                    outNormalLocal[j] = 0.0;
+                    outContactLocal[j] = centerLocal[j];
+                }else {
+                    outNormalLocal[j] = (i < distances.size()/2) ? 1.0 : -1.0;
+                    outContactLocal[j] = (i < distances.size()/2) ? BoxHalfSizes[j] : -BoxHalfSizes[j];
+                }
+            }
+        }
+    }
+    return minDistane;
 }
 
 std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const Box<>& B,  const ClassicEntity& entA, const ClassicEntity& entB)
@@ -51,33 +72,24 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     Vec3D normalLocal;
     double penetration;
     Vec3D conatctLocal = LocalnearestPoint;
-//TODO:
-    if( true )
+
+    constexpr double epsilon = 10e-9;
+    if( diffSquared > epsilon * epsilon )
     {
         double distance = std::sqrt(diffSquared);
         normalLocal = diffrence / distance;
         penetration = A.m_Radius - distance;
     } else {
-        auto distancePos = B.halfSize - localD;
-        auto distanceNeg= B.halfSize + localD;
+        Vec3D distancePos = B.halfSize - localD;
+        Vec3D distanceNeg= B.halfSize + localD;
+        //Brauchen 6D Vektor erst Neg dann Pos
+        Vector<6, double> distances;
+        for( size_t i = 0; i < distanceNeg.size(); ++i ) distances[i] = distanceNeg[i];
+        for( size_t i = 0; i < distancePos.size(); ++i ) distances[i + distanceNeg.size()] = distancePos[i];
 
-        double minDistane = std::numeric_limits<double>::infinity();
-        for( size_t i = 0; i < distancePos.size(); ++i )
-        {
-            double distI = distancePos[i];
-            if( distI < minDistane )
-            {
-                minDistane = distI;
-//normalLoca setzten --> if einfach ein array wo entsprechende local genommen wird
-//Pain IG wenn man Permutation generieren könnte gerade wäre es möglich das trotzdem so umzusetzten was immerhin ein bisschen besser ist. Minus auch machbar reihenfolge schwierig
-//--> Also leerer Vec3D erstellen und dann durchlaufen wenn i != id dann setzten wir da local x sonst setzten wir da den anderen wert ein. -> Hilfsmethode das zu viel hierfür
+        double minDistance = findShortestPointToSurface(distances, localD, B.halfSize, normalLocal, conatctLocal);
 
-
-
-            }
-
-        }
-    
+        penetration = A.m_Radius + minDistance;
     }
 
     Vec3D contactPoint = posB + entB.getRotation().Rotate(conatctLocal);
@@ -88,7 +100,7 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
 
 std::optional<CollisionManifold> detectCollision(const Box<>& A, const Sphere<>& B, const ClassicEntity& entA, const ClassicEntity& entB)
 {
-    return detectCollision(B, A, entA, entB);
+    return detectCollision(B, A, entB, entA);
 }
 
 //TODO:
