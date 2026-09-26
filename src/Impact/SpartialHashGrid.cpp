@@ -114,6 +114,7 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
 
             if( !collision_or.has_value() ) continue;
 
+            //Konvention NOrmal zeigt von kleinerer Id zu größerer. Erste Wert immer kleinere ID
             auto& collision = collision_or.value();
             if(collision.ent1 > collision.ent2 ) { std::swap(collision.ent1, collision.ent2); collision.normal = -1 * collision.normal; }
             if(m_KollisionPairs.find(collision) != m_KollisionPairs.end()) continue;
@@ -135,7 +136,6 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
     }
 
     std::unordered_map<size_t, std::vector<size_t>> groups = Union.getSets();
-//TODO: schön machen das ist alles noch nicht optimal hier auch nicht effizient
     std::vector<std::vector<CollisionManifold>> KollisionGroups;
     KollisionGroups.reserve(groups.size());
     //O(groups.size)

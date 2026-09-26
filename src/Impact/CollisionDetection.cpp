@@ -54,7 +54,7 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     const Vec3D& posA = entA.getPosition();
     const Vec3D& posB = entB.getPosition();
 
-    Vec3D d = posB - posA;
+    Vec3D d = posA - posB;
 
     Vec3D localD = entB.getRotation().Inverse().Rotate(d);
 
@@ -73,8 +73,8 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     double penetration;
     Vec3D conatctLocal = LocalnearestPoint;
 
-    constexpr double epsilon = 10e-9;
-    if( diffSquared > epsilon * epsilon )
+    const constexpr double GeometryEpsilon = 1e-9;
+    if( diffSquared > GeometryEpsilon * GeometryEpsilon )
     {
         double distance = std::sqrt(diffSquared);
         normalLocal = diffrence / distance;
