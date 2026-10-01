@@ -121,28 +121,62 @@ static std::array<Vec3D, dim> GetBodyFixedAxis( const ClassicEntity& Entity )
     return erg;
 }
 
+static double GetR( const ClassicEntity& ent, const Vec3D& Axis, const Box<>& Shape, const std::array<Vec3D, dim>& localAxis )
+{
+    double erg = 0.0;
+    for( size_t i = 0; i < Axis.size(); ++i )
+         erg += Shape.halfSize[i] * std::fabs(Math::VectorCalc::VectorProduct(localAxis[i], Axis));
+
+    return erg;
+}
 
 std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B, const ClassicEntity& entA, const ClassicEntity& entB)
 {
+    using namespace ::Math::VectorCalc;
+
+
+    //Axis Calculation
     std::array<Vec3D, dim> localAxisA = GetBodyFixedAxis(entA);
     std::array<Vec3D, dim> localAxisB = GetBodyFixedAxis(entB);
-
     std::array<Vec3D, 3*dim> localCrossProductAxis; 
+
     for( size_t i = 0; i < localAxisA.size(); ++i )
         for( size_t j = 0; j < localAxisB.size(); ++j )
-            localCrossProductAxis[localAxisA.size()*i+j] = Math::VectorCalc::CrossProduct(localAxisA[i], localAxisB[j]);
+            localCrossProductAxis[localAxisA.size()*i+j] = CrossProduct(localAxisA[i], localAxisB[j]);
 
     std::array<Vec3D, localAxisA.size() + localAxisB.size() + localCrossProductAxis.size()> AllAxis;
 
     auto it = AllAxis.begin();
-
     it = std::copy(localAxisA.begin(), localAxisA.end(), it);
     it = std::copy(localAxisB.begin(), localAxisB.end(), it);
     it = std::copy(localCrossProductAxis.begin(), localCrossProductAxis.end(), it);
 
+    //Test If Collision
+    Vec3D CenterDiff = entB.getPosition() - entA.getPosition(); 
+    size_t AxisMinPenetration;
+    double minPenetration = std::numeric_limits<double>::infinity();
 
+    for( size_t i = 0; i < AllAxis.size(); ++i )
+    {
+        double rA = GetR(entA, AllAxis[i], A, localAxisA);
+        double rB = GetR(entB, AllAxis[i], B, localAxisB);
+        double r = rA + rB;
+        double diff = std::fabs(VectorProduct(CenterDiff, AllAxis[i]));
+
+        if( diff > r )
+            return std::nullopt;
+
+        double Penetration = r - diff;
+        if( minPenetration < Penetration )
+        {
+            minPenetration = Penetration;
+            AxisMinPenetration = i;
+        }
+    }
+
+    //Kollision Collision Calculation
+    Vec3D normal = (VectorProduct(CenterDiff, AllAxis[AxisMinPenetration]) >= 0) ? AllAxis[AxisMinPenetration] : -1 * AllAxis[AxisMinPenetration];
 
     return std::nullopt;
 }
-
 }
