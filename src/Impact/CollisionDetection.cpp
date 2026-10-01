@@ -1,8 +1,11 @@
 #include "CollisionDetction.h"
 
+#include "Entity.h"
 #include "Impact.h"
+#include "Math/Math.h"
 #include "Vector.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -103,9 +106,42 @@ std::optional<CollisionManifold> detectCollision(const Box<>& A, const Sphere<>&
     return detectCollision(B, A, entB, entA);
 }
 
-//TODO:
+
+static constexpr size_t dim = 3;
+static std::array<Vec3D, dim> GetBodyFixedAxis( const ClassicEntity& Entity )
+{
+    std::array<Vec3D, dim> erg;
+    for( size_t i = 0; i < dim; ++i )
+    {
+        Vec3D GlobalAxis;
+        GlobalAxis[i] = 1.0;
+        Vec3D localAxis = Entity.getRotation().Rotate(GlobalAxis);
+        erg[i] = localAxis;
+    }
+    return erg;
+}
+
+
 std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B, const ClassicEntity& entA, const ClassicEntity& entB)
 {
+    std::array<Vec3D, dim> localAxisA = GetBodyFixedAxis(entA);
+    std::array<Vec3D, dim> localAxisB = GetBodyFixedAxis(entB);
+
+    std::array<Vec3D, 3*dim> localCrossProductAxis; 
+    for( size_t i = 0; i < localAxisA.size(); ++i )
+        for( size_t j = 0; j < localAxisB.size(); ++j )
+            localCrossProductAxis[localAxisA.size()*i+j] = Math::VectorCalc::CrossProduct(localAxisA[i], localAxisB[j]);
+
+    std::array<Vec3D, localAxisA.size() + localAxisB.size() + localCrossProductAxis.size()> AllAxis;
+
+    auto it = AllAxis.begin();
+
+    it = std::copy(localAxisA.begin(), localAxisA.end(), it);
+    it = std::copy(localAxisB.begin(), localAxisB.end(), it);
+    it = std::copy(localCrossProductAxis.begin(), localCrossProductAxis.end(), it);
+
+
+
     return std::nullopt;
 }
 
