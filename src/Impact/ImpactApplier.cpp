@@ -36,9 +36,9 @@ Vec3D ImpactApplier::CalcPositionCorrection( const ClassicEntity& hited, const C
 
 std::optional<Vec3D> ImpactApplier::CalcImpulse(  const ClassicEntity& ent1, const ClassicEntity& ent2, const CollisionManifold& collision ) const
 {
-    using Math::VectorCalc::VectorProduct;
+    using Math::VectorCalc::DotProduct;
     Vec3D relativVelocity = ent2.getVelocity() - ent1.getVelocity();
-    double relativVelocNormal = VectorProduct(relativVelocity, collision.normal);
+    double relativVelocNormal = DotProduct(relativVelocity, collision.normal);
     if( relativVelocNormal < 0 ) return std::nullopt;
 
     double inverseMassSum = ent1.getInverseMass() + ent2.getInverseMass();

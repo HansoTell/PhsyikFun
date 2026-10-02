@@ -7,13 +7,13 @@ namespace Physik
 {
 Vec3D ImpactVelocityOperattions::CalcVelocityNormal( const Vec3D& veclocity, const Vec3D& normal ) const
 {
-    using Math::VectorCalc::VectorProduct;
-    return (VectorProduct(veclocity, normal)) * normal;
+    using Math::VectorCalc::DotProduct;
+    return (DotProduct(veclocity, normal)) * normal;
 }
 Vec3D ImpactVelocityOperattions::CalcVelocityTangential( const Vec3D& veclocity, const Vec3D& normal ) const
 {
-    using Math::VectorCalc::VectorProduct;
-    return veclocity - (VectorProduct(veclocity, normal)*normal);
+    using Math::VectorCalc::DotProduct;
+    return veclocity - (DotProduct(veclocity, normal)*normal);
 }
 double ImpactVelocityOperattions::CalcVelocityAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const
 {

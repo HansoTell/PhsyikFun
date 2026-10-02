@@ -128,7 +128,7 @@ static double GetR( const ClassicEntity& ent, const Vec3D& Axis, const Box<>& Sh
 {
     double erg = 0.0;
     for( size_t i = 0; i < Axis.size(); ++i )
-         erg += Shape.halfSize[i] * std::fabs(Math::VectorCalc::VectorProduct(localAxis[i], Axis));
+         erg += Shape.halfSize[i] * std::fabs(Math::VectorCalc::DotProduct(localAxis[i], Axis));
 
     return erg;
 }
@@ -143,8 +143,13 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
     std::array<Vec3D, 3*dim> localCrossProductAxis; 
 
     for( size_t i = 0; i < localAxisA.size(); ++i )
+    {
         for( size_t j = 0; j < localAxisB.size(); ++j )
-            localCrossProductAxis[localAxisA.size()*i+j] = CrossProduct(localAxisA[i], localAxisB[j]);
+        {
+            auto Cross = CrossProduct(localAxisA[i], localAxisB[j]);
+            localCrossProductAxis[localAxisB.size()*i+j] = Cross / Cross.EukNorm();
+        }
+    }
 
     std::array<Vec3D, localAxisA.size() + localAxisB.size() + localCrossProductAxis.size()> AllAxis;
 
@@ -166,20 +171,20 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
         double rA = GetR(entA, AllAxis[i], A, localAxisA);
         double rB = GetR(entB, AllAxis[i], B, localAxisB);
         double r = rA + rB;
-        double diff = std::fabs(VectorProduct(CenterDiff, AllAxis[i]));
+        double diff = std::fabs(DotProduct(CenterDiff, AllAxis[i]));
 
         if( diff > r )
             return std::nullopt;
 
         double Penetration = r - diff;
-        if( minPenetration < Penetration )
+        if( minPenetration > Penetration )
         {
             minPenetration = Penetration;
             AxisMinPenetration = i;
         }
     }
 
-    Vec3D normal = (VectorProduct(CenterDiff, AllAxis[AxisMinPenetration]) >= 0) ? AllAxis[AxisMinPenetration] : -1 * AllAxis[AxisMinPenetration];
+    Vec3D normal = (DotProduct(CenterDiff, AllAxis[AxisMinPenetration]) >= 0) ? AllAxis[AxisMinPenetration] : -1 * AllAxis[AxisMinPenetration];
 
     return CollisionManifold{ entA.getID(), entB.getID(), minPenetration, normal };
 }

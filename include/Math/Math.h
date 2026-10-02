@@ -17,7 +17,7 @@ Vector<Dim, T> VectorNormal( const Vector<Dim, T>& first, const Vector<Dim, T>& 
     return diff / diff.EukNorm();
 }
 template <size_t Dim = 3, typename T = double>
-T VectorProduct( const Vector<Dim, T>& first, const Vector<Dim, T>& secound )
+T DotProduct( const Vector<Dim, T>& first, const Vector<Dim, T>& secound )
 {
     T erg = 0;
     for( size_t i = 0; i < Dim; i++ )
