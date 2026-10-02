@@ -4,6 +4,7 @@
 #include "Impact.h"
 #include "Math/Math.h"
 #include "Vector.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -13,6 +14,10 @@
 
 namespace Physik 
 {
+
+static const constexpr double GeometryEpsilon = 1e-9;
+
+
 std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const Sphere<double>& B,  const ClassicEntity& entA, const ClassicEntity& entB)
 {
     Vec3D diff =  entB.getPosition() - entA.getPosition();
@@ -76,7 +81,6 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     double penetration;
     Vec3D conatctLocal = LocalnearestPoint;
 
-    const constexpr double GeometryEpsilon = 1e-9;
     if( diffSquared > GeometryEpsilon * GeometryEpsilon )
     {
         double distance = std::sqrt(diffSquared);
@@ -106,7 +110,6 @@ std::optional<CollisionManifold> detectCollision(const Box<>& A, const Sphere<>&
     return detectCollision(B, A, entB, entA);
 }
 
-
 static constexpr size_t dim = 3;
 static std::array<Vec3D, dim> GetBodyFixedAxis( const ClassicEntity& Entity )
 {
@@ -134,7 +137,6 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
 {
     using namespace ::Math::VectorCalc;
 
-
     //Axis Calculation
     std::array<Vec3D, dim> localAxisA = GetBodyFixedAxis(entA);
     std::array<Vec3D, dim> localAxisB = GetBodyFixedAxis(entB);
@@ -158,6 +160,9 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
 
     for( size_t i = 0; i < AllAxis.size(); ++i )
     {
+        if( AllAxis[i].BetragsQuadrat() < GeometryEpsilon * GeometryEpsilon )
+            continue;
+
         double rA = GetR(entA, AllAxis[i], A, localAxisA);
         double rB = GetR(entB, AllAxis[i], B, localAxisB);
         double r = rA + rB;
@@ -174,9 +179,8 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
         }
     }
 
-    //Kollision Collision Calculation
     Vec3D normal = (VectorProduct(CenterDiff, AllAxis[AxisMinPenetration]) >= 0) ? AllAxis[AxisMinPenetration] : -1 * AllAxis[AxisMinPenetration];
 
-    return std::nullopt;
+    return CollisionManifold{ entA.getID(), entB.getID(), minPenetration, normal };
 }
 }
