@@ -92,13 +92,15 @@ private:
     };
     static const std::array<CellKoords, 14> offsets;
 public:
+    void UpdateCellSize( const EntityRegistry& Entitys ); 
     void BuildMap( const EntityRegistry& Entitys );
     void FindAllKollisionPairs( const EntityRegistry& Entitys );
     std::vector<std::vector<CollisionManifold>> getZusammenhangskomponenten( const EntityRegistry& Entitys ) const;
 
     double getCellSize() const { return m_CellSize; }
 public:
-    SpartialHashGrid(double CellSize) : m_CellSize(CellSize){}
+    SpartialHashGrid() : m_isCellSizeStatic(false) {}
+    SpartialHashGrid(double CellSize) : m_CellSize(CellSize), m_isCellSizeStatic(true){}
     SpartialHashGrid( const SpartialHashGrid&) = default;
     SpartialHashGrid( SpartialHashGrid&& ) = default;
     ~SpartialHashGrid() = default;
@@ -109,6 +111,7 @@ private:
     std::unordered_set<CollisionManifold, CollisionPairHash> m_KollisionPairs;
 
     double m_CellSize;
+    bool m_isCellSizeStatic;
 };
 
 class IImpactEvaluator  
@@ -116,6 +119,7 @@ class IImpactEvaluator
 public:
     virtual ~IImpactEvaluator() = default;
     virtual void ApplyImpacts( EntityRegistry& state ) = 0;
+    virtual void NotifyEntityAddition( const EntityRegistry& ) = 0;
     virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
 };
 
@@ -123,8 +127,10 @@ class AdvancedElasticImpact : public IImpactEvaluator
 {
 public:
     void ApplyImpacts( EntityRegistry& state ) override;
+    void NotifyEntityAddition( const EntityRegistry& state ) override { m_Grid.UpdateCellSize( state ); }
     std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(m_Grid.getCellSize()); }
 public:
+    AdvancedElasticImpact() = default;
     AdvancedElasticImpact(double CellSize) : m_Grid(CellSize) {}
     AdvancedElasticImpact( const AdvancedElasticImpact& other ) = default;
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;

@@ -1,3 +1,4 @@
+#include "EntityRegistry.h"
 #include "Impact.h"
 
 #include "Datastructures/DisjointSets.h"
@@ -5,6 +6,8 @@
 #include "AABB.h"
 #include "Vector.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -36,15 +39,35 @@ const std::array<SpartialHashGrid::CellKoords, 14> SpartialHashGrid::offsets =
     SpartialHashGrid::CellKoords{ 1, 1, 1 }
 };
 
+void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
+{
+    if( m_isCellSizeStatic )
+        return; 
+
+    constexpr double Percentile = 0.7;
+
+    std::vector<double> EntityBoundingRadius;
+    EntityBoundingRadius.reserve(Entitys.size());
+
+    for( auto& ent : Entitys )
+    {
+        auto AABB = std::visit([&](const auto& Shape){
+            return getAABB(Shape, ent.getPosition(), ent.getRotation());
+        }, ent.getShape());
+        EntityBoundingRadius.push_back(AABB.max.BetragsQuadrat());
+    }
+    std::sort(EntityBoundingRadius.begin(), EntityBoundingRadius.end());
+
+    m_CellSize = 2.0 * std::sqrt(EntityBoundingRadius[std::floor(Percentile * EntityBoundingRadius.size())]);
+}
+
 void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
 {
-    if( Entitys.empty() )
-    {
-        m_Cells.clear();
-        return;
-    }
-
     m_Cells.clear();
+
+    if( Entitys.empty() )
+        return;
+
     size_t avrg_bucketsize = Entitys.size()/4;
     for( const auto& ent : Entitys )
     {

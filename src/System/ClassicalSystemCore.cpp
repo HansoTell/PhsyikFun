@@ -11,25 +11,29 @@
 
 namespace Physik 
 {
-constexpr double default_cellsize = 10.0;  
 ClassicalSystemCore::ClassicalSystemCore()
     : m_DeltaTime(default_delta_time), m_Integrator(std::make_unique<VelocityVerleit>()), 
-    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>(default_cellsize)),
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
-{}
+{
+    UpdateEntityPropertys();
+    m_Impact->NotifyEntityAddition(m_CurrentState);
+}
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
     : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), 
-    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>(default_cellsize)),
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
+    m_Impact->NotifyEntityAddition(m_CurrentState);
 }
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) 
-    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>(default_cellsize)), m_Time(0.0) 
+    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()), m_Time(0.0) 
 {
     UpdateEntityPropertys();
+    m_Impact->NotifyEntityAddition(m_CurrentState);
 }
 
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) 
@@ -58,13 +62,18 @@ void ClassicalSystemCore::addEntity( ClassicEntity entity )
     ClassicEntity EntityCopy = entity;
     m_NextState.add(std::move(EntityCopy));
     m_CurrentState.add(std::move(entity));
+    m_Impact->NotifyEntityAddition( m_CurrentState );
 }
 bool ClassicalSystemCore::addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius )
 {
     ClassicEntity Entity(std::move(startPosition), std::move(startVelocity), mass, Sphere<double>{Radius});
     ClassicEntity EntityCopy = Entity;
+    bool isEntityAdded = m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));
 
-    return  m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));
+    if( isEntityAdded )
+        m_Impact->NotifyEntityAddition( m_CurrentState );
+
+    return isEntityAdded;
 }
 
 void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) 
@@ -75,6 +84,7 @@ void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys 
         m_NextState.add(std::move(EntCopy));
         m_CurrentState.add(std::move(entitys[i]));
     } 
+    m_Impact->NotifyEntityAddition( m_CurrentState );
 }
 void ClassicalSystemCore::addExternPotential( ClassicField extPotential ) { m_Evaluater->addExternPotential(std::move(extPotential)); }
 void ClassicalSystemCore::addMulitpleExternPotentials( std::vector<ClassicField> potentials ) { m_Evaluater->addMulitpleExternPotentials(std::move(potentials)); }

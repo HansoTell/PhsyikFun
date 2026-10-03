@@ -84,6 +84,7 @@ public:
 public:
     Quaternion( T real, T i, T j, T k ) : m_data({ real, i, j, k} ) {}
     Quaternion( Vector<4, T> data ) : m_data(std::move(data)) {}
+    Quaternion( T real, Vector<3, T> Im ) { m_data[0] = real; for( size_t i = 1; i < m_data.size(); ++i ) m_data[i] = Im[i-1];}
     Quaternion( const Quaternion&) = default;
     Quaternion(Quaternion&&) = default;
     ~Quaternion() = default;
