@@ -3,20 +3,15 @@
 #include "Datastructures/ThreadSaveQueue.h"
 #include "Entity.h"
 #include "SystemCore.h"
-#include "Vector.h"
 
-#include <array>
 #include <atomic>
-#include <charconv>
 #include <condition_variable>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
-#include <type_traits>
 
 namespace Physik 
 {
@@ -90,24 +85,6 @@ public:
     ~CSVFileWriter() = default;
 private:
     void printEntityStateHeader() const;
-    void PrintVector( const Vec3D& vector ) const;
-    template<typename T>
-    void PrintNumber( T number ) const
-    {
-        static_assert(std::is_arithmetic_v<T>);
-
-        char buffer[128];
-        auto[end, erc] = std::to_chars(buffer, buffer+sizeof(buffer), number);
-
-        if( erc != std::errc() )
-        {
-            std::cout << "to chars filed\n";
-            return;
-        }
-        m_Buffer.append(buffer, end);
-    }
-    void PrintSeperator() const;
-    void PrintLineEnd() const;
 private:
     PrintOptions m_Options;
 

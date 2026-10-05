@@ -17,6 +17,7 @@ public:
     T& i() { return m_data[1]; }
     T& j() { return m_data[2]; }
     T& k() { return m_data[3]; }
+    Vector<4, T> getAsVector() const { return m_data;}
 
     T Norm() const { return m_data.BetragsQuadrat(); }
     T Betrag() const { return std::sqrt(Norm()); }
