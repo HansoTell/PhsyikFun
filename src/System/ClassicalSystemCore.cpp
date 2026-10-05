@@ -76,6 +76,20 @@ bool ClassicalSystemCore::addEntity( Vec3D startPosition, Vec3D startVelocity, d
     return isEntityAdded;
 }
 
+
+bool ClassicalSystemCore::addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
+{
+    ClassicEntity Entity( Position, Velocity, Rotation, AngularVelocity, Mass, std::move(Material), std::move(Shape));
+    ClassicEntity EntityCopy = Entity;
+
+    bool isEntityAdded = m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));
+
+    if( isEntityAdded )
+        m_Impact->NotifyEntityAddition( m_CurrentState );
+
+    return isEntityAdded;
+}
+
 void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) 
 { 
     for( int i = 0; i < entitys.size(); i++ )

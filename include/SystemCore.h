@@ -30,6 +30,7 @@ public:
 
     void addEntity( ClassicEntity entity );
     bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
+    bool addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }

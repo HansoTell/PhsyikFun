@@ -140,6 +140,16 @@ bool ClassicalSystem::addEntity( Vec3D startPosition, Vec3D startVelocity, doubl
     return succes;
 }
 
+bool ClassicalSystem::addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
+{
+    Pause();
+    bool success = m_Core->addEntity(Position, Velocity, Rotation, AngularVelocity, Mass, Material, Shape);
+    m_Core->UpdateEntityPropertys();
+    Start();
+
+    return success;
+}
+
 void ClassicalSystem::addMulipleEntitys( std::vector<ClassicEntity> entitys )
 {
     Pause();

@@ -21,6 +21,12 @@
 namespace Physik 
 {
 
+using Rotation = Quaternion<>;
+inline Rotation CreateRotation( double Angel, Vec3D Axis ) { return Quaternion<>::FromAxisAngle(Angel, Axis); }
+inline Rotation CombineRotation( const Rotation& first, const Rotation& secound ) { auto res = first * secound; res.NormQuaterion(); return res; }
+
+inline const Rotation NoRotation = CreateRotation(0.0, Vec3D{1.0, 0.0, 0.0});
+
 class ISystem 
 {
 public: 
@@ -47,7 +53,7 @@ public:
     void addEntity( ClassicEntity entity );
     //TODO: Remove
     bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
-    bool addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
+    bool addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 
     void setTmax( double Tmax ); 
@@ -76,4 +82,5 @@ private:
     bool m_Calculating;
     std::atomic<bool> m_running;
 };
+
 }

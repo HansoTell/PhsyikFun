@@ -67,16 +67,27 @@ public:
 
     bool operator == ( const Entity& other ){ return m_ID == other.m_ID; }
 public:
+    Entity(Vector<Dim, T> Position, Vector<Dim, T> Velocity, Quaternion<> Rotation, Vector<Dim, T> AgularVelocity, T Mass, Material<T> Material, Shape<Dim, T> Shape )
+        : m_KinState( { Position, Velocity, Vector<Dim, T>(), Rotation, AgularVelocity, Vector<Dim, T>() }), 
+          m_Energy( { 0.5 * Mass * Velocity * Velocity, T{0.0} } ),
+          m_Shape(std::move(Shape)),
+          m_Material(std::move(Material)),
+          m_ID(nextID++)
+    {
+        if( Mass == T{0} )
+            m_Constants = { Mass, T{0} };
+        else
+            m_Constants = { Mass, T{1}/Mass };
+    }
     Entity(Vector<Dim, T> startPosition, T mass, Shape<Dim, T> shape, bool isStatic = false ) 
         : m_KinState( { startPosition, Vector<Dim, T>(), Vector<Dim, T>() } ), m_Energy({ 0.0, 0.0 }), m_Shape(std::move(shape)), m_Material({ T{1} }), m_ID(nextID++) 
     {
-        if( isStatic || mass == 0 )
+        if( isStatic || mass == T{0} )
             m_Constants = { mass, 0 };
         else
             m_Constants = { mass, 1/mass };
     }
     Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, Shape<Dim, T> shape, bool isStatic = false ) : 
-        m_Constants({ mass, 1/mass }), 
         m_KinState( { startPosition, startVelocity, Vector<Dim, T>(), Quaternion<T>(0.0, 1.0, 0.0, 0.0), Vector<Dim, T>(), Vector<Dim, T>() } ),
         m_Energy({ 0.5 * mass * Math::VectorCalc::DotProduct(startVelocity, startVelocity), 0.0 }), 
         m_Shape(std::move(shape)), 
