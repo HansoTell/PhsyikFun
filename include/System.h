@@ -2,7 +2,9 @@
 
 #include "Entity.h"
 #include "Interactions.h"
+#include "Material.h"
 #include "Printer.h"
+#include "Shapes.h"
 #include "Vector.h"
 #include <condition_variable>
 #include <future>
@@ -41,8 +43,11 @@ public:
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
+    //TODO: Remove
     void addEntity( ClassicEntity entity );
+    //TODO: Remove
     bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
+    bool addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
     void addMulipleEntitys( std::vector<ClassicEntity> entitys );
     void setTimeIncrement( double DeltaTime ); 
     void setTmax( double Tmax ); 
