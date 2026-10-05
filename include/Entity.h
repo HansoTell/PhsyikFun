@@ -69,7 +69,7 @@ public:
 public:
     Entity(Vector<Dim, T> Position, Vector<Dim, T> Velocity, Quaternion<> Rotation, Vector<Dim, T> AgularVelocity, T Mass, Material<T> Material, Shape<Dim, T> Shape )
         : m_KinState( { Position, Velocity, Vector<Dim, T>(), Rotation, AgularVelocity, Vector<Dim, T>() }), 
-          m_Energy( { 0.5 * Mass * Velocity * Velocity, T{0.0} } ),
+          m_Energy( { 0.5 * Mass * Velocity.BetragsQuadrat(), T{0.0} } ),
           m_Shape(std::move(Shape)),
           m_Material(std::move(Material)),
           m_ID(nextID++)

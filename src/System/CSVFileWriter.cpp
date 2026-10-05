@@ -1,7 +1,10 @@
 #include "Printer.h"
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <string_view>
+#include <unordered_map>
 
 namespace Physik 
 {
@@ -70,38 +73,33 @@ void CSVFileWriter::WriteState( const ClassicEntity& State, double Time ) const
     PrintLineEnd();
 }
 
+struct OptionEntry 
+{
+    PrintOptions flag;
+    std::string_view label;
+};
+
+constexpr std::array<OptionEntry, 9> kOptionTable
+{{
+    { PrintOptions::ePosition, ",pos_x,pos_y,pos_z" },
+    { PrintOptions::eVelocity, ",veloc_x,veloc_y,veloc_z" },
+    { PrintOptions::eAcceleration, ",acc_x,acc_y,acc_z" },
+    { PrintOptions::eRotation, "Keine Ahnung was man hier printed" }, //TODO:
+    { PrintOptions::eAngularVelocity, ",AngVeloc_x,AngVeloc_y,AngVeloc_z" },
+    { PrintOptions::eAngularAcceleration, ",AngAcc_x,AngAcc_y,AngAcc_z" },
+    { PrintOptions::eForce, ",F_x,F_y,F_z" },
+    { PrintOptions::eKinEnergy, ",Ekin" },
+    { PrintOptions::ePotEnergy, ",EPot" }
+}};
+
 void CSVFileWriter::printEntityStateHeader() const 
 {
     m_Buffer.append("index,Time");
-    if( has(m_Options, PrintOptions::ePosition ))
+
+    for( const auto&[flag, label] : kOptionTable )
     {
-        PrintSeperator();
-        m_Buffer.append("pos_x,pos_y,pos_z");
-    }
-    if( has(m_Options, PrintOptions::eVelocity ))
-    {
-        PrintSeperator();
-        m_Buffer.append("veloc_x,veloc_y,veloc_z");
-    }
-    if( has(m_Options, PrintOptions::eAcceleration ))
-    {
-        PrintSeperator();
-        m_Buffer.append("acc_x,acc_y,acc_z");
-    }
-    if( has(m_Options, PrintOptions::eForce ))
-    {
-        PrintSeperator();
-        m_Buffer.append("F_x,F_y,F_z");
-    }
-    if( has(m_Options, PrintOptions::eKinEnergy ))
-    {
-        PrintSeperator();
-        m_Buffer.append("Ekin");
-    }
-    if( has(m_Options, PrintOptions::ePotEnergy ))
-    {
-        PrintSeperator();
-        m_Buffer.append("EPot");
+        if( has(m_Options, flag))
+            m_Buffer.append(label);
     }
 
     PrintLineEnd();

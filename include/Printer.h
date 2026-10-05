@@ -5,6 +5,7 @@
 #include "SystemCore.h"
 #include "Vector.h"
 
+#include <array>
 #include <atomic>
 #include <charconv>
 #include <condition_variable>
@@ -17,7 +18,6 @@
 #include <thread>
 #include <type_traits>
 
-//TODO anpassen alles so dass es unterschieldich3e formate unterstützt
 namespace Physik 
 {
 struct ClassicEntityInfo
@@ -32,10 +32,13 @@ enum class PrintOptions : uint16_t
     ePosition = 0b1,
     eVelocity = 0b10,
     eAcceleration = 0b100,
-    eForce = 0b1000,
-    eKinEnergy = 0b10000,
-    ePotEnergy = 0b100000,
-    eAll = 0b111111
+    eRotation = 0b1000,
+    eAngularVelocity = 0b10000,
+    eAngularAcceleration = 0b100000,
+    eForce = 0b1000000,
+    eKinEnergy = 0b10000000,
+    ePotEnergy = 0b100000000,
+    eAll = 0b111111111
 };
 
 constexpr PrintOptions operator|( PrintOptions a, PrintOptions b ) { return static_cast<PrintOptions>( static_cast<uint16_t>(a) | static_cast<uint16_t>(b) ); }
