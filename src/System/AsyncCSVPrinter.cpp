@@ -1,4 +1,7 @@
+#include "Entity.h"
 #include "Printer.h"
+#include <cstddef>
+#include <optional>
 
 namespace Physik 
 {
@@ -35,8 +38,16 @@ void AsyncCSVPrinter::Print() const
     m_CV.notify_all();
 }
 
+void AsyncCSVPrinter::OnEntityCreated(const ClassicEntity& Entity) const 
+{ 
+    m_ConstantsQueue.push({ Entity.getID(), Entity.getConstants(), Entity.getMaterial(), Entity.getShape() }); 
+    m_CV.notify_all();
+}
+
 void AsyncCSVPrinter::Run()
 {
+    constexpr size_t RepetitionLimit = 500;
+
     std::unique_lock<std::mutex> _lock(m_Mutex);
     while( m_running )
     {
@@ -46,8 +57,26 @@ void AsyncCSVPrinter::Run()
 
         _lock.unlock();
 
-        while (auto EntityInfo = m_Queue.try_pop()) 
-            m_FileWriter->WriteState(EntityInfo->State, EntityInfo->Time);
+        while(!m_Queue.empty() || !m_ConstantsQueue.empty())
+        {
+            for( size_t i = 0; i < RepetitionLimit; ++i )
+            {
+                auto EntInfo_or = m_Queue.try_pop();
+                if(!EntInfo_or)
+                    break;
+
+                m_FileWriter->WriteState(EntInfo_or->State, EntInfo_or->Time);
+            }
+
+            for(size_t i = 0; i < RepetitionLimit; ++i )
+            {
+                auto Constant_or = m_ConstantsQueue.try_pop();
+                if(!Constant_or)
+                    break;
+
+                m_FileWriter->WirteConstantPropertys(*Constant_or);
+            }
+        }
 
         _lock.lock();
     }

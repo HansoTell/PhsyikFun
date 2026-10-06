@@ -1,11 +1,13 @@
 #pragma once
 
-#include "Entity.h"
 #include "Interactions.h"
 #include "Material.h"
 #include "Printer.h"
 #include "Shapes.h"
+#include "SystemCore.h"
 #include "Vector.h"
+#include "EntityDescribtion.h"
+
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -13,9 +15,7 @@
 #include <thread>
 #include <vector>
 
-#define CREATE_CLASSIC_EXT_STANDART_POTENTIAL( beta, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicStandartPotential>(beta),  ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, 0.0 ) ) 
 #define CREATE_CLASSIC_ENTITY__STANDART_POTENTIAL( beta ) ClassicInteraction( std::make_unique<ClassicStandartPotential>(beta) )
-#define CREATE_CLASSIC_EXT_GRAVITATIONAL_POTENTIAL( Mass, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicGravitationPotential>(), ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, Mass) ) 
 #define CREATE_CLASSIC_ENTITY_GRAVITATIONAL_POTENTIAL() ClassicInteraction( std::make_unique<ClassicGravitationPotential>() ) 
 
 namespace Physik 
@@ -36,7 +36,6 @@ public:
     virtual void Clear() = 0;
 };
 
-
 class ClassicalSystem : public ISystem 
 {
 public:
@@ -49,12 +48,9 @@ public:
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
-    //TODO: Remove
-    void addEntity( ClassicEntity entity );
-    //TODO: Remove
-    bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
-    bool addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
-    void addMulipleEntitys( std::vector<ClassicEntity> entitys );
+    void addEntity(EntityDescription desc);
+    void addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
+    void addMulipleEntitys( std::vector<EntityDescription> entitys );
     void setTimeIncrement( double DeltaTime ); 
     void setTmax( double Tmax ); 
     bool isRunning() const { return m_running; }

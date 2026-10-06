@@ -1,4 +1,3 @@
-#include "Entity.h"
 #include "Interactions.h"
 #include "Printer.h"
 #include <System.h>
@@ -122,39 +121,42 @@ void ClassicalSystem::addMultipleNonPotentialForce( std::vector<ClassicNonPotent
     Start();
 }
 
-void ClassicalSystem::addEntity( ClassicEntity entity )
+
+void ClassicalSystem::addEntity(EntityDescription desc)
 {
     Pause();
-    m_Core->addEntity( std::move(entity) );
+    auto ID = m_Core->addEntity(std::move(desc));
     m_Core->UpdateEntityPropertys();
+
+    auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
+    m_Printer->OnEntityCreated(CreatedEntity);
+
     Start();
 }
 
-bool ClassicalSystem::addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius )
+void ClassicalSystem::addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
 {
     Pause();
-    bool succes = m_Core->addEntity(std::move(startPosition), std::move(startVelocity), mass, Radius);
+    auto ID = m_Core->addEntity(Position, Velocity, Rotation, AngularVelocity, Mass, Material, Shape);
     m_Core->UpdateEntityPropertys();
-    Start();
 
-    return succes;
+    auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
+    m_Printer->OnEntityCreated(CreatedEntity);
+
+    Start();
 }
 
-bool ClassicalSystem::addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
+void ClassicalSystem::addMulipleEntitys( std::vector<EntityDescription> entitys )
 {
     Pause();
-    bool success = m_Core->addEntity(Position, Velocity, Rotation, AngularVelocity, Mass, Material, Shape);
+    auto IDs = m_Core->addMulipleEntitys( std::move(entitys) );
     m_Core->UpdateEntityPropertys();
-    Start();
+    for( auto& ID : IDs )
+    {
+        auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
+        m_Printer->OnEntityCreated(CreatedEntity);
+    }
 
-    return success;
-}
-
-void ClassicalSystem::addMulipleEntitys( std::vector<ClassicEntity> entitys )
-{
-    Pause();
-    m_Core->addMulipleEntitys( std::move(entitys) );
-    m_Core->UpdateEntityPropertys();
     Start();
 }
 

@@ -14,6 +14,8 @@ namespace Physik
 {
 using SimulationState = std::vector<ClassicEntity>;
 
+struct EntityDescription;
+
 class ClassicalSystemCore 
 {
     static constexpr double default_delta_time = 0.001;
@@ -28,10 +30,9 @@ public:
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
 
-    void addEntity( ClassicEntity entity );
-    bool addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius );
-    bool addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
-    void addMulipleEntitys( std::vector<ClassicEntity> entitys );
+    EntityRegistry::ID addEntity(EntityDescription);
+    EntityRegistry::ID addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
+    std::vector<EntityRegistry::ID> addMulipleEntitys( std::vector<EntityDescription> entitys );
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
     void setTmax( double Tmax ) { m_Tmax = Tmax; }

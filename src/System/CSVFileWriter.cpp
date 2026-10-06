@@ -62,6 +62,7 @@ constexpr std::array<OptionEntry, 9> kOptionTable
 
 static constexpr uint64_t buff_size = 5'000'000;
 
+
 CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(FilePath)), m_Options(PrintOptions::eAll) 
 {
     m_Buffer.reserve(buff_size);
@@ -69,8 +70,18 @@ CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(File
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
         std::cerr << "Filed to open File" << "\n";
+    if( has(m_Options, PrintOptions::eConstants) )
+    {
+        auto it = m_FilePath.find_last_of('.');
+        auto FileName = m_FilePath.substr(0, it);
+        auto ConstantsFileName = FileName += "Constants.csv";
+        m_ConstantsFile.open(ConstantsFileName);
+        if(!m_ConstantsFile.is_open())
+            std::cerr << "Failed to open ConstantsFile\n";
+    }
 
     printEntityStateHeader();
+    printConstantsHeader();
 }
 
 CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_FilePath(std::move(FilePath)), m_Options(options)
@@ -121,7 +132,6 @@ void CSVFileWriter::printEntityStateHeader() const
 
 void CSVFileWriter::flush() const
 {
-    std::cout << "Flushed with size: " << m_Buffer.size() << "\n";
     m_File << m_Buffer;
     m_Buffer.clear();
     m_File.flush();

@@ -2,6 +2,9 @@
 
 #include "Datastructures/ThreadSaveQueue.h"
 #include "Entity.h"
+#include "EntityRegistry.h"
+#include "Material.h"
+#include "Shapes.h"
 #include "SystemCore.h"
 
 #include <atomic>
@@ -21,19 +24,28 @@ struct ClassicEntityInfo
     double Time;
 };
 
+struct ClassicConstantsInfo
+{
+    EntityRegistry::ID id;
+    ConstantPrtopertys<> constants;
+    Material<> material;
+    Shape<> shape;
+};
+
 enum class PrintOptions : uint16_t 
 {
-    eNone = 0b0,
-    ePosition = 0b1,
-    eVelocity = 0b10,
-    eAcceleration = 0b100,
-    eRotation = 0b1000,
-    eAngularVelocity = 0b10000,
-    eAngularAcceleration = 0b100000,
-    eForce = 0b1000000,
-    eKinEnergy = 0b10000000,
-    ePotEnergy = 0b100000000,
-    eAll = 0b111111111
+    eNone =                 0b0,
+    ePosition =             0b1,
+    eVelocity =             0b10,
+    eAcceleration =         0b100,
+    eRotation =             0b1000,
+    eAngularVelocity =      0b10000,
+    eAngularAcceleration =  0b100000,
+    eForce =                0b1000000,
+    eKinEnergy =            0b10000000,
+    ePotEnergy =            0b100000000,
+    eConstants =            0b1000000000,
+    eAll =                  0b1111111111
 };
 
 constexpr PrintOptions operator|( PrintOptions a, PrintOptions b ) { return static_cast<PrintOptions>( static_cast<uint16_t>(a) | static_cast<uint16_t>(b) ); }
@@ -46,12 +58,14 @@ class IPrinter
 public:
     virtual ~IPrinter() = default;
     virtual void Print() const = 0;
+    virtual void OnEntityCreated(const ClassicEntity&) const = 0;
 };
 
 class ConsolePrinter : public IPrinter 
 {
 public:
     void Print() const override;
+    void OnEntityCreated(const ClassicEntity&) const override {}
 
 public:
     ConsolePrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore );
@@ -71,11 +85,12 @@ private:
     std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
 };
 
-
 class CSVFileWriter 
 {
 public:
     void WriteState( const ClassicEntity& state, double t ) const;
+    //TODO:  -> wie ist es mit fl
+    void WirteConstantPropertys( const ClassicConstantsInfo& state ) const;
     void flush() const;
 public:
     CSVFileWriter( std::string FilePath );
@@ -85,10 +100,13 @@ public:
     ~CSVFileWriter() = default;
 private:
     void printEntityStateHeader() const;
+    //TODO:
+    void printConstantsHeader() const;
 private:
     PrintOptions m_Options;
 
     mutable std::ofstream m_File;
+    mutable std::ofstream m_ConstantsFile;
     std::string m_FilePath;
     mutable std::string m_Buffer;
 };
@@ -97,6 +115,7 @@ class CSVPrinter : public IPrinter
 {
 public:
     void Print() const override;
+    void OnEntityCreated(const ClassicEntity& entity) const override { m_FileWriter->WirteConstantPropertys({entity.getID(), entity.getConstants(), entity.getMaterial(), entity.getShape()}); }
 public:
     CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string filepath );
     CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string filepath, PrintOptions options );
@@ -112,6 +131,7 @@ class AsyncCSVPrinter : public IPrinter
 {
 public:
     void Print() const override;
+    void OnEntityCreated(const ClassicEntity& entity) const override;
 public:
     AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath );
     AsyncCSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemCore, std::string FilePath, PrintOptions options );
@@ -125,6 +145,7 @@ private:
     const std::shared_ptr<const ClassicalSystemCore> m_SystemCore;
 
     mutable http::ThreadSaveQueue<ClassicEntityInfo> m_Queue;
+    mutable http::ThreadSaveQueue<ClassicConstantsInfo> m_ConstantsQueue;
     std::atomic<bool> m_running;
     std::mutex m_Mutex;
     mutable std::condition_variable m_CV;

@@ -1,4 +1,6 @@
 #include "Entity.h"
+#include "EntityDescribtion.h"
+#include "EntityRegistry.h"
 #include "Interactions.h"
 #include "Shapes.h"
 #include "SystemCore.h"
@@ -57,48 +59,45 @@ void ClassicalSystemCore::Clear()
     Energy = 0.0; 
 }
 
-void ClassicalSystemCore::addEntity( ClassicEntity entity ) 
-{ 
-    ClassicEntity EntityCopy = entity;
+EntityRegistry::ID ClassicalSystemCore::addEntity( EntityDescription desc )
+{
+    ClassicEntity Entity(std::move(desc));
+    ClassicEntity EntityCopy = Entity;
+
+    auto ID = Entity.getID();
+
+    m_CurrentState.add(std::move(Entity));  
     m_NextState.add(std::move(EntityCopy));
-    m_CurrentState.add(std::move(entity));
+
     m_Impact->NotifyEntityAddition( m_CurrentState );
+
+    return ID;
 }
-bool ClassicalSystemCore::addEntity( Vec3D startPosition, Vec3D startVelocity, double mass, double Radius )
+
+EntityRegistry::ID ClassicalSystemCore::addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
 {
-    ClassicEntity Entity(std::move(startPosition), std::move(startVelocity), mass, Sphere<double>{Radius});
-    ClassicEntity EntityCopy = Entity;
-    bool isEntityAdded = m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));
-
-    if( isEntityAdded )
-        m_Impact->NotifyEntityAddition( m_CurrentState );
-
-    return isEntityAdded;
+    EntityDescription desc { Position, Velocity, Rotation, AngularVelocity, Mass, std::move(Material), std::move(Shape) };
+    return addEntity(desc);
 }
 
-
-bool ClassicalSystemCore::addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
-{
-    ClassicEntity Entity( Position, Velocity, Rotation, AngularVelocity, Mass, std::move(Material), std::move(Shape));
-    ClassicEntity EntityCopy = Entity;
-
-    bool isEntityAdded = m_CurrentState.add(std::move(Entity)) && m_NextState.add(std::move(EntityCopy));
-
-    if( isEntityAdded )
-        m_Impact->NotifyEntityAddition( m_CurrentState );
-
-    return isEntityAdded;
-}
-
-void ClassicalSystemCore::addMulipleEntitys( std::vector<ClassicEntity> entitys ) 
+std::vector<EntityRegistry::ID> ClassicalSystemCore::addMulipleEntitys( std::vector<EntityDescription> entitys ) 
 { 
+    std::vector<EntityRegistry::ID> AllIDs;
+    AllIDs.reserve(entitys.size());
+
     for( int i = 0; i < entitys.size(); i++ )
     {
-        ClassicEntity EntCopy = entitys[i];
+        ClassicEntity Ent(entitys[i]);
+        ClassicEntity EntCopy = Ent;
+        auto ID = Ent.getID();
         m_NextState.add(std::move(EntCopy));
-        m_CurrentState.add(std::move(entitys[i]));
+        m_CurrentState.add(std::move(Ent));
+
+        AllIDs.push_back(ID);
     } 
     m_Impact->NotifyEntityAddition( m_CurrentState );
+
+    return AllIDs;
 }
 void ClassicalSystemCore::addExternPotential( ClassicField extPotential ) { m_Evaluater->addExternPotential(std::move(extPotential)); }
 void ClassicalSystemCore::addMulitpleExternPotentials( std::vector<ClassicField> potentials ) { m_Evaluater->addMulitpleExternPotentials(std::move(potentials)); }

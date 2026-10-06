@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EntityDescribtion.h"
 #include "Math/Math.h"
 #include "Vector.h"
 #include "Shapes.h"
@@ -12,6 +13,7 @@
 
 namespace Physik 
 {
+
 template <size_t Dim = 3, typename T = double> 
 struct KinematicState 
 {
@@ -51,6 +53,7 @@ public:
     Vector<Dim, T> getAngularAcceleration() const { return m_KinState.m_AngularAcceleration; }
     T getMass() const { return m_Constants.m_Mass; }
     T getInverseMass() const { return m_Constants.m_inverseMass; }
+    ConstantPrtopertys<T> getConstants() const { return m_Constants; }
     bool isStatic() const { return m_Constants.m_inverseMass == T{0}; }
     T getEnergy() const { return getKineticEnergy() + getPotentialEnergy(); }
     T getKineticEnergy() const { return m_Energy.KineticEnergy; }
@@ -69,18 +72,19 @@ public:
 
     bool operator == ( const Entity& other ){ return m_ID == other.m_ID; }
 public:
-    Entity(Vector<Dim, T> Position, Vector<Dim, T> Velocity, Quaternion<> Rotation, Vector<Dim, T> AgularVelocity, T Mass, Material<T> Material, Shape<Dim, T> Shape )
-        : m_KinState( { Position, Velocity, Vector<Dim, T>(), Rotation, AgularVelocity, Vector<Dim, T>() }), 
-          m_Energy( { 0.5 * Mass * Velocity.BetragsQuadrat(), T{0.0} } ),
-          m_Shape(std::move(Shape)),
-          m_Material(std::move(Material)),
+    Entity(EntityDescription desc)
+        : m_KinState( { desc.Position, desc.Velocity, Vector<Dim, T>(), desc.Rotation, desc.AngularVelocity, Vector<Dim, T>() }), 
+          m_Energy( { 0.5 * desc.Mass * desc.Velocity.BetragsQuadrat(), T{0.0} } ),
+          m_Shape(std::move(desc.shape)),
+          m_Material(std::move(desc.material)),
           m_ID(nextID++)
     {
-        if( Mass == T{0} )
-            m_Constants = { Mass, T{0} };
+        if( desc.Mass == T{0} )
+            m_Constants = { desc.Mass, T{0} };
         else
-            m_Constants = { Mass, T{1}/Mass };
+            m_Constants = { desc.Mass, T{1}/desc.Mass };
     }
+
     Entity(Vector<Dim, T> startPosition, T mass, Shape<Dim, T> shape, bool isStatic = false ) 
         : m_KinState( { startPosition, Vector<Dim, T>(), Vector<Dim, T>() } ), m_Energy({ 0.0, 0.0 }), m_Shape(std::move(shape)), m_Material({ T{1} }), m_ID(nextID++) 
     {
