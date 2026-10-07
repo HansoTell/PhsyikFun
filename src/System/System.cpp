@@ -41,20 +41,37 @@ void ClassicalSystem::Start()
         std::lock_guard<std::mutex> _lock ( m_Mutex );
         m_Calculating = true;
         m_running = true;
+        m_Idle = false;
     }
-    m_Finished = std::promise<void>();
-    m_Future = m_Finished.get_future();
+    if( m_FinishedSet )
+    {
+        m_Finished = std::promise<void>();
+        m_Future = m_Finished.get_future();
+        m_FinishedSet = false;
+    }
 
     if( !m_Thread.joinable() )
+    {
+        m_Finished = std::promise<void>();
+        m_Future = m_Finished.get_future();
         m_Thread = std::thread([this](){ this->run(); }); 
+    }
 
     m_SystemCV.notify_all();
 }
 
+bool ClassicalSystem::pauseInternal()
+{
+    std::unique_lock<std::mutex> lock(m_Mutex);
+    const bool wasRunngin = m_Calculating;
+    m_Calculating = false;
+    m_IdleCV.wait(lock, [this]{ return m_Idle; });
+    return wasRunngin;
+}
+
 void ClassicalSystem::Pause() 
 {
-    std::lock_guard<std::mutex> _lock( m_Mutex );
-    m_Calculating = false;
+    pauseInternal();
 
     //kann man iwie garantieren dass hier aufgehalten wird bis er in cv gelaufen ist?
 }
@@ -76,79 +93,69 @@ void ClassicalSystem::Clear()
 
 void ClassicalSystem::addExternPotential( ClassicField potential )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addExternPotential( std::move(potential) );
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addMulitpleExternPotentials( std::vector<ClassicField> potentials )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addMulitpleExternPotentials( std::move(potentials) );
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addEntityPotential( ClassicInteraction potential )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addEntityPotential(std::move(potential));
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addMultipleEntityPotentials( std::move(potentials) );
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addNonPotentialForce( ClassicNonPotentialForce NonPotForce ) 
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addNonPotentialForce(std::move(NonPotForce)); 
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 void ClassicalSystem::addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce ) 
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addMultipleNonPotentialForce(std::move(NonPotForce));
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 
 void ClassicalSystem::addEntity(EntityDescription desc)
 {
-    Pause();
+    PauseScope pause(*this);
     auto ID = m_Core->addEntity(std::move(desc));
     m_Core->UpdateEntityPropertys();
 
     auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
     m_Printer->OnEntityCreated(CreatedEntity);
-
-    Start();
 }
 
 void ClassicalSystem::addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
 {
-    Pause();
+    PauseScope pause(*this);
     auto ID = m_Core->addEntity(Position, Velocity, Rotation, AngularVelocity, Mass, Material, Shape);
     m_Core->UpdateEntityPropertys();
 
     auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
     m_Printer->OnEntityCreated(CreatedEntity);
-
-    Start();
 }
 
 void ClassicalSystem::addMulipleEntitys( std::vector<EntityDescription> entitys )
 {
-    Pause();
+    PauseScope pause(*this);
     auto IDs = m_Core->addMulipleEntitys( std::move(entitys) );
     m_Core->UpdateEntityPropertys();
     for( auto& ID : IDs )
@@ -156,19 +163,17 @@ void ClassicalSystem::addMulipleEntitys( std::vector<EntityDescription> entitys 
         auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
         m_Printer->OnEntityCreated(CreatedEntity);
     }
-
-    Start();
 }
 
 void ClassicalSystem::setTimeIncrement( double DeltaTime )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->setTimeIncrement( DeltaTime );
-    Start();
 }
 void ClassicalSystem::setTmax( double Tmax )
 {
     assert(std::isfinite(Tmax));
+    PauseScope pause(*this);
     m_Core->setTmax(Tmax);
 }
 
@@ -176,7 +181,7 @@ void ClassicalSystem::run()
 {
     m_Printer->Print();
     std::unique_lock<std::mutex> _lock(m_Mutex);
-    while( m_running && m_Core->getTime() < m_Core->getTmax() )
+    while( m_running )
     {
         m_SystemCV.wait(_lock, [this](){
             return m_Calculating || !m_running;
@@ -190,10 +195,18 @@ void ClassicalSystem::run()
             tick();
 
         _lock.lock();
+
+        if(m_Core->getTime() >= m_Core->getTmax())
+        {
+            m_Calculating = false;
+            if(!m_FinishedSet){ m_Finished.set_value(); m_FinishedSet = true; }
+        }
+        m_Idle = true;
+        m_IdleCV.notify_all();
     }
-    m_running = false;
-    m_Calculating = false;
-    m_Finished.set_value();
+    if(!m_FinishedSet){ m_Finished.set_value(); m_FinishedSet = true; }
+    m_Idle = true;
+    m_IdleCV.notify_all();
 }
 
 void ClassicalSystem::tick() 

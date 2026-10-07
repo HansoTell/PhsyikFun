@@ -89,7 +89,7 @@ class CSVFileWriter
 {
 public:
     void WriteState( const ClassicEntity& state, double t ) const;
-    //TODO:  -> wie ist es mit fl
+    //TODO:  -> wie ist es mit flush
     void WirteConstantPropertys( const ClassicConstantsInfo& state ) const;
     void flush() const;
 public:
@@ -100,8 +100,10 @@ public:
     ~CSVFileWriter() = default;
 private:
     void printEntityStateHeader() const;
-    //TODO:
     void printConstantsHeader() const;
+
+    void flushVariableFile() const;
+    void flushConstantFile() const;
 private:
     PrintOptions m_Options;
 
@@ -109,6 +111,7 @@ private:
     mutable std::ofstream m_ConstantsFile;
     std::string m_FilePath;
     mutable std::string m_Buffer;
+    mutable std::string m_ConstanstBuffer;
 };
 
 class CSVPrinter : public IPrinter 

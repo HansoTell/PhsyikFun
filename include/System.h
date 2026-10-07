@@ -8,6 +8,7 @@
 #include "Vector.h"
 #include "EntityDescribtion.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -66,6 +67,15 @@ public:
 private:
     void run();
     void tick();
+    bool pauseInternal();
+    struct PauseScope
+    {
+        ClassicalSystem& sys;
+        bool wasRunning;
+        explicit PauseScope(ClassicalSystem& s) :sys(s), wasRunning(s.pauseInternal()){}
+        ~PauseScope() { if(wasRunning) sys.Start(); }
+
+    };
 private:
     std::unique_ptr<IPrinter> m_Printer;
     std::shared_ptr<ClassicalSystemCore> m_Core;
@@ -75,8 +85,11 @@ private:
     std::future<void> m_Future;
     std::mutex m_Mutex;
     std::condition_variable m_SystemCV;
-    bool m_Calculating;
-    std::atomic<bool> m_running;
+    std::condition_variable m_IdleCV;
+    std::atomic<bool> m_Calculating{false};
+    std::atomic<bool> m_running{false};
+    bool m_Idle{true};
+    bool m_FinishedSet{false};
 };
 
 }

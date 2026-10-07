@@ -1,5 +1,4 @@
 #include "AABB.h"
-#include "Entity.h"
 #include "Vector.h"
 #include <cstddef>
 #include <cstdlib>
@@ -33,7 +32,7 @@ AABB getAABB( const Box<>& Box, const Vec3D& position, const Quaternion<>& Rotat
 
     Vec3D a;
     for( size_t i = 0; i < a.size(); ++i )
-        a[i] = Box.halfSize[1] * std::abs(rot.u[i]) + Box.halfSize[2] * std::abs(rot.v[i]) + Box.halfSize[3] * std::abs(rot.w[i]); 
+        a[i] = Box.halfSize[0] * std::abs(rot.u[i]) + Box.halfSize[1] * std::abs(rot.v[i]) + Box.halfSize[2] * std::abs(rot.w[i]); 
 
     return { position - a, position + a };
 }

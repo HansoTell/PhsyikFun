@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <variant>
 
 namespace Physik 
 {
@@ -37,6 +38,11 @@ namespace PrintingHelpers
         }
         return erg;
     }
+    std::string PrintShapeName(const Sphere<> sphere) { return "SPHERE"; }
+    std::string PrintShapeName(const Box<> box) { return "BOX"; }
+        
+    std::string PrintShapePropertys(const Sphere<>& sphere) { return std::to_string(sphere.m_Radius) += ",,,"; }
+    std::string PrintShapePropertys(const Box<>& box){ return std::string(",") += PrintVector(box.halfSize);}
     static inline std::string PrintLineEnd(){ return "\n"; }
 }
 
@@ -66,6 +72,7 @@ static constexpr uint64_t buff_size = 5'000'000;
 CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(FilePath)), m_Options(PrintOptions::eAll) 
 {
     m_Buffer.reserve(buff_size);
+    m_ConstanstBuffer.reserve(buff_size);
 
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
@@ -87,19 +94,31 @@ CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(File
 CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_FilePath(std::move(FilePath)), m_Options(options)
 {
     m_Buffer.reserve(buff_size);
+    m_ConstanstBuffer.reserve(buff_size);
 
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
         std::cerr << "Filed to open File" << "\n";
 
+    if( has(m_Options, PrintOptions::eConstants) )
+    {
+        auto it = m_FilePath.find_last_of('.');
+        auto FileName = m_FilePath.substr(0, it);
+        auto ConstantsFileName = FileName += "Constants.csv";
+        m_ConstantsFile.open(ConstantsFileName);
+        if(!m_ConstantsFile.is_open())
+            std::cerr << "Failed to open ConstantsFile\n";
+    }
+
     printEntityStateHeader();
+    printConstantsHeader();
 }
 
 
 void CSVFileWriter::WriteState( const ClassicEntity& State, double Time ) const
 {
     if( m_Buffer.size() + 300 > buff_size )
-        flush();
+        flushVariableFile();
     
     m_Buffer += PrintingHelpers::PrintNumber(State.getID());
     m_Buffer += PrintingHelpers::PrintSeperator();
@@ -117,6 +136,27 @@ void CSVFileWriter::WriteState( const ClassicEntity& State, double Time ) const
     m_Buffer += PrintingHelpers::PrintLineEnd();
 }
 
+void CSVFileWriter::WirteConstantPropertys( const ClassicConstantsInfo& state ) const
+{
+    if( m_ConstanstBuffer.size() + 300 > buff_size )
+        flushConstantFile();
+
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.id);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.constants.m_Mass);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.constants.m_inverseMass);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.material.Restitution);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    std::visit([&](const auto& Shape){
+        m_ConstanstBuffer+=PrintingHelpers::PrintShapeName(Shape);
+        m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+        m_ConstanstBuffer += PrintingHelpers::PrintShapePropertys(Shape);
+    }, state.shape);
+    m_ConstanstBuffer += PrintingHelpers::PrintLineEnd();
+}
+
 void CSVFileWriter::printEntityStateHeader() const 
 {
     m_Buffer.append("index,Time");
@@ -130,10 +170,28 @@ void CSVFileWriter::printEntityStateHeader() const
     m_Buffer += PrintingHelpers::PrintLineEnd();
 }
 
-void CSVFileWriter::flush() const
+void CSVFileWriter::printConstantsHeader() const
+{
+    m_ConstanstBuffer.append("index,Mass,InverseMass,Restitution,ShapeName,sphere_radius,box_hx,box_hy,box_hz\n");
+}
+
+void CSVFileWriter::flushVariableFile() const
 {
     m_File << m_Buffer;
     m_Buffer.clear();
     m_File.flush();
+}
+void CSVFileWriter::flushConstantFile() const
+{
+    m_ConstantsFile << m_ConstanstBuffer;
+    m_ConstanstBuffer.clear();
+    m_ConstantsFile.flush();
+
+}
+
+void CSVFileWriter::flush() const
+{
+    flushVariableFile();
+    flushConstantFile();
 }
 }

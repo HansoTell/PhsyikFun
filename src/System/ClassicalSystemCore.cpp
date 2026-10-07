@@ -19,7 +19,6 @@ ClassicalSystemCore::ClassicalSystemCore()
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
-    m_Impact->NotifyEntityAddition(m_CurrentState);
 }
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
@@ -28,14 +27,12 @@ ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod 
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
-    m_Impact->NotifyEntityAddition(m_CurrentState);
 }
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) 
     : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()), m_Time(0.0) 
 {
     UpdateEntityPropertys();
-    m_Impact->NotifyEntityAddition(m_CurrentState);
 }
 
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) 

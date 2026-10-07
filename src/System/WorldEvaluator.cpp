@@ -3,6 +3,7 @@
 #include <cassert>
 #include <climits>
 #include <cstddef>
+#include <iostream>
 #include <vector>
 
 namespace Physik 
