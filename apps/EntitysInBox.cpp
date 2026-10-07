@@ -1,5 +1,9 @@
+#include <cfenv>
+#include <chrono>
 #include <cstddef>
+#include <fenv.h>
 #include <random>
+#include <thread>
 
 #include "Shapes.h"
 #include "System.h"
@@ -10,6 +14,9 @@ using namespace Physik;
 
 int main()
 {
+    feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);
+
+
     constexpr size_t NUM_ENTITYS = 5;
 
     size_t seed = 43627890;
@@ -21,8 +28,8 @@ int main()
     std::uniform_real_distribution<> Velocity( 0.0, 75.0 );
 
     ClassicalSystem sys;
-    sys.setTimeIncrement( 0.01 );
-    sys.setTmax(5000);
+    sys.setTimeIncrement( 0.1 );
+    //sys.setTmax(1000);
 
     //6 Box Wände Setzten
     sys.addEntity(Vec3D{ 55.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 5.0, 50.0, 50.0 } });
@@ -37,8 +44,9 @@ int main()
 
     sys.Start();
 
-    const auto& f = sys.getFuture();
-    f.wait();
+    std::this_thread::sleep_for(std::chrono::seconds(60));
+    //const auto& f = sys.getFuture();
+    //f.wait();
 
     sys.Clear();
 

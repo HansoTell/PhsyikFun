@@ -12,6 +12,8 @@
 #include <limits>
 #include <optional>
 
+#include <cassert>
+
 namespace Physik 
 {
 
@@ -147,7 +149,8 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
         for( size_t j = 0; j < localAxisB.size(); ++j )
         {
             auto Cross = CrossProduct(localAxisA[i], localAxisB[j]);
-            localCrossProductAxis[localAxisB.size()*i+j] = Cross / Cross.EukNorm();
+            auto CrossLength = Cross.EukNorm();
+            localCrossProductAxis[localAxisB.size()*i+j] = (CrossLength > GeometryEpsilon) ? Cross / CrossLength : Vec3D();
         }
     }
 
@@ -160,12 +163,12 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
 
     //Test If Collision
     Vec3D CenterDiff = entB.getPosition() - entA.getPosition(); 
-    size_t AxisMinPenetration;
+    size_t AxisMinPenetration = AllAxis.size();
     double minPenetration = std::numeric_limits<double>::infinity();
 
     for( size_t i = 0; i < AllAxis.size(); ++i )
     {
-        if( AllAxis[i].BetragsQuadrat() < GeometryEpsilon * GeometryEpsilon )
+        if( !(AllAxis[i].BetragsQuadrat() >= GeometryEpsilon * GeometryEpsilon) )
             continue;
 
         double rA = GetR(entA, AllAxis[i], A, localAxisA);
@@ -173,7 +176,7 @@ std::optional<CollisionManifold> detectCollision(const Box<> &A, const Box<> &B,
         double r = rA + rB;
         double diff = std::fabs(DotProduct(CenterDiff, AllAxis[i]));
 
-        if( diff > r )
+        if( !(diff <= r) )
             return std::nullopt;
 
         double Penetration = r - diff;

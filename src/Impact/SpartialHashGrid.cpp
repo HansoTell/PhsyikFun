@@ -160,8 +160,7 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
     }
 
     std::unordered_map<size_t, std::vector<size_t>> groups = Union.getSets();
-    std::vector<std::vector<CollisionManifold>> KollisionGroups;
-    KollisionGroups.reserve(groups.size());
+    std::vector<std::vector<CollisionManifold>> KollisionGroups(groups.size());
     //O(groups.size)
     size_t idx = 0;
     for( auto&[_, group] : groups )

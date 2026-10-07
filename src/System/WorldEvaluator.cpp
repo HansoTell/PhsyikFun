@@ -86,7 +86,12 @@ void WorldEvaluator::CalcAccelerations( const EntityRegistry& state, double Time
     }
 
     for( size_t i = 0; i < state.size(); i++ )
+    {
+        if(state[i].isStatic())
+            continue;
+
         outAccelerations[i] /= state[i].getMass();
+    }
 
 }
 

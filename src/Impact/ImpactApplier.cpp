@@ -42,6 +42,7 @@ std::optional<Vec3D> ImpactApplier::CalcImpulse(  const ClassicEntity& ent1, con
     if( relativVelocNormal < 0 ) return std::nullopt;
 
     double inverseMassSum = ent1.getInverseMass() + ent2.getInverseMass();
+    if( inverseMassSum <= 0.0 ) return std::nullopt;
     auto CombinedMaterial = m_Combiner->CombineMaterials(ent1.getMaterial(), ent2.getMaterial());
 
     double AbsImpulse = -((1.0 + CombinedMaterial.Restitution) * relativVelocNormal) / inverseMassSum;
