@@ -1,8 +1,9 @@
 #include "Interactions.h"
 #include "Printer.h"
 #include <System.h>
-#include <cmath>
+#include <chrono>
 #include <future>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -17,6 +18,9 @@ ClassicalSystem::ClassicalSystem() : m_Calculating (false), m_running(false)
     m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<VelocityVerleit>());
     //PRINTER
     m_Printer = std::make_unique<AsyncCSVPrinter>(m_Core, "data.csv");
+
+    //Becnhmarking
+    m_TimeStart = std::chrono::steady_clock::now();
 }
 
 ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_Calculating (false), m_running(false) {}
@@ -30,6 +34,12 @@ ClassicalSystem::ClassicalSystem( const ClassicalSystem& other )
 ClassicalSystem::~ClassicalSystem() 
 {
     Clear();
+
+    //Becnhmarking
+    m_TimeEnd = std::chrono::steady_clock::now();
+    auto rutime = m_TimeEnd - m_TimeStart;
+    double runtimrSec = std::chrono::duration<double>(rutime).count();
+    std::cout << runtimrSec << "," << m_StepTime << "," << m_PrintTime << ","; 
 
     m_Core.reset();
     m_Printer.reset(nullptr);
@@ -72,8 +82,6 @@ bool ClassicalSystem::pauseInternal()
 void ClassicalSystem::Pause() 
 {
     pauseInternal();
-
-    //kann man iwie garantieren dass hier aufgehalten wird bis er in cv gelaufen ist?
 }
 
 void ClassicalSystem::Clear()
@@ -211,8 +219,17 @@ void ClassicalSystem::run()
 
 void ClassicalSystem::tick() 
 {
+    //Benchmarking
+    auto t1 = std::chrono::steady_clock::now();
     m_Core->Step();
+    auto t2 = std::chrono::steady_clock::now();
+    auto d1 = t2-t1;
+    m_StepTime += std::chrono::duration<double>(d1).count();
 
+    auto t3 = std::chrono::steady_clock::now();
     m_Printer->Print();
+    auto t4 = std::chrono::steady_clock::now();
+    auto d2 = t4-t3;
+    m_PrintTime += std::chrono::duration<double>(d2).count();
 }
 }

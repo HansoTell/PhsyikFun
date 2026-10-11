@@ -10,6 +10,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <chrono>
 
 namespace Physik 
 {
@@ -105,9 +106,20 @@ void ClassicalSystemCore::addMultipleNonPotentialForce( std::vector<ClassicNonPo
 
 void ClassicalSystemCore::Step()
 {
+//Benchmarking
+    auto t1 = std::chrono::steady_clock::now();
     m_Integrator->step(m_CurrentState, m_NextState, m_Evaluater, m_Time, m_DeltaTime);
-    m_Impact->ApplyImpacts(m_NextState);
+    auto t2 = std::chrono::steady_clock::now();
+    auto d1 = t2-t1;
+    m_CoreStepTime += std::chrono::duration<double>(d1).count();
 
+    auto t3 = std::chrono::steady_clock::now();
+    m_Impact->ApplyImpacts(m_NextState);
+    auto t4 = std::chrono::steady_clock::now();
+    auto d2 = t4-t3;
+    m_CoreCollisionTime += std::chrono::duration<double>(d1).count();
+
+    auto t5 = std::chrono::steady_clock::now();
     advanceTimeIncrement();
     
     m_Evaluater->UpdateAccelerations(m_NextState, m_Time);
@@ -115,7 +127,9 @@ void ClassicalSystemCore::Step()
     m_Evaluater->UpdatePotentialEnergys(m_NextState, m_Time);
 
     std::swap(m_NextState, m_CurrentState);
-
+    auto t6 = std::chrono::steady_clock::now();
+    auto d3 = t4-t3;
+    m_CoreRestTim += std::chrono::duration<double>(d1).count();
 }
 
 void ClassicalSystemCore::UpdateEntityPropertys()

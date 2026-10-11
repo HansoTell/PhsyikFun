@@ -7,6 +7,7 @@
 #include "Impact.h"
 #include "Vector.h"
 
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -51,7 +52,11 @@ public:
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
     ClassicalSystemCore( const ClassicalSystemCore& other );
     ClassicalSystemCore( ClassicalSystemCore&& other);
-    ~ClassicalSystemCore() = default;
+    ~ClassicalSystemCore()  
+    {
+        //Benchmarking
+        std::cout << m_CoreStepTime << "," << m_CoreCollisionTime << "," << m_CoreRestTim << "\n";
+    }
 private:
     void advanceTimeIncrement();
 private:
@@ -66,5 +71,11 @@ private:
     std::unique_ptr<IDGLSolver> m_Integrator;
     std::unique_ptr<IImpactEvaluator> m_Impact;
     std::shared_ptr<IAccelerationEveluater> m_Evaluater;
+
+    //Becnhmarkingvaribels
+private:
+    double m_CoreStepTime{0.0};
+    double m_CoreCollisionTime{0.0};
+    double m_CoreRestTim{0.0};
 };
 }

@@ -9,6 +9,7 @@
 #include "EntityDescribtion.h"
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -90,6 +91,13 @@ private:
     std::atomic<bool> m_running{false};
     bool m_Idle{true};
     bool m_FinishedSet{false};
+//Benchmarking
+private:
+    std::chrono::steady_clock::time_point m_TimeStart;
+    std::chrono::steady_clock::time_point m_TimeEnd;
+    double m_StepTime{0.0};
+    double m_PrintTime{0.0};
+
 };
 
 }
