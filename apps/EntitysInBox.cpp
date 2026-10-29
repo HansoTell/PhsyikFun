@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
     std::uniform_real_distribution<> Velocity( 0.0, 75.0 );
 
     ClassicalSystem sys;
-    sys.setTimeIncrement( 0.1 );
-    sys.setTmax(1000);
+    sys.setTimeIncrement( 0.01 );
+    sys.setTmax(250);
 
     //6 Box Wände Setzten
     sys.addEntity(Vec3D{ 75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } });

@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
@@ -60,4 +59,4 @@ def Plot(FilePath, options):
 
 
 if __name__ == "__main__":
-    Plot("../build/apps/data.csv", [["Trajektorie"], ["Eges"], ["EKin", "EPot"]])
+    Plot("data.csv", [["Trajektorie"], ["Eges"], ["EKin", "EPot"]])
