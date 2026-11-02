@@ -10,10 +10,10 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <optional>
 #include <variant>
 #include <vector>
+#include <iostream>
 
 
 namespace Physik 
@@ -45,7 +45,7 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
     if( m_isCellSizeStatic )
         return; 
 
-    constexpr double Percentile = 0.7;
+    constexpr double Percentile = 0.4;
 
     std::vector<double> EntityBoundingRadius;
     EntityBoundingRadius.reserve(Entitys.size());
@@ -55,11 +55,11 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
         auto AABB = std::visit([&](const auto& Shape){
             return getAABB(Shape, ent.getPosition(), ent.getRotation());
         }, ent.getShape());
-        EntityBoundingRadius.push_back(AABB.max.BetragsQuadrat());
+        EntityBoundingRadius.push_back((AABB.max - ent.getPosition()).EukNorm());
     }
     std::sort(EntityBoundingRadius.begin(), EntityBoundingRadius.end());
 
-    m_CellSize = 2.0 * std::sqrt(EntityBoundingRadius[std::floor(Percentile * EntityBoundingRadius.size())]);
+    m_CellSize = 2.0 * EntityBoundingRadius[std::floor(Percentile * EntityBoundingRadius.size())];
 }
 
 void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)

@@ -32,7 +32,6 @@ public:
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
 
     EntityRegistry::ID addEntity(EntityDescription);
-    EntityRegistry::ID addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
     std::vector<EntityRegistry::ID> addMulipleEntitys( std::vector<EntityDescription> entitys );
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }

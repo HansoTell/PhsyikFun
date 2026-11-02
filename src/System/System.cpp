@@ -151,16 +151,6 @@ void ClassicalSystem::addEntity(EntityDescription desc)
     m_Printer->OnEntityCreated(CreatedEntity);
 }
 
-void ClassicalSystem::addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
-{
-    PauseScope pause(*this);
-    auto ID = m_Core->addEntity(Position, Velocity, Rotation, AngularVelocity, Mass, Material, Shape);
-    m_Core->UpdateEntityPropertys();
-
-    auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
-    m_Printer->OnEntityCreated(CreatedEntity);
-}
-
 void ClassicalSystem::addMulipleEntitys( std::vector<EntityDescription> entitys )
 {
     PauseScope pause(*this);

@@ -72,12 +72,6 @@ EntityRegistry::ID ClassicalSystemCore::addEntity( EntityDescription desc )
     return ID;
 }
 
-EntityRegistry::ID ClassicalSystemCore::addEntity( Vec3D Position, Vec3D Velocity, Quaternion<> Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape )
-{
-    EntityDescription desc { Position, Velocity, Rotation, AngularVelocity, Mass, std::move(Material), std::move(Shape) };
-    return addEntity(desc);
-}
-
 std::vector<EntityRegistry::ID> ClassicalSystemCore::addMulipleEntitys( std::vector<EntityDescription> entitys ) 
 { 
     std::vector<EntityRegistry::ID> AllIDs;

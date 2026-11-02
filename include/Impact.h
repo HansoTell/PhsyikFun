@@ -99,7 +99,7 @@ public:
 
     double getCellSize() const { return m_CellSize; }
 public:
-    SpartialHashGrid() : m_isCellSizeStatic(false) {}
+    SpartialHashGrid() : m_isCellSizeStatic(false), m_CellSize(-1.0) {}
     SpartialHashGrid(double CellSize) : m_CellSize(CellSize), m_isCellSizeStatic(true){}
     SpartialHashGrid( const SpartialHashGrid&) = default;
     SpartialHashGrid( SpartialHashGrid&& ) = default;

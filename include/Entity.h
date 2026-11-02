@@ -84,27 +84,6 @@ public:
         else
             m_Constants = { desc.Mass, T{1}/desc.Mass };
     }
-
-    Entity(Vector<Dim, T> startPosition, T mass, Shape<Dim, T> shape, bool isStatic = false ) 
-        : m_KinState( { startPosition, Vector<Dim, T>(), Vector<Dim, T>() } ), m_Energy({ 0.0, 0.0 }), m_Shape(std::move(shape)), m_Material({ T{1} }), m_ID(nextID++) 
-    {
-        if( isStatic || mass == T{0} )
-            m_Constants = { mass, 0 };
-        else
-            m_Constants = { mass, 1/mass };
-    }
-    Entity( Vector<Dim, T> startPosition, Vector<Dim, T> startVelocity, T mass, Shape<Dim, T> shape, bool isStatic = false ) : 
-        m_KinState( { startPosition, startVelocity, Vector<Dim, T>(), Quaternion<T>(0.0, 1.0, 0.0, 0.0), Vector<Dim, T>(), Vector<Dim, T>() } ),
-        m_Energy({ 0.5 * mass * Math::VectorCalc::DotProduct(startVelocity, startVelocity), 0.0 }), 
-        m_Shape(std::move(shape)), 
-        m_Material({ T{1.0} }), 
-        m_ID(nextID++) 
-    {
-        if( isStatic || mass == T{0} )
-            m_Constants = { mass, T{0} };
-        else
-            m_Constants = { mass, 1/mass };
-    }
     Entity( const Entity<Dim, T>& other ) : m_KinState(other.m_KinState), m_Energy(other.m_Energy), m_Constants(other.m_Constants), m_Shape(other.m_Shape), m_ID(other.m_ID) {}
     Entity( Entity<Dim, T>&& other ) : m_KinState(std::move(other.m_KinState)), m_Energy(std::move(other.m_Energy)), m_Constants(std::move(other.m_Constants)), m_Shape(std::move(other.m_Shape)), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;

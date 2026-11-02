@@ -51,7 +51,6 @@ public:
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
     void addEntity(EntityDescription desc);
-    void addEntity( Vec3D Position, Vec3D Velocity, Rotation Rotation, Vec3D AngularVelocity, double Mass, Material<> Material, Shape<> Shape );
     void addMulipleEntitys( std::vector<EntityDescription> entitys );
     void setTimeIncrement( double DeltaTime ); 
     void setTmax( double Tmax ); 

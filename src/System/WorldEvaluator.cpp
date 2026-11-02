@@ -151,7 +151,7 @@ void WorldEvaluator::UpdatePotentialEnergys( EntityRegistry& state, double Time 
     CalcPotEnergy(state, Time, m_EkinScratch);
 
     for( size_t i = 0; i < state.size(); i++ )
-        state[i].setPotentialEnergy(m_EkinScratch[i]);
+        state[i].setPotentialEnergy(m_EPotScratch[i]);
 }
 
 void WorldEvaluator::addExternPotential( ClassicField potential ) { m_ExtPotentials.push_back(ClassicField(std::move(potential))); }

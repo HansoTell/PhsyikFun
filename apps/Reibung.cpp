@@ -10,7 +10,7 @@ int main()
 {
     ClassicalSystem sys;
 
-    sys.addEntity(Vec3D(), Vec3D{ 100.0, 0.0, 0.0 }, NoRotation, Vec3D(), 1.0, {1.0},  Sphere<>{1.0});
+    sys.addEntity({Vec3D(), Vec3D{ 100.0, 0.0, 0.0 }, NoRotation, Vec3D(), 1.0, {1.0},  Sphere<>{1.0}});
     sys.addNonPotentialForce(ClassicNonPotentialForce([]( const ClassicEntity& state, double Time ){ 
         constexpr double gamma = 0.01; 
 

@@ -36,15 +36,15 @@ int main(int argc, char* argv[])
     sys.setTmax(250);
 
     //6 Box Wände Setzten
-    sys.addEntity(Vec3D{ 75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } });
-    sys.addEntity(Vec3D{ -75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } });
-    sys.addEntity(Vec3D{ 0.0, 75.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 25.0, 50.0 }});
-    sys.addEntity(Vec3D{ 0.0, -75.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 25.0, 50.0 }});
-    sys.addEntity(Vec3D{ 0.0, 0.0, 75.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 50.0, 25.0 } });
-    sys.addEntity(Vec3D{ 0.0, 0.0, -75.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 50.0, 25.0 } });
+    sys.addEntity({ Vec3D{ 75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } } });
+    sys.addEntity({ Vec3D{ -75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } }});
+    sys.addEntity({ Vec3D{ 0.0, 75.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 25.0, 50.0 }}});
+    sys.addEntity({ Vec3D{ 0.0, -75.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 25.0, 50.0 }}});
+    sys.addEntity({ Vec3D{ 0.0, 0.0, 75.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 50.0, 25.0 } }});
+    sys.addEntity({ Vec3D{ 0.0, 0.0, -75.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 50.0, 25.0 } }});
 
     for( int i = 0; i < numEntitys; ++i )
-        sys.addEntity(Vec3D{ Position(generator), Position(generator), Position(generator) }, Vec3D{ Velocity(generator), Velocity(generator), Velocity(generator) }, Physik::NoRotation, Vec3D(), Mass(generator), Material<>{ 1.0 }, Sphere<>{ RadiusDist(generator) } );
+        sys.addEntity({ Vec3D{ Position(generator), Position(generator), Position(generator) }, Vec3D{ Velocity(generator), Velocity(generator), Velocity(generator) }, Physik::NoRotation, Vec3D(), Mass(generator), Material<>{ 1.0 }, Sphere<>{ RadiusDist(generator) } });
 
     sys.Start();
 

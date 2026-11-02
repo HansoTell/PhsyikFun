@@ -1,3 +1,4 @@
+#include "Material.h"
 #include "Shapes.h"
 #include "System.h"
 #include "Vector.h"
@@ -11,8 +12,8 @@ int main()
 {
     ClassicalSystem sys;
 
-    sys.addEntity( Vec3D{ 10.0, 0.0, 0.0 }, Vec3D{ 0.0, 1.0, 0.0 }, NoRotation, Vec3D(), 10.0, {1.0}, Sphere<>{1.0} );
-    sys.addExternPotential(ClassicField( std::make_unique<ClassicStandartPotential>(100.0),  ClassicEntity(Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{0.0, 0.0, 0.0}, 0.0, Sphere<>{1.0} ) ));
+    sys.addEntity( {Vec3D{ 10.0, 0.0, 0.0 }, Vec3D{ 0.0, 1.0, 0.0 }, NoRotation, Vec3D(), 10.0, {1.0}, Sphere<>{1.0} });
+    sys.addExternPotential(ClassicField( std::make_unique<ClassicStandartPotential>(100.0),  ClassicEntity({Vec3D{ 0.0, 0.0, 0.0 }, Vec3D{0.0, 0.0, 0.0}, NoRotation, Vec3D(), 0.0, Material<>{1.0}, Sphere<>{1.0} }) ));
     sys.setTimeIncrement( 0.01 );
 
     sys.Start();
