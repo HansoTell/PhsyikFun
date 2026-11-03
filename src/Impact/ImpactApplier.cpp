@@ -3,7 +3,9 @@
 #include "Vector.h"
 #include "Math/Math.h"
 #include <cassert>
+#include <iterator>
 #include <optional>
+#include <iostream>
 
 
 namespace Physik 
@@ -25,7 +27,7 @@ void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<Colli
         ent2.setVelocity(ent2.getVelocity() + ent2.getInverseMass() * (*Impulse));
 
         ent1.setPosition(ent1.getPosition() - positionCorrection * ent1.getInverseMass());
-        ent2.setPosition(ent2.getPosition() - positionCorrection * ent2.getInverseMass());
+        ent2.setPosition(ent2.getPosition() + positionCorrection * ent2.getInverseMass());
     }
 }
   
@@ -39,7 +41,7 @@ std::optional<Vec3D> ImpactApplier::CalcImpulse(  const ClassicEntity& ent1, con
     using Math::VectorCalc::DotProduct;
     Vec3D relativVelocity = ent2.getVelocity() - ent1.getVelocity();
     double relativVelocNormal = DotProduct(relativVelocity, collision.normal);
-    if( relativVelocNormal < 0 ) return std::nullopt;
+    if( relativVelocNormal >= 0 ) return std::nullopt;
 
     double inverseMassSum = ent1.getInverseMass() + ent2.getInverseMass();
     if( inverseMassSum <= 0.0 ) return std::nullopt;

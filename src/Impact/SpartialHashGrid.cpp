@@ -13,7 +13,6 @@
 #include <optional>
 #include <variant>
 #include <vector>
-#include <iostream>
 
 
 namespace Physik 
@@ -45,7 +44,7 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
     if( m_isCellSizeStatic )
         return; 
 
-    constexpr double Percentile = 0.4;
+    constexpr double Percentile = 0.7;
 
     std::vector<double> EntityBoundingRadius;
     EntityBoundingRadius.reserve(Entitys.size());

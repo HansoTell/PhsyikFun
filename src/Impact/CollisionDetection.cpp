@@ -9,6 +9,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <limits>
 #include <optional>
 
@@ -50,8 +51,8 @@ static double findShortestPointToSurface( const Vector<6, double> distances, con
                     outNormalLocal[j] = 0.0;
                     outContactLocal[j] = centerLocal[j];
                 }else {
-                    outNormalLocal[j] = (i < distances.size()/2) ? 1.0 : -1.0;
-                    outContactLocal[j] = (i < distances.size()/2) ? BoxHalfSizes[j] : -BoxHalfSizes[j];
+                    outNormalLocal[j] = (i < distances.size()/2) ? -1.0 : 1.0;
+                    outContactLocal[j] = (i < distances.size()/2) ? -BoxHalfSizes[j] : BoxHalfSizes[j];
                 }
             }
         }
@@ -86,7 +87,7 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     if( diffSquared > GeometryEpsilon * GeometryEpsilon )
     {
         double distance = std::sqrt(diffSquared);
-        normalLocal = diffrence / distance;
+        normalLocal = -1* diffrence / distance;
         penetration = A.m_Radius - distance;
     } else {
         Vec3D distancePos = B.halfSize - localD;

@@ -44,6 +44,12 @@ def PrintEnergie(df:pd.DataFrame, options):
                     plt.plot(time, ekin, label = f"EKin of Entity = {i}")
                 if "EPot" in OptionsPack:
                     plt.plot(time, epot, label = f"EPotof Entity = {i}")
+            if "Eges" in OptionsPack:
+                eGes = df.groupby("Time")[["Ekin", "EPot"]].sum()
+                eGes["etot"] = eGes["Ekin"] + eGes["EPot"]
+                plt.plot(eGes.index, eGes["Ekin"], label = "KineticEnergy all Entitys")
+                plt.plot(eGes.index, eGes["EPot"], label = "PotentialEnergy all Entitys")
+                plt.plot(eGes.index, eGes["etot"], label = "Energy all Entitys")
             plt.xlabel("Time")
             plt.ylabel("E / [J]")
             plt.title(", ".join(OptionsPack))

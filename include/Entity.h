@@ -84,8 +84,8 @@ public:
         else
             m_Constants = { desc.Mass, T{1}/desc.Mass };
     }
-    Entity( const Entity<Dim, T>& other ) : m_KinState(other.m_KinState), m_Energy(other.m_Energy), m_Constants(other.m_Constants), m_Shape(other.m_Shape), m_ID(other.m_ID) {}
-    Entity( Entity<Dim, T>&& other ) : m_KinState(std::move(other.m_KinState)), m_Energy(std::move(other.m_Energy)), m_Constants(std::move(other.m_Constants)), m_Shape(std::move(other.m_Shape)), m_ID(other.m_ID){ other.m_ID = 0; }
+    Entity( const Entity<Dim, T>& other ) : m_Material(other.m_Material), m_KinState(other.m_KinState), m_Energy(other.m_Energy), m_Constants(other.m_Constants), m_Shape(other.m_Shape), m_ID(other.m_ID) {}
+    Entity( Entity<Dim, T>&& other ) : m_Material(std::move(other.m_Material)), m_KinState(std::move(other.m_KinState)), m_Energy(std::move(other.m_Energy)), m_Constants(std::move(other.m_Constants)), m_Shape(std::move(other.m_Shape)), m_ID(other.m_ID){ other.m_ID = 0; }
     ~Entity() = default;
     Entity& operator=(const Entity&) = default;
     Entity& operator=(Entity&&) = default;
