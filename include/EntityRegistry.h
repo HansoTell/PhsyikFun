@@ -26,8 +26,14 @@ public:
 
     void add(ClassicEntity entity)
     {
+        bool isStatic = entity.isStatic();
+        ID id = entity.getID();
         m_IDtoIndex[entity.getID()] = m_Entitys.size();
         m_Entitys.push_back(std::move(entity));
+        if( isStatic )
+            m_StaticEntitys.push_back(id);
+        else 
+            m_DynamicEntitys.push_back(id);
     }
 
     void removeById(ID id)
@@ -66,7 +72,13 @@ public:
     {
         m_Entitys.clear();
         m_IDtoIndex.clear();
+        m_DynamicEntitys.clear();
+        m_StaticEntitys.clear();
     }
+    std::vector<ID>& getStaticEntitys() { return m_StaticEntitys; }
+    std::vector<ID>& getDynamicEntitys() { return m_DynamicEntitys; }
+    const std::vector<ID>& getStaticEntitys() const  { return m_StaticEntitys; }
+    const std::vector<ID>& getDynamicEntitys() const { return m_DynamicEntitys; }
 public:
     EntityRegistry() = default;
     EntityRegistry( std::vector<ClassicEntity> entitys ) : m_Entitys(std::move(entitys))
@@ -84,5 +96,8 @@ public:
 private:
     std::vector<ClassicEntity> m_Entitys;
     std::unordered_map<ID, size_t> m_IDtoIndex;
+
+    std::vector<ID> m_StaticEntitys;
+    std::vector<ID> m_DynamicEntitys;
 };
 }

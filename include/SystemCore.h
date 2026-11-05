@@ -68,7 +68,8 @@ private:
     double Energy;
     
     std::unique_ptr<IDGLSolver> m_Integrator;
-    std::unique_ptr<IImpactEvaluator> m_Impact;
+    std::unique_ptr<IImpactEvaluator> m_DynamicEntImpact;
+    std::unique_ptr<IImpactEvaluator> m_StaticEntImpact;
     std::shared_ptr<IAccelerationEveluater> m_Evaluater;
 
     //Becnhmarkingvaribels

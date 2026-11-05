@@ -3,9 +3,7 @@
 #include "Vector.h"
 #include "Math/Math.h"
 #include <cassert>
-#include <iterator>
 #include <optional>
-#include <iostream>
 
 
 namespace Physik 

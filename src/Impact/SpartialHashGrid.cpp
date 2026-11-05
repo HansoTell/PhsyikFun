@@ -39,7 +39,7 @@ const std::array<SpartialHashGrid::CellKoords, 14> SpartialHashGrid::offsets =
     SpartialHashGrid::CellKoords{ 1, 1, 1 }
 };
 
-void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
+void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
     if( m_isCellSizeStatic )
         return; 
@@ -47,10 +47,11 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
     constexpr double Percentile = 0.7;
 
     std::vector<double> EntityBoundingRadius;
-    EntityBoundingRadius.reserve(Entitys.size());
+    EntityBoundingRadius.reserve(EntitySet.size());
 
-    for( auto& ent : Entitys )
+    for( auto& EntID : EntitySet )
     {
+        const auto& ent = Entitys.getById(EntID); 
         auto AABB = std::visit([&](const auto& Shape){
             return getAABB(Shape, ent.getPosition(), ent.getRotation());
         }, ent.getShape());
@@ -61,16 +62,17 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys )
     m_CellSize = 2.0 * EntityBoundingRadius[std::floor(Percentile * EntityBoundingRadius.size())];
 }
 
-void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
+void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
     m_Cells.clear();
 
-    if( Entitys.empty() )
+    if( EntitySet.empty() )
         return;
 
-    size_t avrg_bucketsize = Entitys.size()/4;
-    for( const auto& ent : Entitys )
+    size_t avrg_bucketsize = EntitySet.size()/4;
+    for( const auto& EntityID : EntitySet )
     {
+        const auto& ent = Entitys.getById(EntityID);
         auto AABBBox = std::visit([&](const auto& Shape)
         {
             return getAABB(Shape, ent.getPosition(), ent.getRotation());
@@ -88,7 +90,7 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys)
                 {
                     CellKoords momCell = { x, y, z };
                     if( m_Cells.find(momCell) == m_Cells.end()) m_Cells[momCell].reserve(avrg_bucketsize);
-                    m_Cells[momCell].push_back(ent.getID());
+                    m_Cells[momCell].push_back(EntityID);
                 }
             }
         }
@@ -137,7 +139,7 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
 
             if( !collision_or.has_value() ) continue;
 
-            //Konvention NOrmal zeigt von kleinerer Id zu größerer. Erste Wert immer kleinere ID
+            //Konvention Normal zeigt von kleinerer Id zu größerer. Erste Wert immer kleinere ID
             auto& collision = collision_or.value();
             if(collision.ent1 > collision.ent2 ) { std::swap(collision.ent1, collision.ent2); collision.normal = -1 * collision.normal; }
             if(m_KollisionPairs.find(collision) != m_KollisionPairs.end()) continue;

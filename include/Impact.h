@@ -59,7 +59,6 @@ private:
     std::optional<Vec3D> CalcImpulse(  const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
     Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
 private:
-    ImpactVelocityOperattions ops;
     std::unique_ptr<IMaterialCombiner<>> m_Combiner;
 };
 
@@ -92,8 +91,8 @@ private:
     };
     static const std::array<CellKoords, 14> offsets;
 public:
-    void UpdateCellSize( const EntityRegistry& Entitys ); 
-    void BuildMap( const EntityRegistry& Entitys );
+    void UpdateCellSize( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet ); 
+    void BuildMap( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
     void FindAllKollisionPairs( const EntityRegistry& Entitys );
     std::vector<std::vector<CollisionManifold>> getZusammenhangskomponenten( const EntityRegistry& Entitys ) const;
 
@@ -118,16 +117,16 @@ class IImpactEvaluator
 {
 public:
     virtual ~IImpactEvaluator() = default;
-    virtual void ApplyImpacts( EntityRegistry& state ) = 0;
-    virtual void NotifyEntityAddition( const EntityRegistry& ) = 0;
+    virtual void ApplyImpacts( EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet ) = 0;
+    virtual void NotifyEntityAddition( const EntityRegistry&, const std::vector<EntityRegistry::ID>& EntitySet ) = 0;
     virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
 };
 
 class AdvancedElasticImpact : public IImpactEvaluator 
 {
 public:
-    void ApplyImpacts( EntityRegistry& state ) override;
-    void NotifyEntityAddition( const EntityRegistry& state ) override { m_Grid.UpdateCellSize( state ); }
+    void ApplyImpacts( EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet ) override;
+    void NotifyEntityAddition( const EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet ) override { m_Grid.UpdateCellSize( state, EntitySet ); }
     std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(m_Grid.getCellSize()); }
 public:
     AdvancedElasticImpact() = default;

@@ -2,7 +2,6 @@
 #include "EntityDescribtion.h"
 #include "EntityRegistry.h"
 #include "Interactions.h"
-#include "Shapes.h"
 #include "SystemCore.h"
 
 #include <cassert>
@@ -16,7 +15,7 @@ namespace Physik
 {
 ClassicalSystemCore::ClassicalSystemCore()
     : m_DeltaTime(default_delta_time), m_Integrator(std::make_unique<VelocityVerleit>()), 
-    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_DynamicEntImpact(std::make_unique<AdvancedElasticImpact>()),
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
@@ -24,28 +23,28 @@ ClassicalSystemCore::ClassicalSystemCore()
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod ) 
     : m_DeltaTime(default_delta_time), m_Integrator(std::move(dglMethod)), 
-    m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()),
+    m_Evaluater(std::make_shared<WorldEvaluator>()), m_DynamicEntImpact(std::make_unique<AdvancedElasticImpact>()),
     m_Time(0.0), m_Tmax(std::numeric_limits<double>::infinity()) 
 {
     UpdateEntityPropertys();
 }
 
 ClassicalSystemCore::ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double deltaTime ) 
-    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_Impact(std::make_unique<AdvancedElasticImpact>()), m_Time(0.0) 
+    : m_DeltaTime( deltaTime ), m_Integrator(std::move(dglMethod)), m_Evaluater(std::make_shared<WorldEvaluator>()), m_DynamicEntImpact(std::make_unique<AdvancedElasticImpact>()), m_Time(0.0) 
 {
     UpdateEntityPropertys();
 }
 
 ClassicalSystemCore::ClassicalSystemCore( const ClassicalSystemCore& other ) 
     : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy),
-    m_CurrentState(other.m_CurrentState),  m_Integrator(other.m_Integrator->clone()), m_Evaluater(other.m_Evaluater->clone()), m_Impact(other.m_Impact->clone()) {}
+    m_CurrentState(other.m_CurrentState),  m_Integrator(other.m_Integrator->clone()), m_Evaluater(other.m_Evaluater->clone()), m_DynamicEntImpact(other.m_DynamicEntImpact->clone()) {}
 
 ClassicalSystemCore::ClassicalSystemCore( ClassicalSystemCore&& other ) 
     : m_DeltaTime(other.m_DeltaTime), m_Time(other.m_Time), Energy(other.Energy), 
     m_Integrator(std::move(other.m_Integrator)), 
     m_CurrentState(std::move(other.m_CurrentState)),
     m_Evaluater(std::move(other.m_Evaluater)),
-    m_Impact(std::move(other.m_Impact)){}
+    m_DynamicEntImpact(std::move(other.m_DynamicEntImpact)){}
 
 void ClassicalSystemCore::Clear() 
 {
@@ -63,11 +62,15 @@ EntityRegistry::ID ClassicalSystemCore::addEntity( EntityDescription desc )
     ClassicEntity EntityCopy = Entity;
 
     auto ID = Entity.getID();
+    bool isStatic = Entity.isStatic();
 
     m_CurrentState.add(std::move(Entity));  
     m_NextState.add(std::move(EntityCopy));
 
-    m_Impact->NotifyEntityAddition( m_CurrentState );
+    if( isStatic )
+        m_StaticEntImpact->NotifyEntityAddition(m_CurrentState, m_CurrentState.getStaticEntitys());
+    else
+        m_DynamicEntImpact->NotifyEntityAddition( m_CurrentState, m_CurrentState.getDynamicEntitys() );
 
     return ID;
 }
@@ -87,7 +90,9 @@ std::vector<EntityRegistry::ID> ClassicalSystemCore::addMulipleEntitys( std::vec
 
         AllIDs.push_back(ID);
     } 
-    m_Impact->NotifyEntityAddition( m_CurrentState );
+
+    m_DynamicEntImpact->NotifyEntityAddition( m_CurrentState, m_CurrentState.getDynamicEntitys() );
+    m_StaticEntImpact->NotifyEntityAddition( m_CurrentState, m_CurrentState.getStaticEntitys() );
 
     return AllIDs;
 }
@@ -108,7 +113,8 @@ void ClassicalSystemCore::Step()
     m_CoreStepTime += std::chrono::duration<double>(d1).count();
 
     auto t3 = std::chrono::steady_clock::now();
-    m_Impact->ApplyImpacts(m_NextState);
+    m_DynamicEntImpact->ApplyImpacts(m_NextState, m_NextState.getDynamicEntitys());
+    m_StaticEntImpact->ApplyImpacts(m_NextState, m_NextState.getStaticEntitys());
     auto t4 = std::chrono::steady_clock::now();
     auto d2 = t4-t3;
     m_CoreCollisionTime += std::chrono::duration<double>(d1).count();
