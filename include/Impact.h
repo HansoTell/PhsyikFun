@@ -62,6 +62,15 @@ private:
     std::unique_ptr<IMaterialCombiner<>> m_Combiner;
 };
 
+class BoundingVolumeHierarchy
+{
+public:
+    BoundingVolumeHierarchy() = default;
+    BoundingVolumeHierarchy(const BoundingVolumeHierarchy&) = default;
+    BoundingVolumeHierarchy(BoundingVolumeHierarchy&&) = default;
+    ~BoundingVolumeHierarchy() = default;
+};
+
 
 class SpartialHashGrid
 {
@@ -117,16 +126,16 @@ class IImpactEvaluator
 {
 public:
     virtual ~IImpactEvaluator() = default;
-    virtual void ApplyImpacts( EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet ) = 0;
-    virtual void NotifyEntityAddition( const EntityRegistry&, const std::vector<EntityRegistry::ID>& EntitySet ) = 0;
+    virtual void ApplyImpacts( EntityRegistry& state ) = 0;
+    virtual void NotifyEntityAddition( const EntityRegistry& ) = 0;
     virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
 };
 
 class AdvancedElasticImpact : public IImpactEvaluator 
 {
 public:
-    void ApplyImpacts( EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet ) override;
-    void NotifyEntityAddition( const EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet ) override { m_Grid.UpdateCellSize( state, EntitySet ); }
+    void ApplyImpacts( EntityRegistry& state ) override;
+    void NotifyEntityAddition( const EntityRegistry& state ) override { m_Grid.UpdateCellSize( state, state.getDynamicEntitys() ); }
     std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(m_Grid.getCellSize()); }
 public:
     AdvancedElasticImpact() = default;

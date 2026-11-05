@@ -4,10 +4,10 @@
 
 namespace Physik 
 {
-void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state, const std::vector<EntityRegistry::ID>& EntitySet )
+void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state )
 {
     //O(n)
-    m_Grid.BuildMap( state, EntitySet );
+    m_Grid.BuildMap( state, state.getDynamicEntitys() );
     
     //O(SizeofBuckets²)
     m_Grid.FindAllKollisionPairs( state );
