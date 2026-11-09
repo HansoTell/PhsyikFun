@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "EntityRegistry.h"
 #include "Vector.h"
+#include "AABB.h"
 
 #include <cmath>
 #include <cstddef>
@@ -64,11 +65,45 @@ private:
 
 class BoundingVolumeHierarchy
 {
+private:
+    class BVHTree
+    {
+    private:
+        struct BVHNode
+        {
+            EntityRegistry::ID EntityID;
+            AABB Bounds;
+
+            BVHNode* left;
+            BVHNode* right;
+
+            bool isLeaf() const { return left == NULL && right == NULL; }
+        };
+    public:
+        BVHTree() = default;
+        BVHTree( EntityRegistry::ID EntityID, AABB BoundingBox )
+        {
+            m_Nodes.push_back({ EntityID, BoundingBox, NULL, NULL });
+            m_root = &m_Nodes.back();
+        }
+        BVHTree(const BVHTree&);
+        BVHTree(BVHTree&&);
+        ~BVHTree() = default;
+    private:
+        BVHNode* m_root;
+        std::vector<BVHNode> m_Nodes;
+    };
+public:
+    void BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
+    void FindCollisions( const std::vector<EntityRegistry::ID>& TestEntitys );
 public:
     BoundingVolumeHierarchy() = default;
     BoundingVolumeHierarchy(const BoundingVolumeHierarchy&) = default;
     BoundingVolumeHierarchy(BoundingVolumeHierarchy&&) = default;
     ~BoundingVolumeHierarchy() = default;
+private:
+    uint8_t FindLongestAxis( const std::vector<AABB>& Bounds ) const;
+
 };
 
 

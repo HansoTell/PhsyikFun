@@ -1,6 +1,6 @@
-#include "Entity.h"
 #include "Vector.h"
 #include "Shapes.h"
+#include <Math/Quaternion.h>
 
 namespace Physik 
 {
