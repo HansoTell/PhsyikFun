@@ -66,6 +66,7 @@ private:
 class BoundingVolumeHierarchy
 {
 private:
+    struct EntityBound{ EntityRegistry::ID ID; AABB Bound; };
     class BVHTree
     {
     private:
@@ -79,6 +80,7 @@ private:
 
             bool isLeaf() const { return left == NULL && right == NULL; }
         };
+
     public:
         BVHTree() = default;
         BVHTree( EntityRegistry::ID EntityID, AABB BoundingBox )
@@ -102,7 +104,7 @@ public:
     BoundingVolumeHierarchy(BoundingVolumeHierarchy&&) = default;
     ~BoundingVolumeHierarchy() = default;
 private:
-    uint8_t FindLongestAxis( const std::vector<AABB>& Bounds ) const;
+    uint8_t FindLongestAxis( const std::vector<EntityBound>& Bounds ) const;
 
 };
 

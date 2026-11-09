@@ -1,4 +1,5 @@
 #include "Impact.h"
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <limits>
@@ -9,21 +10,21 @@
 namespace Physik 
 {
 
-uint8_t BoundingVolumeHierarchy::FindLongestAxis( const std::vector<AABB>& Bounds ) const
+uint8_t BoundingVolumeHierarchy::FindLongestAxis( const std::vector<EntityBound>& Bounds ) const
 {
     assert(!Bounds.empty());
 
     uint8_t global_Max_Axis;
     double max_Delta = std::numeric_limits<double>().min();
 
-    for( size_t i = 0; i < Bounds[0].max.size(); ++i )
+    for( size_t i = 0; i < Bounds[0].Bound.max.size(); ++i )
     {
         double local_min = std::numeric_limits<double>().max();
         double local_max = std::numeric_limits<double>().min();
         for( size_t j = 0; j < Bounds.size(); ++j )
         {
-            double axis_max_bound = Bounds[j].max[i];
-            double axis_min_bound = Bounds[j].min[i];
+            double axis_max_bound = Bounds[j].Bound.max[i];
+            double axis_min_bound = Bounds[j].Bound.min[i];
             if( axis_max_bound > local_max )
                 local_max = axis_max_bound;
 
@@ -43,7 +44,7 @@ uint8_t BoundingVolumeHierarchy::FindLongestAxis( const std::vector<AABB>& Bound
 
 void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
-    std::vector<AABB> all_bounds;
+    std::vector<EntityBound> all_bounds;
     all_bounds.reserve(EntitySet.size());
 
     //Alle Bounds bestimmen
@@ -53,15 +54,20 @@ void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std
         AABB bound = std::visit([&](const auto& Shape){
             return getAABB(Shape, ent.getPosition(), ent.getRotation());
         }, ent.getShape());
-        all_bounds.push_back(bound);
+        all_bounds.push_back({ EntityID, bound });
     }
 
     //Achse bestimmen
     auto Axis = FindLongestAxis(all_bounds);
 
-    //An Achse sortieren
+    std::sort(all_bounds.begin(), all_bounds.end(), [&](const EntityBound& b1, const EntityBound& b2)
+    {
+        double midPoint1 = (b1.Bound.max[Axis] + b1.Bound.min[Axis]);
+        double midPoint2 = (b2.Bound.max[Axis] + b2.Bound.min[Axis]);
+
+        return midPoint1 < midPoint2;
+    });
+
     //Baum daran rekursiv bauen
-    //
-    //-> wie verbinden wir entity und bounding box muss ja zusammen passen
 }
 }
