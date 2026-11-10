@@ -5,6 +5,8 @@
 #include "Vector.h"
 #include "AABB.h"
 
+#include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -67,35 +69,18 @@ class BoundingVolumeHierarchy
 {
 private:
     struct EntityBound{ EntityRegistry::ID ID; AABB Bound; };
-    class BVHTree
+    struct BVHNode
     {
-    private:
-        struct BVHNode
-        {
-            EntityRegistry::ID EntityID;
-            AABB Bounds;
+        EntityRegistry::ID EntityID;
+        AABB Bounds;
 
-            BVHNode* left;
-            BVHNode* right;
+        BVHNode* left;
+        BVHNode* right;
 
-            bool isLeaf() const { return left == NULL && right == NULL; }
-        };
-
-    public:
-        BVHTree() = default;
-        BVHTree( EntityRegistry::ID EntityID, AABB BoundingBox )
-        {
-            m_Nodes.push_back({ EntityID, BoundingBox, NULL, NULL });
-            m_root = &m_Nodes.back();
-        }
-        BVHTree(const BVHTree&);
-        BVHTree(BVHTree&&);
-        ~BVHTree() = default;
-    private:
-        BVHNode* m_root;
-        std::vector<BVHNode> m_Nodes;
+        bool isLeaf() const { return left == NULL && right == NULL; }
     };
 public:
+    //void UpdateBVHTree()???
     void BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
     void FindCollisions( const std::vector<EntityRegistry::ID>& TestEntitys );
 public:
@@ -105,7 +90,15 @@ public:
     ~BoundingVolumeHierarchy() = default;
 private:
     uint8_t FindLongestAxis( const std::vector<EntityBound>& Bounds ) const;
+    //TODO:
+    template<size_t N>
+    BVHNode* BuildTreeRecursiv( const std::array<EntityBound, N>& Entitys, uint8_t axis );
 
+    BVHNode* CreateLeaf( const EntityBound& payload );
+    BVHNode* CreateInternalNode( BVHNode* left, BVHNode* right );
+private:
+    BVHNode* m_root;
+    std::vector<BVHNode> m_Nodes;
 };
 
 

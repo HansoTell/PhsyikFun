@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <variant>
 #include <vector>
@@ -9,7 +10,6 @@
 
 namespace Physik 
 {
-
 uint8_t BoundingVolumeHierarchy::FindLongestAxis( const std::vector<EntityBound>& Bounds ) const
 {
     assert(!Bounds.empty());
@@ -41,9 +41,33 @@ uint8_t BoundingVolumeHierarchy::FindLongestAxis( const std::vector<EntityBound>
 
     return global_Max_Axis;
 }
+BoundingVolumeHierarchy::BVHNode* BoundingVolumeHierarchy::CreateLeaf( const EntityBound& payload )
+{
+    m_Nodes.push_back({ payload.ID, payload.Bound, NULL, NULL });
+    return &m_Nodes.back();
+}
+
+BoundingVolumeHierarchy::BVHNode* BoundingVolumeHierarchy::CreateInternalNode( BVHNode* left, BVHNode* right )
+{
+    assert(left && right);
+
+    AABB combinedBounds;
+    for( size_t i = 0; i < left->Bounds.max.size(); ++i )
+    {
+        combinedBounds.min[i] = std::min(left->Bounds.min[i], right->Bounds.min[i]);
+        combinedBounds.max[i] = std::max(left->Bounds.max[i], right->Bounds.max[i]);
+    }
+
+    m_Nodes.emplace_back( std::numeric_limits<EntityRegistry::ID>().max(), combinedBounds, left, right );
+
+    return &m_Nodes.back();
+}
 
 void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
+    m_Nodes.clear();
+    m_Nodes.reserve(EntitySet.size());
+
     std::vector<EntityBound> all_bounds;
     all_bounds.reserve(EntitySet.size());
 
@@ -67,6 +91,9 @@ void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std
 
         return midPoint1 < midPoint2;
     });
+
+    //anstatt array nutzen wir einfach views oder ranges hahah wie geil
+    //m_root = BuildTreeRecursiv(const std::array<EntityBound, N> &Entitys, Axis)
 
     //Baum daran rekursiv bauen
 }
