@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <span>
 
 namespace Physik
 {
@@ -82,7 +83,7 @@ private:
 public:
     //void UpdateBVHTree()???
     void BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
-    void FindCollisions( const std::vector<EntityRegistry::ID>& TestEntitys );
+    void FindCollisions( const EntityRegistry& Entitys, std::span<const EntityRegistry::ID> TestEntitys );
 public:
     BoundingVolumeHierarchy() = default;
     BoundingVolumeHierarchy(const BoundingVolumeHierarchy&) = default;
@@ -90,10 +91,7 @@ public:
     ~BoundingVolumeHierarchy() = default;
 private:
     uint8_t FindLongestAxis( const std::vector<EntityBound>& Bounds ) const;
-    //TODO:
-    template<size_t N>
-    BVHNode* BuildTreeRecursiv( const std::array<EntityBound, N>& Entitys, uint8_t axis );
-
+    BVHNode* BuildTreeRecursiv( std::span<EntityBound> Entitys, uint8_t axis );
     BVHNode* CreateLeaf( const EntityBound& payload );
     BVHNode* CreateInternalNode( BVHNode* left, BVHNode* right );
 private:

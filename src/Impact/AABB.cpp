@@ -36,4 +36,13 @@ AABB getAABB( const Box<>& Box, const Vec3D& position, const Quaternion<>& Rotat
 
     return { position - a, position + a };
 }
+
+bool isAABBsOverlapping( const AABB& first, const AABB& secound )
+{
+    for( size_t i = 0; i < first.max.size(); ++i )
+        if(first.max[i] < secound.min[i] || secound.max[i] < first.min[i])
+            return false;
+
+    return true;
+}
 }
