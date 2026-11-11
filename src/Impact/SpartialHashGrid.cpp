@@ -1,7 +1,6 @@
 #include "EntityRegistry.h"
 #include "Impact.h"
 
-#include "Datastructures/DisjointSets.h"
 #include "CollisionDetction.h"
 #include "AABB.h"
 #include "Vector.h"
@@ -97,10 +96,10 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys, const std::vecto
     }
 }
 
-void SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Entitys ) 
+CollisionSet SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Entitys ) 
 {
-    m_KollisionPairs.clear();
-
+    CollisionSet Collisions;
+    Collisions.reserve(Entitys.size());
     for( auto&[Cell, _] : m_Cells )
     {
         auto& cellEntitys = m_Cells.at(Cell);
@@ -111,12 +110,13 @@ void SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Entitys )
             auto neighbour_it = m_Cells.find(neighbour);
             if( neighbour_it == m_Cells.end() ) continue;
 
-            CollectCollisions(cellEntitys, neighbour_it->second, Entitys);
+            CollectCollisions(cellEntitys, neighbour_it->second, Entitys, Collisions);
         }
     }
+    return Collisions;
 }
 
-void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& Entitys ) 
+void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& Entitys, CollisionSet& outCollisions ) 
 {
     for( size_t i = 0; i < cell1.size(); ++i )
     {
@@ -131,55 +131,14 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
             auto& ent1 = Entitys.getById(ent1ID);
             auto& ent2 = Entitys.getById(ent2ID);
 
-            auto collision_or = std::visit([&]( const auto& ShapeA, const auto& ShapeB ) -> std::optional<CollisionManifold> 
-            { 
-                return detectCollision(ShapeA, ShapeB, ent1, ent2); 
-            }, ent1.getShape(), ent2.getShape());
-            
+            auto collision_or = FindCollision(ent1, ent2);
 
             if( !collision_or.has_value() ) continue;
-
-            //Konvention Normal zeigt von kleinerer Id zu größerer. Erste Wert immer kleinere ID
             auto& collision = collision_or.value();
-            if(collision.ent1 > collision.ent2 ) { std::swap(collision.ent1, collision.ent2); collision.normal = -1 * collision.normal; }
-            if(m_KollisionPairs.find(collision) != m_KollisionPairs.end()) continue;
+            if(outCollisions.find(collision) != outCollisions.end()) continue;
 
-            m_KollisionPairs.insert(collision);
+            outCollisions.insert(collision);
         }
     }
-}
-
- std::vector<std::vector<CollisionManifold>> SpartialHashGrid::getZusammenhangskomponenten( const EntityRegistry& Entitys ) const
-{
-    ds::DisjointSets Union(Entitys.size());
-    for( auto& pair : m_KollisionPairs)
-    {
-        size_t ent1Idx = Entitys.getEntityIdx(pair.ent1);
-        size_t ent2Idx = Entitys.getEntityIdx(pair.ent2);
-
-        Union.unite(ent1Idx, ent2Idx);
-    }
-
-    std::unordered_map<size_t, std::vector<size_t>> groups = Union.getSets();
-    std::vector<std::vector<CollisionManifold>> KollisionGroups(groups.size());
-    //O(groups.size)
-    size_t idx = 0;
-    for( auto&[_, group] : groups )
-    {
-        KollisionGroups[idx].reserve(group.size());
-        for( size_t i = 0; i < group.size(); ++i )
-        {
-            const auto ent1ID = Entitys.at(group[i]).getID();
-            for( size_t j = i+1; j < group.size(); ++j )
-            {
-                const auto ent2ID = Entitys.at(group[j]).getID();
-                CollisionManifold hash = (ent1ID < ent2ID) ? CollisionManifold{ ent1ID, ent2ID, 0.0, Vec3D(), Vec3D() } : CollisionManifold{ ent2ID, ent1ID, 0.0, Vec3D(), Vec3D() };
-                if( auto it = m_KollisionPairs.find(hash); it != m_KollisionPairs.cend() ) KollisionGroups[idx].push_back(*it);
-            }
-        }
-        ++idx;
-    }
-
-    return KollisionGroups;
 }
 }

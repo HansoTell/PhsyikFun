@@ -1,17 +1,21 @@
+#include "AABB.h"
 #include "EntityRegistry.h"
+#include "CollisionDetction.h"
 #include "Impact.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
+#include <span>
 #include <variant>
 #include <vector>
 
 
 namespace Physik 
 {
-uint8_t BoundingVolumeHierarchy::FindLongestAxis( const std::vector<EntityBound>& Bounds ) const
+uint8_t BoundingVolumeHierarchy::FindLongestAxis( std::span<const EntityBound> Bounds ) const
 {
     assert(!Bounds.empty());
 
@@ -64,26 +68,39 @@ BoundingVolumeHierarchy::BVHNode* BoundingVolumeHierarchy::CreateInternalNode( B
     return &m_Nodes.back();
 }
 
-BoundingVolumeHierarchy::BVHNode* BoundingVolumeHierarchy::BuildTreeRecursiv( std::span<EntityBound> Entitys, uint8_t axis )
+BoundingVolumeHierarchy::BVHNode* BoundingVolumeHierarchy::BuildTreeRecursiv( std::span<EntityBound> Entitys )
 {
     if( Entitys.size() == 1)
         return CreateLeaf(Entitys[0]);
+
+    //Achse bestimmen
+    Axis axis = FindLongestAxis(Entitys);
+
+    std::sort(Entitys.begin(), Entitys.end(), [&](const EntityBound& b1, const EntityBound& b2)
+    {
+        double midPoint1 = (b1.Bound.max[axis] + b1.Bound.min[axis]);
+        double midPoint2 = (b2.Bound.max[axis] + b2.Bound.min[axis]);
+
+        return midPoint1 < midPoint2;
+    });
 
     size_t mid = Entitys.size()/2;
     auto leftSide = Entitys.first(mid);
     auto rightSide = Entitys.last(Entitys.size() - mid);
 
-    BVHNode* left = BuildTreeRecursiv(leftSide, axis);
-    BVHNode* right = BuildTreeRecursiv(rightSide, axis);
+    BVHNode* left = BuildTreeRecursiv(leftSide);
+    BVHNode* right = BuildTreeRecursiv(rightSide);
 
     return CreateInternalNode(left, right);
 }
 
-//TODO: Sollte nicht funktionieren wenn Liste ungerade lang ist
 void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
+    if( m_Nodes.size() == 2*EntitySet.size()-1)
+        return;
+
     m_Nodes.clear();
-    m_Nodes.reserve(EntitySet.size());
+    m_Nodes.reserve(2*EntitySet.size()-1);
 
     std::vector<EntityBound> all_bounds;
     all_bounds.reserve(EntitySet.size());
@@ -98,23 +115,42 @@ void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std
         all_bounds.push_back({ EntityID, bound });
     }
 
-    //Achse bestimmen
-    auto Axis = FindLongestAxis(all_bounds);
-
-    std::sort(all_bounds.begin(), all_bounds.end(), [&](const EntityBound& b1, const EntityBound& b2)
-    {
-        double midPoint1 = (b1.Bound.max[Axis] + b1.Bound.min[Axis]);
-        double midPoint2 = (b2.Bound.max[Axis] + b2.Bound.min[Axis]);
-
-        return midPoint1 < midPoint2;
-    });
-
     //Baum daran rekursiv bauen
-    m_root = BuildTreeRecursiv(all_bounds, Axis);
+    m_root = BuildTreeRecursiv(all_bounds);
 }
 
-void BoundingVolumeHierarchy::FindCollisions( const EntityRegistry& Entitys, std::span<const EntityRegistry::ID> TestEntitys )
+void BoundingVolumeHierarchy::QueryBVH( BVHNode* Node, AABB bound, const EntityRegistry& Entitys, EntityRegistry::ID TestEntityID, CollisionSet& outCollisions ) 
 {
+    if( Node->isLeaf() )
+    {
+        const auto& TestEnt = Entitys.getById(TestEntityID);
+        const auto& TreeEnt = Entitys.getById(Node->EntityID);
+
+        auto collision_or = FindCollision(TestEnt, TreeEnt);
+
+        if( collision_or.has_value() )
+        {
+            auto& collision = collision_or.value();
+
+            assert(outCollisions.find(collision) != outCollisions.end());
+            outCollisions.insert(collision);
+        }
+        return;
+    }
+
+    if( isAABBsOverlapping(Node->Bounds, bound) )
+    {
+        QueryBVH(Node->left, bound, Entitys, TestEntityID, outCollisions);
+        QueryBVH(Node->right, bound, Entitys, TestEntityID, outCollisions);
+    }
+
+    return;
+}
+
+CollisionSet BoundingVolumeHierarchy::CollectCollisions( const EntityRegistry& Entitys, std::span<const EntityRegistry::ID> TestEntitys )
+{
+    CollisionSet Collisions;
+    Collisions.reserve(TestEntitys.size());
     for( auto& EntityID : TestEntitys )
     {
         const auto& ent = Entitys.getById(EntityID);
@@ -122,15 +158,10 @@ void BoundingVolumeHierarchy::FindCollisions( const EntityRegistry& Entitys, std
             return getAABB(Shape, ent.getPosition(), ent.getRotation());
         }, ent.getShape());
 
-
         //find all Collisions
-
-
-        //algo zum durchgehen, wenn bounding box nicht getreoffen den baum bereich ignorieren, wenn leaf dann detectCollision
-        //brauchen auch noch wie wir die Collision zurück geben
-        //Wie sieht es mit Gruppen aus können wir das auflösen? --> Können wir das einfach auch über das united Set ding machen
-        //Ziehen wir das einfach raus und machen das gleiche??
-        //Müssen glaube ich das als erstes Lösen um eine einheitliche Lösung für spartial hash grid und das hier zu finden...
+        QueryBVH(m_root, bound, Entitys, EntityID, Collisions);
     }
+
+    return Collisions;
 }
 }

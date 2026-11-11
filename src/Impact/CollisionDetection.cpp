@@ -9,7 +9,6 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <optional>
 
@@ -19,6 +18,22 @@ namespace Physik
 {
 
 static const constexpr double GeometryEpsilon = 1e-9;
+
+
+std::optional<CollisionManifold> FindCollision( const ClassicEntity& A, const ClassicEntity& B )
+{
+    auto collision_or = std::visit([&]( const auto& ShapeA, const auto& ShapeB ) -> std::optional<CollisionManifold> 
+    { 
+        return detectCollision(ShapeA, ShapeB, A, B); 
+    }, A.getShape(), B.getShape());
+
+    if( !collision_or.has_value() )
+        return std::nullopt;
+
+    //Konvention Normal zeigt von kleinerer Id zu größerer. Erste Wert immer kleinere ID
+    auto& collision = collision_or.value();
+    if(collision.ent1 > collision.ent2 ) { std::swap(collision.ent1, collision.ent2); collision.normal = -1 * collision.normal; }
+}
 
 
 std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const Sphere<double>& B,  const ClassicEntity& entA, const ClassicEntity& entB)

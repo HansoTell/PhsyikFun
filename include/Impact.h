@@ -20,6 +20,8 @@
 
 namespace Physik
 {
+
+
 struct CollisionManifold 
 { 
     EntityRegistry::ID ent1, ent2; 
@@ -66,8 +68,11 @@ private:
     std::unique_ptr<IMaterialCombiner<>> m_Combiner;
 };
 
+using CollisionSet = std::unordered_set<CollisionManifold, CollisionPairHash>;
 class BoundingVolumeHierarchy
 {
+private:
+    using Axis = uint8_t;
 private:
     struct EntityBound{ EntityRegistry::ID ID; AABB Bound; };
     struct BVHNode
@@ -83,17 +88,18 @@ private:
 public:
     //void UpdateBVHTree()???
     void BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
-    void FindCollisions( const EntityRegistry& Entitys, std::span<const EntityRegistry::ID> TestEntitys );
+    CollisionSet CollectCollisions( const EntityRegistry& Entitys, std::span<const EntityRegistry::ID> TestEntitys );
 public:
     BoundingVolumeHierarchy() = default;
     BoundingVolumeHierarchy(const BoundingVolumeHierarchy&) = default;
     BoundingVolumeHierarchy(BoundingVolumeHierarchy&&) = default;
     ~BoundingVolumeHierarchy() = default;
 private:
-    uint8_t FindLongestAxis( const std::vector<EntityBound>& Bounds ) const;
-    BVHNode* BuildTreeRecursiv( std::span<EntityBound> Entitys, uint8_t axis );
+    Axis FindLongestAxis( std::span<const EntityBound> Bounds ) const;
+    BVHNode* BuildTreeRecursiv( std::span<EntityBound> Entitys );
     BVHNode* CreateLeaf( const EntityBound& payload );
     BVHNode* CreateInternalNode( BVHNode* left, BVHNode* right );
+    void QueryBVH( BVHNode* Node, AABB bound, const EntityRegistry& Entitys, EntityRegistry::ID testEntityID, CollisionSet& outCollisions ); 
 private:
     BVHNode* m_root;
     std::vector<BVHNode> m_Nodes;
@@ -130,8 +136,7 @@ private:
 public:
     void UpdateCellSize( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet ); 
     void BuildMap( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
-    void FindAllKollisionPairs( const EntityRegistry& Entitys );
-    std::vector<std::vector<CollisionManifold>> getZusammenhangskomponenten( const EntityRegistry& Entitys ) const;
+    CollisionSet FindAllKollisionPairs( const EntityRegistry& Entitys );
 
     double getCellSize() const { return m_CellSize; }
 public:
@@ -141,13 +146,17 @@ public:
     SpartialHashGrid( SpartialHashGrid&& ) = default;
     ~SpartialHashGrid() = default;
 private:
-    void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& entitys );
+    void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& entitys, CollisionSet& outCollisions );
 private:
     std::unordered_map<CellKoords, std::vector<EntityRegistry::ID> , CellHash> m_Cells;
-    std::unordered_set<CollisionManifold, CollisionPairHash> m_KollisionPairs;
 
     double m_CellSize;
     bool m_isCellSizeStatic;
+};
+
+struct ConnectedParts
+{
+    std::vector<std::vector<CollisionManifold>> getConnectedParts( const EntityRegistry& Entitys, const CollisionSet& Collisions );
 };
 
 class IImpactEvaluator  
@@ -163,7 +172,7 @@ class AdvancedElasticImpact : public IImpactEvaluator
 {
 public:
     void ApplyImpacts( EntityRegistry& state ) override;
-    void NotifyEntityAddition( const EntityRegistry& state ) override { m_Grid.UpdateCellSize( state, state.getDynamicEntitys() ); }
+    void NotifyEntityAddition( const EntityRegistry& state ) override; 
     std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(m_Grid.getCellSize()); }
 public:
     AdvancedElasticImpact() = default;
@@ -172,7 +181,9 @@ public:
     AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
     ~AdvancedElasticImpact() = default;
 private:
-    SpartialHashGrid m_Grid; //find Impacts
+    SpartialHashGrid m_Grid; //find Impacts DynamicEntitys
+    BoundingVolumeHierarchy m_BVH; //find Impacts Static Entitys on Dynamic Entitys
+    ConnectedParts m_ConnectedParts; //findConnectedParts
     ImpactApplier m_ImpactApplier; //Apply Impacts
 }; 
 }
