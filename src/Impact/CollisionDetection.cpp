@@ -33,6 +33,8 @@ std::optional<CollisionManifold> FindCollision( const ClassicEntity& A, const Cl
     //Konvention Normal zeigt von kleinerer Id zu größerer. Erste Wert immer kleinere ID
     auto& collision = collision_or.value();
     if(collision.ent1 > collision.ent2 ) { std::swap(collision.ent1, collision.ent2); collision.normal = -1 * collision.normal; }
+
+    return collision;
 }
 
 
