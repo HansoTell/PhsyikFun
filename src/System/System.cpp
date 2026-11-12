@@ -23,7 +23,13 @@ ClassicalSystem::ClassicalSystem() : m_Calculating (false), m_running(false)
     m_TimeStart = std::chrono::steady_clock::now();
 }
 
-ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_Calculating (false), m_running(false) {}
+ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_Calculating (false), m_running(false) 
+{
+    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<VelocityVerleit>());
+
+    //Benchmarking
+    m_TimeStart = std::chrono::steady_clock::now();
+}
 
 ClassicalSystem::ClassicalSystem( const ClassicalSystem& other ) 
 {

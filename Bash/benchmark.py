@@ -50,7 +50,7 @@ means = []
 meansDiffrent = []
 dfCOpy = df
 dfCOpy = dfCOpy["n"].drop_duplicates()
-for i in (10, 20, 50, 100, 200, 500):
+for i in (10, 20, 50, 100, 200, 500, 1000, 2000, 5000):
     dfi = df[i == df["n"]]
     means.append(dfi["Runtime"].mean())
     meansDiffrent.append(dfi["SystemStep"].mean() + dfi["SystemPrint"].mean())
@@ -85,7 +85,7 @@ plt.figure()
 meansCoreStep = []
 meansCoreCollision= []
 meansCoreRest = []
-for i in (10, 20, 50, 100, 200, 500):
+for i in (10, 20, 50, 100, 200, 500, 1000, 2000, 5000):
     dfi = df[i == df["n"]]
     meansCoreStep.append(dfi["CoreStep"].mean())
     meansCoreCollision.append(dfi["CoreCollision"].mean())

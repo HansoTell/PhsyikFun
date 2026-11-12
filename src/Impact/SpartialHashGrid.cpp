@@ -103,9 +103,8 @@ CollisionSet SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Enti
 {
     CollisionSet Collisions;
     Collisions.reserve(Entitys.size());
-    for( auto&[Cell, _] : m_Cells )
+    for( auto&[Cell, cellEntitys] : m_Cells )
     {
-        auto& cellEntitys = m_Cells.at(Cell);
         for( const auto& offset : SpartialHashGrid::offsets )
         {
             CellKoords neighbour { Cell.x_Koord + offset.x_Koord, Cell.y_Koord+offset.y_Koord, Cell.z_Koord+offset.z_Koord };
@@ -124,7 +123,7 @@ void SpartialHashGrid::CollectCollisions( const std::vector<EntityRegistry::ID>&
     for( size_t i = 0; i < cell1.size(); ++i )
     {
         auto& ent1ID = cell1[i];
-        size_t startIndex = cell1 == cell2 ? i+1 : 0;
+        size_t startIndex = &cell1 == &cell2 ? i+1 : 0;
         for( size_t j = startIndex; j < cell2.size(); ++j )
         {
             auto& ent2ID = cell2[j];

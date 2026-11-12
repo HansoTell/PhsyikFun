@@ -12,10 +12,12 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 build/
+build-prof/
 .cache/
 .vscode/
 .venv/
 *.csv
+*perf*
 
 # CLion
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

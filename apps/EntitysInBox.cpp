@@ -4,8 +4,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <fenv.h>
+#include <memory>
 #include <random>
-#include <thread>
 
 #include "Shapes.h"
 #include "System.h"
@@ -14,9 +14,11 @@
 
 using namespace Physik;
 
+#define DYNMAIC_BOX_SIZE 1 
+
 int main(int argc, char* argv[])
 {
-    feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);
+    //feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);
     assert(argc == 2);
     int numEntitys = std::atoi(argv[1]);
     assert(numEntitys != 0);
@@ -27,22 +29,28 @@ int main(int argc, char* argv[])
 
     std::mt19937 generator(seed);
 
-    std::uniform_real_distribution<> RadiusDist(0.0, 2.5);
+    constexpr double RMAX = 2.5;
+    const double Height = DYNMAIC_BOX_SIZE ? 50.0 * std::cbrt(numEntitys/100.0) : 50.0;
+    const double depth = 0.5 * Height;
+    const double MiddlePoint = Height+depth;
+    const double Out = Height + 2.0 * depth;
+
+    std::uniform_real_distribution<> RadiusDist(0.0, RMAX);
     std::uniform_real_distribution<> Mass(1.0, 100.0);
-    std::uniform_real_distribution<> Position(-50.0, 50.0);
+    std::uniform_real_distribution<> Position(-(Height - RMAX), Height-RMAX);
     std::uniform_real_distribution<> Velocity( 0.0, 25.0 );
 
-    ClassicalSystem sys;
+    ClassicalSystem sys(std::make_unique<FakePrinter>());
     sys.setTimeIncrement( 0.01 );
     sys.setTmax(100);
 
     //6 Box Wände Setzten
-    sys.addEntity({ Vec3D{ 75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } } });
-    sys.addEntity({ Vec3D{ -75.0, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 25.0, 50.0, 50.0 } }});
-    sys.addEntity({ Vec3D{ 0.0, 75.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 25.0, 50.0 }}});
-    sys.addEntity({ Vec3D{ 0.0, -75.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 25.0, 50.0 }}});
-    sys.addEntity({ Vec3D{ 0.0, 0.0, 75.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 50.0, 25.0 } }});
-    sys.addEntity({ Vec3D{ 0.0, 0.0, -75.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ 50.0, 50.0, 25.0 } }});
+    sys.addEntity({ Vec3D{ MiddlePoint, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ depth, Height, Height} } });
+    sys.addEntity({ Vec3D{ -MiddlePoint, 0.0, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ depth, Height, Height} }});
+    sys.addEntity({ Vec3D{ 0.0, MiddlePoint, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ Out, depth, Height}}});
+    sys.addEntity({ Vec3D{ 0.0, -MiddlePoint, 0.0 } , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ Out, depth, Height}}});
+    sys.addEntity({ Vec3D{ 0.0, 0.0, MiddlePoint} , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ Out, Out, depth} }});
+    sys.addEntity({ Vec3D{ 0.0, 0.0, -MiddlePoint} , Vec3D() , Physik::NoRotation, Vec3D() , 0.0, Material<>{ 1.0 }, Box<>{ Vec3D{ Out, Out, depth} }});
 
     for( int i = 0; i < numEntitys; ++i )
         sys.addEntity({ Vec3D{ Position(generator), Position(generator), Position(generator) }, Vec3D{ Velocity(generator), Velocity(generator), Velocity(generator) }, Physik::NoRotation, Vec3D(), Mass(generator), Material<>{ 1.0 }, Sphere<>{ RadiusDist(generator) } });

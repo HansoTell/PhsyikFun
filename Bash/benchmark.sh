@@ -6,7 +6,7 @@
 APP="../build/apps/EntitysInBox"
 CSV="benchmark.csv"   
 HEADER="n,Runtime,SystemStep,SystemPrint,CoreStep,CoreCollision,CoreRest"      # Kopfzeile; passe sie an das an, was dein Programm ausgibt
-SIZES=(10 20 50 100 200 500)   # Problemgroessen
+SIZES=(10 20 50 100 200 500 1000 2000 5000)   # Problemgroessen
 
 if [[ ! -x "$APP" ]]; then
     echo "Fehler: '$APP' nicht gefunden oder nicht ausfuehrbar." >&2
@@ -18,7 +18,7 @@ fi
 echo "$HEADER" >> "$CSV"
 
 for n in "${SIZES[@]}"; do
-    for i in {1..10}; do
+    for i in {1..1}; do
         echo "Starte: $APP $i $n" >&2          # Fortschritt im Terminal (stderr)
 
         # Ausgabe des Programms in einer Variablen einfangen

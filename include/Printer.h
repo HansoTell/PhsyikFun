@@ -154,5 +154,12 @@ private:
     mutable std::condition_variable m_CV;
     std::thread m_Thread;
 };
+
+class FakePrinter : public IPrinter
+{
+public:
+    void Print() const override {}
+    void OnEntityCreated(const ClassicEntity&) const override {}
+};
     
 }

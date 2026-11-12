@@ -126,10 +126,14 @@ private:
     {
         std::size_t operator() (const CellKoords& c) const 
         {
-            size_t h1 = std::hash<int32_t>{}(c.x_Koord);
-            size_t h2 = std::hash<int32_t>{}(c.y_Koord);
-            size_t h3 = std::hash<int32_t>{}(c.z_Koord);
-            return h1 ^ (h2 << 1) ^ (h3 << 2);
+            uint64_t h = (static_cast<uint64_t>(static_cast<uint32_t>(c.x_Koord)) * 73856093ull)
+                ^ (static_cast<uint64_t>(static_cast<uint32_t>(c.y_Koord)) * 19349663ull)
+                ^ (static_cast<uint64_t>(static_cast<uint32_t>(c.z_Koord)) * 83492791ull);
+            h ^= h >> 30; h*= 0xbf58476d1ce4e5b9;
+            h ^= h >> 27; h*= 0x94d049bb133111ebull;
+            h ^= h >> 31;
+
+            return static_cast<std::size_t>(h);
         }
     };
     static const std::array<CellKoords, 14> offsets;
