@@ -24,13 +24,11 @@ void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state )
     {
         switch (set.size()) 
         {
-        case 1:
+        case 0:
             break;
-        case 2:
-        {
+        case 1:
             m_ImpactApplier.ApplyImpacts(state, set);
             break;
-        }
         default:
         {
             constexpr int solver_iterations = 10; //Komplett heuristisch

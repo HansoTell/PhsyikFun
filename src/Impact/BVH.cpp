@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <optional>
 #include <span>
@@ -15,17 +16,17 @@
 
 namespace Physik 
 {
-uint8_t BoundingVolumeHierarchy::FindLongestAxis( std::span<const EntityBound> Bounds ) const
+BoundingVolumeHierarchy::Axis BoundingVolumeHierarchy::FindLongestAxis( std::span<const EntityBound> Bounds ) const
 {
     assert(!Bounds.empty());
 
     uint8_t global_Max_Axis;
-    double max_Delta = std::numeric_limits<double>().min();
+    double max_Delta = std::numeric_limits<double>().lowest();
 
     for( size_t i = 0; i < Bounds[0].Bound.max.size(); ++i )
     {
         double local_min = std::numeric_limits<double>().max();
-        double local_max = std::numeric_limits<double>().min();
+        double local_max = std::numeric_limits<double>().lowest();
         for( size_t j = 0; j < Bounds.size(); ++j )
         {
             double axis_max_bound = Bounds[j].Bound.max[i];
@@ -121,7 +122,7 @@ void BoundingVolumeHierarchy::BuildBVH( const EntityRegistry& Entitys, const std
 
 void BoundingVolumeHierarchy::QueryBVH( BVHNode* Node, AABB bound, const EntityRegistry& Entitys, EntityRegistry::ID TestEntityID, CollisionSet& outCollisions ) 
 {
-    if( Node->isLeaf() )
+    if( Node->isLeaf() && isAABBsOverlapping(Node->Bounds, bound) )
     {
         const auto& TestEnt = Entitys.getById(TestEntityID);
         const auto& TreeEnt = Entitys.getById(Node->EntityID);
@@ -132,7 +133,7 @@ void BoundingVolumeHierarchy::QueryBVH( BVHNode* Node, AABB bound, const EntityR
         {
             auto& collision = collision_or.value();
 
-            assert(outCollisions.find(collision) != outCollisions.end());
+            assert(outCollisions.find(collision) == outCollisions.end());
             outCollisions.insert(collision);
         }
         return;

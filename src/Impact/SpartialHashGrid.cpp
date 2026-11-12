@@ -45,6 +45,9 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys, const std:
 
     constexpr double Percentile = 0.7;
 
+    if( EntitySet.size() == 0 )
+        return;
+
     std::vector<double> EntityBoundingRadius;
     EntityBoundingRadius.reserve(EntitySet.size());
 

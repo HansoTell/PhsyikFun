@@ -5,7 +5,7 @@
 
 APP="../build/apps/EntitysInBox"
 CSV="benchmark.csv"   
-HEADER="n,Runtime,SystemStep,SystemPrint,CoreStep,CoreCollision,CoreRest\n"      # Kopfzeile; passe sie an das an, was dein Programm ausgibt
+HEADER="n,Runtime,SystemStep,SystemPrint,CoreStep,CoreCollision,CoreRest"      # Kopfzeile; passe sie an das an, was dein Programm ausgibt
 SIZES=(10 20 50 100 200 500)   # Problemgroessen
 
 if [[ ! -x "$APP" ]]; then

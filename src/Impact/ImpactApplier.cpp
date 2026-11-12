@@ -15,17 +15,17 @@ void ImpactApplier::ApplyImpacts( EntityRegistry& state, const std::vector<Colli
         ClassicEntity& ent1 = state.getById(Collision.ent1);
         ClassicEntity& ent2 = state.getById(Collision.ent2);
 
-        auto Impulse = CalcImpulse(ent1, ent2, Collision);
-
-        if(!Impulse.has_value()) continue;
-
         Vec3D positionCorrection = CalcPositionCorrection(ent1, ent2, Collision);
+
+        ent1.setPosition(ent1.getPosition() - positionCorrection * ent1.getInverseMass());
+        ent2.setPosition(ent2.getPosition() + positionCorrection * ent2.getInverseMass());
+
+        auto Impulse = CalcImpulse(ent1, ent2, Collision);
+        if(!Impulse.has_value()) continue;
 
         ent1.setVelocity(ent1.getVelocity() - ent1.getInverseMass() * (*Impulse));
         ent2.setVelocity(ent2.getVelocity() + ent2.getInverseMass() * (*Impulse));
 
-        ent1.setPosition(ent1.getPosition() - positionCorrection * ent1.getInverseMass());
-        ent2.setPosition(ent2.getPosition() + positionCorrection * ent2.getInverseMass());
     }
 }
   

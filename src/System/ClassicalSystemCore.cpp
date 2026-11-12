@@ -112,7 +112,7 @@ void ClassicalSystemCore::Step()
     m_Impact->ApplyImpacts(m_NextState);
     auto t4 = std::chrono::steady_clock::now();
     auto d2 = t4-t3;
-    m_CoreCollisionTime += std::chrono::duration<double>(d1).count();
+    m_CoreCollisionTime += std::chrono::duration<double>(d2).count();
 
     auto t5 = std::chrono::steady_clock::now();
     advanceTimeIncrement();
@@ -123,8 +123,8 @@ void ClassicalSystemCore::Step()
 
     std::swap(m_NextState, m_CurrentState);
     auto t6 = std::chrono::steady_clock::now();
-    auto d3 = t4-t3;
-    m_CoreRestTim += std::chrono::duration<double>(d1).count();
+    auto d3 = t6-t5;
+    m_CoreRestTim += std::chrono::duration<double>(d3).count();
 }
 
 void ClassicalSystemCore::UpdateEntityPropertys()

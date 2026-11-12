@@ -16,7 +16,7 @@ using namespace Physik;
 
 int main(int argc, char* argv[])
 {
-    //feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);
+    feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);
     assert(argc == 2);
     int numEntitys = std::atoi(argv[1]);
     assert(numEntitys != 0);

@@ -115,6 +115,7 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
         for( size_t i = 0; i < distancePos.size(); ++i ) distances[i + distanceNeg.size()] = distancePos[i];
 
         double minDistance = findShortestPointToSurface(distances, localD, B.halfSize, normalLocal, conatctLocal);
+        normalLocal = -1 * normalLocal;
 
         penetration = A.m_Radius + minDistance;
     }
