@@ -5,7 +5,6 @@
 #include "Vector.h"
 #include "AABB.h"
 
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -13,7 +12,6 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <span>
@@ -122,21 +120,19 @@ private:
             }; 
         }
     };
-    struct CellHash 
+    struct CellEntry { uint64_t key; EntityRegistry::ID id; };
+    static uint64_t PackCell( const CellKoords& c)
     {
-        std::size_t operator() (const CellKoords& c) const 
-        {
-            uint64_t h = (static_cast<uint64_t>(static_cast<uint32_t>(c.x_Koord)) * 73856093ull)
-                ^ (static_cast<uint64_t>(static_cast<uint32_t>(c.y_Koord)) * 19349663ull)
-                ^ (static_cast<uint64_t>(static_cast<uint32_t>(c.z_Koord)) * 83492791ull);
-            h ^= h >> 30; h*= 0xbf58476d1ce4e5b9;
-            h ^= h >> 27; h*= 0x94d049bb133111ebull;
-            h ^= h >> 31;
+        constexpr int32_t BIAS = 1 << 20;
+        assert(c.x_Koord > -BIAS && c.x_koord < BIAS);
+        assert(c.y_Koord > -BIAS && c.y_koord < BIAS);
+        assert(c.z_Koord > -BIAS && c.z_koord < BIAS);
+        const uint64_t x = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
+        const uint64_t y = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
+        const uint64_t z = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
 
-            return static_cast<std::size_t>(h);
-        }
-    };
-    static const std::array<CellKoords, 14> offsets;
+        return (x << 42) | (y << 21) | z;
+    }
 public:
     void UpdateCellSize( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet ); 
     void BuildMap( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
@@ -152,7 +148,7 @@ public:
 private:
     void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& entitys, CollisionSet& outCollisions );
 private:
-    std::unordered_map<CellKoords, std::vector<EntityRegistry::ID> , CellHash> m_Cells;
+    std::vector<CellEntry> m_CellEntry;
 
     double m_CellSize;
     bool m_isCellSizeStatic;

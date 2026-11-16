@@ -16,28 +16,6 @@
 
 namespace Physik 
 {
-const std::array<SpartialHashGrid::CellKoords, 14> SpartialHashGrid::offsets = 
-{
-    SpartialHashGrid::CellKoords{ -1, 1, 0 },
-    SpartialHashGrid::CellKoords{ 0, 1, 0 }, 
-    SpartialHashGrid::CellKoords{ 1, 1, 0 }, 
-
-    SpartialHashGrid::CellKoords{ 0, 0, 0 }, 
-    SpartialHashGrid::CellKoords{ 1, 0, 0 },
-
-    SpartialHashGrid::CellKoords{ -1, -1, 1 },
-    SpartialHashGrid::CellKoords{ 0, -1, 1 },
-    SpartialHashGrid::CellKoords{ 1, -1, 1 },
-
-    SpartialHashGrid::CellKoords{ -1, 0, 1 }, 
-    SpartialHashGrid::CellKoords{ 0, 0, 1 },
-    SpartialHashGrid::CellKoords{ 1, 0, 1 },
-
-    SpartialHashGrid::CellKoords{ -1, 1, 1 },
-    SpartialHashGrid::CellKoords{ 0, 1, 1 },
-    SpartialHashGrid::CellKoords{ 1, 1, 1 }
-};
-
 void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
     if( m_isCellSizeStatic )
@@ -66,12 +44,11 @@ void SpartialHashGrid::UpdateCellSize( const EntityRegistry& Entitys, const std:
 
 void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet )
 {
-    m_Cells.clear();
+    m_CellEntry.clear();
 
     if( EntitySet.empty() )
         return;
 
-    size_t avrg_bucketsize = EntitySet.size()/4;
     for( const auto& EntityID : EntitySet )
     {
         const auto& ent = Entitys.getById(EntityID);
@@ -80,22 +57,17 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys, const std::vecto
             return getAABB(Shape, ent.getPosition(), ent.getRotation());
         }, ent.getShape());
 
-
         CellKoords minCell = CellKoords::getCell(AABBBox.min, m_CellSize);
         CellKoords maxCell = CellKoords::getCell(AABBBox.max, m_CellSize);
 
         for( int32_t x = minCell.x_Koord; x <= maxCell.x_Koord; ++x )
-        {
             for( int32_t y = minCell.y_Koord; y <= maxCell.y_Koord; ++y )
-            {
                 for( int32_t z = minCell.z_Koord; z <= maxCell.z_Koord; ++z )
-                {
-                    CellKoords momCell = { x, y, z };
-                    if( m_Cells.find(momCell) == m_Cells.end()) m_Cells[momCell].reserve(avrg_bucketsize);
-                    m_Cells[momCell].push_back(EntityID);
-                }
-            }
-        }
+                    m_CellEntry.push_back({ PackCell({x, y, z}), EntityID } );
+
+        std::sort(m_CellEntry.begin(), m_CellEntry.end(), [&]( const CellEntry& a, const CellEntry& b){
+            return a.key != b.key ? a.key < b.key : a.id < b.id;
+        });
     }
 }
 
@@ -103,18 +75,29 @@ CollisionSet SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Enti
 {
     CollisionSet Collisions;
     Collisions.reserve(Entitys.size());
-    for( auto&[Cell, cellEntitys] : m_Cells )
+
+
+    const size_t N = m_CellEntry.size();
+    size_t begin = 0;
+    while(begin < N)
     {
-        for( const auto& offset : SpartialHashGrid::offsets )
+        size_t end = begin+1;
+        while( end < N && m_CellEntry[end].key == m_CellEntry[begin].key) ++end;
+
+        for( size_t i = begin; i < end; ++i )
         {
-            CellKoords neighbour { Cell.x_Koord + offset.x_Koord, Cell.y_Koord+offset.y_Koord, Cell.z_Koord+offset.z_Koord };
-
-            auto neighbour_it = m_Cells.find(neighbour);
-            if( neighbour_it == m_Cells.end() ) continue;
-
-            CollectCollisions(cellEntitys, neighbour_it->second, Entitys, Collisions);
+            const auto& ent1 = Entitys.getById(m_CellEntry[i].id);
+            for( size_t j = i+1; j < end; ++j )
+            {
+                const auto& ent2 = Entitys.getById(m_CellEntry[j].id);
+                auto collision_or = FindCollision(ent1, ent2);
+                if( !collision_or.has_value()) continue;
+                Collisions.insert(collision_or.value());
+            }
         }
+        begin = end;
     }
+
     return Collisions;
 }
 

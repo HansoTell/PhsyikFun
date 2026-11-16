@@ -6,6 +6,8 @@ namespace Physik
 {
     struct CollisionManifold;
 
+    inline constexpr double GeometryEpsilon = 1e-9;
+
     std::optional<CollisionManifold> FindCollision( const ClassicEntity& A, const ClassicEntity& B );
 
     std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const Sphere<double>& B, const ClassicEntity& entA, const ClassicEntity& entB);

@@ -17,7 +17,6 @@
 namespace Physik 
 {
 
-static const constexpr double GeometryEpsilon = 1e-9;
 
 
 std::optional<CollisionManifold> FindCollision( const ClassicEntity& A, const ClassicEntity& B )
