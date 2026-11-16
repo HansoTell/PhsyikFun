@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     std::uniform_real_distribution<> Position(-(Height - RMAX), Height-RMAX);
     std::uniform_real_distribution<> Velocity( 0.0, 25.0 );
 
-    ClassicalSystem sys(std::make_unique<FakePrinter>());
+    ClassicalSystem sys;
     sys.setTimeIncrement( 0.01 );
     sys.setTmax(100);
 
