@@ -64,18 +64,16 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys, const std::vecto
             for( int32_t y = minCell.y_Koord; y <= maxCell.y_Koord; ++y )
                 for( int32_t z = minCell.z_Koord; z <= maxCell.z_Koord; ++z )
                     m_CellEntry.push_back({ PackCell({x, y, z}), EntityID } );
-
-        std::sort(m_CellEntry.begin(), m_CellEntry.end(), [&]( const CellEntry& a, const CellEntry& b){
-            return a.key != b.key ? a.key < b.key : a.id < b.id;
-        });
     }
+    std::sort(m_CellEntry.begin(), m_CellEntry.end(), [&]( const CellEntry& a, const CellEntry& b){
+        return a.key != b.key ? a.key < b.key : a.id < b.id;
+    });
 }
 
 CollisionSet SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Entitys ) 
 {
     CollisionSet Collisions;
     Collisions.reserve(Entitys.size());
-
 
     const size_t N = m_CellEntry.size();
     size_t begin = 0;

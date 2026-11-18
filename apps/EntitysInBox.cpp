@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
     std::uniform_real_distribution<> RadiusDist(0.0, RMAX);
     std::uniform_real_distribution<> Mass(1.0, 100.0);
     std::uniform_real_distribution<> Position(-(Height - RMAX), Height-RMAX);
-    std::uniform_real_distribution<> Velocity( 0.0, 25.0 );
+    std::uniform_real_distribution<> Velocity( -25.0, 25.0 );
 
-    ClassicalSystem sys;
+    ClassicalSystem sys(std::make_unique<FakePrinter>());
     sys.setTimeIncrement( 0.01 );
     sys.setTmax(100);
 

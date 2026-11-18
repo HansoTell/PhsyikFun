@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Interactions.h"
-#include "Material.h"
 #include "Printer.h"
-#include "Shapes.h"
 #include "SystemCore.h"
 #include "Vector.h"
 #include "EntityDescribtion.h"

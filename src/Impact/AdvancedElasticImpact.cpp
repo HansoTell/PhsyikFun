@@ -1,6 +1,5 @@
 #include "EntityRegistry.h"
 #include "Impact.h"
-#include <iostream>
 
 namespace Physik 
 {
@@ -15,8 +14,6 @@ void AdvancedElasticImpact::ApplyImpacts( EntityRegistry& state )
 
     DynamicCollisions.reserve(DynamicCollisions.size()+StaticCollisions.size());
     DynamicCollisions.merge(StaticCollisions);
-
-    std::cout << DynamicCollisions.size() << "\n";
 
     //O(alpha * n)
     auto groups = m_ConnectedParts.getConnectedParts( state, DynamicCollisions );
