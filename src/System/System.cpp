@@ -45,7 +45,7 @@ ClassicalSystem::~ClassicalSystem()
     m_TimeEnd = std::chrono::steady_clock::now();
     auto rutime = m_TimeEnd - m_TimeStart;
     double runtimrSec = std::chrono::duration<double>(rutime).count();
-    std::cout << runtimrSec << "," << m_StepTime << "," << m_PrintTime << ","; 
+    std::cout << runtimrSec << "," << m_StepTime << "," << m_PrintTime  << ","; 
 
     m_Core.reset();
     m_Printer.reset(nullptr);

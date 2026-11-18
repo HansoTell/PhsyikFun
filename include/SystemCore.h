@@ -12,6 +12,8 @@
 
 namespace Physik 
 {
+inline size_t g_findPairsCalls = 0, g_narrowTests = 0, g_hits = 0;
+
 using SimulationState = std::vector<ClassicEntity>;
 
 struct EntityDescription;
@@ -53,7 +55,11 @@ public:
     ~ClassicalSystemCore()  
     {
         //Benchmarking
-        std::cout << m_CoreStepTime << "," << m_CoreCollisionTime << "," << m_CoreRestTim << "\n";
+        std::cout << m_CoreStepTime << "," << m_CoreCollisionTime << "," << m_CoreRestTim << "," << "\n";
+        std::fprintf(stderr, "calls/step=%.2f tests/call/n=%.2f hits/call/n=%.3f\n",
+            double(g_findPairsCalls)/10000.0,
+            double(g_narrowTests)/g_findPairsCalls/m_CurrentState.size(),
+            double(g_hits)/g_findPairsCalls/m_CurrentState.size());
     }
 private:
     void advanceTimeIncrement();

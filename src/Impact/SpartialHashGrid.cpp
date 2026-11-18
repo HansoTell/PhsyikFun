@@ -4,6 +4,7 @@
 #include "CollisionDetction.h"
 #include "AABB.h"
 #include "Vector.h"
+#include "SystemCore.h"
 
 #include <algorithm>
 #include <cmath>
@@ -72,6 +73,7 @@ void SpartialHashGrid::BuildMap( const EntityRegistry& Entitys, const std::vecto
 
 CollisionSet SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Entitys ) 
 {
+    ++g_findPairsCalls;
     CollisionSet Collisions;
     Collisions.reserve(Entitys.size());
 
@@ -88,8 +90,10 @@ CollisionSet SpartialHashGrid::FindAllKollisionPairs( const EntityRegistry& Enti
             for( size_t j = i+1; j < end; ++j )
             {
                 const auto& ent2 = Entitys.getById(m_CellEntry[j].id);
+                ++g_narrowTests;
                 auto collision_or = FindCollision(ent1, ent2);
                 if( !collision_or.has_value()) continue;
+                ++g_hits;
                 Collisions.insert(collision_or.value());
             }
         }

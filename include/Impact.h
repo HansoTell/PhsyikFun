@@ -124,9 +124,9 @@ private:
     static uint64_t PackCell( const CellKoords& c)
     {
         constexpr int32_t BIAS = 1 << 20;
-        assert(c.x_Koord > -BIAS && c.x_koord < BIAS);
-        assert(c.y_Koord > -BIAS && c.y_koord < BIAS);
-        assert(c.z_Koord > -BIAS && c.z_koord < BIAS);
+        assert(c.x_Koord > -BIAS && c.x_Koord < BIAS);
+        assert(c.y_Koord > -BIAS && c.y_Koord < BIAS);
+        assert(c.z_Koord > -BIAS && c.z_Koord < BIAS);
         const uint64_t x = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
         const uint64_t y = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
         const uint64_t z = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
