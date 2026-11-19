@@ -6,6 +6,7 @@
 #include "Integrator.h"
 #include "Impact.h"
 
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -13,6 +14,7 @@
 namespace Physik 
 {
 inline size_t g_findPairsCalls = 0, g_narrowTests = 0, g_hits = 0;
+inline size_t g_NumEntitys = 0;
 
 using SimulationState = std::vector<ClassicEntity>;
 
@@ -58,8 +60,8 @@ public:
         std::cout << m_CoreStepTime << "," << m_CoreCollisionTime << "," << m_CoreRestTim << "," << "\n";
         std::fprintf(stderr, "calls/step=%.2f tests/call/n=%.2f hits/call/n=%.3f\n",
             double(g_findPairsCalls)/10000.0,
-            double(g_narrowTests)/g_findPairsCalls/m_CurrentState.size(),
-            double(g_hits)/g_findPairsCalls/m_CurrentState.size());
+            double(g_narrowTests)/g_findPairsCalls/g_NumEntitys,
+            double(g_hits)/g_findPairsCalls/g_NumEntitys);
     }
 private:
     void advanceTimeIncrement();
