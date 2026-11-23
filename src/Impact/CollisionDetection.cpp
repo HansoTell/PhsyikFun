@@ -9,7 +9,6 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <optional>
 
@@ -43,7 +42,7 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
     Vec3D diff =  entB.getPosition() - entA.getPosition();
 
     double distance = diff.EukNorm();
-    double radiusSum = A.m_Radius * B.m_Radius;
+    double radiusSum = A.m_Radius + B.m_Radius;
     if( distance > radiusSum ) 
         return std::nullopt;
 
@@ -63,7 +62,7 @@ std::optional<CollisionManifold> detectCollision(const Sphere<double>& A, const 
             normal = Vec3D{1.0, 0.0, 0.0};
     }
 
-    double penetration = A.m_Radius + B.m_Radius - diff.EukNorm();
+    double penetration = radiusSum - distance;
 
     return CollisionManifold{ entA.getID(), entB.getID(), penetration, normal };
 }

@@ -128,8 +128,8 @@ private:
         assert(c.y_Koord > -BIAS && c.y_Koord < BIAS);
         assert(c.z_Koord > -BIAS && c.z_Koord < BIAS);
         const uint64_t x = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
-        const uint64_t y = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
-        const uint64_t z = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
+        const uint64_t y = static_cast<uint64_t>(c.y_Koord + BIAS) & 0x1FFFFF;
+        const uint64_t z = static_cast<uint64_t>(c.z_Koord + BIAS) & 0x1FFFFF;
 
         return (x << 42) | (y << 21) | z;
     }

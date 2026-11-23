@@ -16,6 +16,7 @@ build-prof/
 .cache/
 .vscode/
 .venv/
+.clangd
 *.csv
 *perf*
 

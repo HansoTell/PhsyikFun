@@ -69,9 +69,6 @@ EntityRegistry::ID ClassicalSystemCore::addEntity( EntityDescription desc )
 
     m_Impact->NotifyEntityAddition( m_CurrentState );
 
-    //benchmarking oder so
-    g_NumEntitys = m_CurrentState.getDynamicEntitys().size();
-
     return ID;
 }
 

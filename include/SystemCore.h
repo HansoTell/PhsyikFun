@@ -6,15 +6,12 @@
 #include "Integrator.h"
 #include "Impact.h"
 
-#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <vector>
 
 namespace Physik 
 {
-inline size_t g_findPairsCalls = 0, g_narrowTests = 0, g_hits = 0;
-inline size_t g_NumEntitys = 0;
 
 using SimulationState = std::vector<ClassicEntity>;
 
@@ -34,8 +31,8 @@ public:
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
 
-    EntityRegistry::ID addEntity(EntityDescription);
-    std::vector<EntityRegistry::ID> addMulipleEntitys( std::vector<EntityDescription> entitys );
+    auto addEntity(EntityDescription) -> EntityRegistry::ID;
+    auto addMulipleEntitys( std::vector<EntityDescription> entitys ) -> std::vector<EntityRegistry::ID>;
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
     void setTmax( double Tmax ) { m_Tmax = Tmax; }
@@ -43,7 +40,7 @@ public:
     void UpdateEntityPropertys();
     void Step();
 
-    const EntityRegistry& getEntityRegister() const { return m_CurrentState; }
+    auto getEntityRegister() const -> const EntityRegistry& { return m_CurrentState; }
     double getEnergy() const { return Energy; }
     double getTime() const { return m_Time; }
     double getTmax() const { return m_Tmax; }
@@ -53,15 +50,11 @@ public:
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> PropertyCalcer );
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
     ClassicalSystemCore( const ClassicalSystemCore& other );
-    ClassicalSystemCore( ClassicalSystemCore&& other);
+    ClassicalSystemCore( ClassicalSystemCore&& other) noexcept ;
     ~ClassicalSystemCore()  
     {
         //Benchmarking
         std::cout << m_CoreStepTime << "," << m_CoreCollisionTime << "," << m_CoreRestTim << "," << "\n";
-        std::fprintf(stderr, "calls/step=%.2f tests/call/n=%.2f hits/call/n=%.3f\n",
-            double(g_findPairsCalls)/10000.0,
-            double(g_narrowTests)/g_findPairsCalls/g_NumEntitys,
-            double(g_hits)/g_findPairsCalls/g_NumEntitys);
     }
 private:
     void advanceTimeIncrement();
