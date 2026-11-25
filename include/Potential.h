@@ -14,8 +14,8 @@ class IPotential
 {
 public:
     ~IPotential() = default;
-    virtual Vector<Dim, T> getForce( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const = 0;
-    virtual T getPotentialEnergy( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const = 0;
+    virtual Vector<Dim, T> getForce( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const = 0;
+    virtual T getPotentialEnergy( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const = 0;
     virtual std::unique_ptr<IPotential> clone() const = 0;
 };
 
@@ -25,18 +25,18 @@ class StandartPotential : public IPotential<Dim, T>
 {
 public:
     //distance muss riochtig gemacht werden wenn distance --> 0 geht was dann??? Kann nicht einfach error machen
-    Vector<Dim, T> getForce( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
+    Vector<Dim, T> getForce( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = ent1.m_KinState.m_Position - ent2.m_KinState.m_Position;
+        Vector<Dim, T> offset = ent1.getPosition() - ent2.getPosition();
         T distance = offset.EukNorm();
 
         double constant = - m_Beta / (distance*distance*distance);
 
         return offset * constant;
     }
-    T getPotentialEnergy( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override 
+    T getPotentialEnergy( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const override 
     {
-        Vector<Dim, T> offset = ent1.m_KinState.m_Position - ent2.m_KinState.m_Position;
+        Vector<Dim, T> offset = ent1.getPosition() - ent2.getPosition();
 
         return - m_Beta / offset.EukNorm(); 
     }
@@ -54,17 +54,17 @@ template <size_t Dim = 3, typename T = double>
 class GravitationalPotential : public IPotential<Dim, T> 
 {
 public:
-    Vector<Dim, T> getForce( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
+    Vector<Dim, T> getForce( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = ent2.m_KinState.m_Position - ent1.m_KinState.m_Position;
-        double constant  =  GravtationalKonstant * ent1.m_Constants.m_Mass * ent2.m_Constants.m_Mass /(offset.EukNorm() * offset.EukNorm() * offset.EukNorm());
+        Vector<Dim, T> offset = ent2.getPosition() - ent1.getPosition();
+        double constant  =  GravtationalKonstant * ent1.getMass() * ent2.getMass() / (offset.EukNorm() * offset.EukNorm() * offset.EukNorm());
         return offset * constant;
     }
-    T getPotentialEnergy( const EntityState<Dim, T>& ent1, const EntityState<Dim, T>& ent2, double time ) const override
+    T getPotentialEnergy( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const override
     {
-        Vector<Dim, T> offset = ent1.m_KinState.m_Position - ent2.m_KinState.m_Position;
+        Vector<Dim, T> offset = ent1.getPosition() - ent2.getPosition();
 
-        return - GravtationalKonstant * ent1.m_Constants.m_Mass * ent2.m_Constants.m_Mass / offset.EukNorm();
+        return - GravtationalKonstant * ent1.getMass() * ent2.getMass() / offset.EukNorm();
     }
     std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<GravitationalPotential>(); }
 public:
@@ -74,7 +74,35 @@ public:
     ~GravitationalPotential() = default;
 };
 
+template <size_t Dim=3, typename T =double>
+class GravitationEarth : public IPotential<Dim, T> 
+{
+public:
+    Vector<Dim, T> getForce( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const override
+    {
+        T force = -ent1.getMass() * m_GravConstant;
+        Vector<Dim, T> erg;
+        erg[Dim-1] = force;
+    }
+    T getPotentialEnergy( const Entity<Dim, T>& ent1, const Entity<Dim, T>& ent2, double time ) const override
+    {
+        T zKoord = ent1.getPosition()[Dim-1]; 
+        T mass = ent1.getMass();
+        return mass * m_GravConstant * zKoord;
+    }
+    std::unique_ptr<IPotential<Dim, T>> clone() const override { return std::make_unique<GravitationEarth>(); }
+public:
+    GravitationEarth() : m_GravConstant(9.81) {}
+    GravitationEarth( T GravConstant ) : m_GravConstant(GravConstant) {}
+    GravitationEarth( const GravitationEarth& other ) = default;
+    GravitationEarth( GravitationEarth&& other ) = default;
+    ~GravitationEarth() = default;
+private:
+    T m_GravConstant;
+};
+
 using ClassicIPotential = IPotential<3, double>;
 using ClassicStandartPotential = StandartPotential<3, double>;
 using ClassicGravitationPotential = GravitationalPotential<3, double>;
+using ClassicGravitationEarth = GravitationEarth<3, double>;
 }

@@ -1,9 +1,9 @@
 #include "Evaluator.h"
-#include "SystemCore.h"
 #include "Vector.h"
 #include <cassert>
 #include <climits>
 #include <cstddef>
+#include <iostream>
 #include <vector>
 
 namespace Physik 
@@ -45,7 +45,7 @@ WorldEvaluator::WorldEvaluator( WorldEvaluator&& other ) :
     m_NonPotForce(std::move(other.m_NonPotForce)){}
 
 
-void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Time, std::vector<Vec3D>& outAccelerations ) const 
+void WorldEvaluator::CalcAccelerations( const EntityRegistry& state, double Time, std::vector<Vec3D>& outAccelerations ) const 
 {
     //Entity Potentials
     for( auto& interaction : m_EntityPotentials )
@@ -55,7 +55,7 @@ void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Tim
             const auto& ent1 = state[i];
             for( size_t j = i+1; j < state.size(); j++ )
             {
-                Vec3D force = interaction.getForce(ent1.getEntityState(), state[j].getEntityState(), Time);
+                Vec3D force = interaction.getForce(ent1, state[j], Time);
 
                 outAccelerations[i] += force;
                 outAccelerations[j] -= force;
@@ -69,7 +69,7 @@ void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Tim
         for( size_t i = 0; i < state.size(); i++ )
         {
             const auto& ent1 = state[i];
-            Vec3D force = field.getForce(ent1.getEntityState(), Time);
+            Vec3D force = field.getForce(ent1, Time);
             outAccelerations[i] += force;
         }
     }
@@ -80,17 +80,22 @@ void WorldEvaluator::CalcAccelerations( const SimulationState& state, double Tim
         for( size_t i = 0; i < state.size(); i++ )
         {
             const auto& ent1 = state[i];
-            Vec3D force = NonPotF.getForce(ent1.getEntityState(), Time);
+            Vec3D force = NonPotF.getForce(ent1, Time);
             outAccelerations[i] += force;
         }
     }
 
     for( size_t i = 0; i < state.size(); i++ )
+    {
+        if(state[i].isStatic())
+            continue;
+
         outAccelerations[i] /= state[i].getMass();
+    }
 
 }
 
-void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, std::vector<double>& outEpots ) const 
+void WorldEvaluator::CalcPotEnergy( const EntityRegistry& state, double Time, std::vector<double>& outEpots ) const 
 {
     for( auto& interaction : m_EntityPotentials )
     {
@@ -99,7 +104,7 @@ void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, s
             const auto& ent1 = state[i];
             for( size_t j = i+1; j < state.size(); j++ )
             {
-                double E = interaction.getPotentialEnergy(ent1.getEntityState(), state[j].getEntityState(), Time);
+                double E = interaction.getPotentialEnergy(ent1, state[j], Time);
 
                 outEpots[i] += E;
                 outEpots[j] -= E;
@@ -112,19 +117,19 @@ void WorldEvaluator::CalcPotEnergy( const SimulationState& state, double Time, s
         for( size_t j = 0; j < state.size(); j++ )
         {
             const auto& ent1 = state[j];
-            double E = m_ExtPotentials[i].getPotentialEnergy(ent1.getEntityState(), Time);
+            double E = m_ExtPotentials[i].getPotentialEnergy(ent1, Time);
             outEpots[j] += E;
         }
     }
 }
 
-void WorldEvaluator::CalcKineticEnergy( const SimulationState& state, std::vector<double>& outEKins ) const 
+void WorldEvaluator::CalcKineticEnergy( const EntityRegistry& state, std::vector<double>& outEKins ) const 
 {
     for( size_t i = 0; i < state.size(); i++ )
         outEKins[i] = 0.5 * state[i].getMass() * state[i].getVelocity().BetragsQuadrat();
 }
 
-void WorldEvaluator::UpdateAccelerations( SimulationState& state, double Time ) 
+void WorldEvaluator::UpdateAccelerations( EntityRegistry& state, double Time ) 
 {
     m_AccScratch.assign(state.size(), Vec3D{});
     CalcAccelerations(state, Time, m_AccScratch);
@@ -132,7 +137,7 @@ void WorldEvaluator::UpdateAccelerations( SimulationState& state, double Time )
     for( size_t i = 0; i < state.size(); i++ )
         state[i].setAcceleration(m_AccScratch[i]);
 }
-void WorldEvaluator::UpdateKineticEnergys( SimulationState& state ) 
+void WorldEvaluator::UpdateKineticEnergys( EntityRegistry& state ) 
 {
     m_EkinScratch.assign(state.size(), double{});
     CalcKineticEnergy(state, m_EkinScratch);
@@ -140,13 +145,13 @@ void WorldEvaluator::UpdateKineticEnergys( SimulationState& state )
     for( size_t i = 0; i < state.size(); i++ )
         state[i].setKineticEnergy(m_EkinScratch[i]);
 }
-void WorldEvaluator::UpdatePotentialEnergys( SimulationState& state, double Time ) 
+void WorldEvaluator::UpdatePotentialEnergys( EntityRegistry& state, double Time ) 
 {
     m_EPotScratch.assign(state.size(), double{});
     CalcPotEnergy(state, Time, m_EkinScratch);
 
     for( size_t i = 0; i < state.size(); i++ )
-        state[i].setPotentialEnergy(m_EkinScratch[i]);
+        state[i].setPotentialEnergy(m_EPotScratch[i]);
 }
 
 void WorldEvaluator::addExternPotential( ClassicField potential ) { m_ExtPotentials.push_back(ClassicField(std::move(potential))); }

@@ -1,13 +1,21 @@
 #pragma once
 
+#include "EntityRegistry.h"
 #include "Interactions.h"
 #include "Entity.h"
 #include "Integrator.h"
+#include "Impact.h"
+
+#include <iostream>
+#include <memory>
 #include <vector>
 
 namespace Physik 
 {
+
 using SimulationState = std::vector<ClassicEntity>;
+
+struct EntityDescription;
 
 class ClassicalSystemCore 
 {
@@ -23,8 +31,8 @@ public:
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
 
-    void addEntity( ClassicEntity entity );
-    void addMulipleEntitys( std::vector<ClassicEntity> entitys );
+    auto addEntity(EntityDescription) -> EntityRegistry::ID;
+    auto addMulipleEntitys( std::vector<EntityDescription> entitys ) -> std::vector<EntityRegistry::ID>;
 
     void setTimeIncrement( double DeltaTime ) { m_DeltaTime = DeltaTime; }
     void setTmax( double Tmax ) { m_Tmax = Tmax; }
@@ -32,22 +40,27 @@ public:
     void UpdateEntityPropertys();
     void Step();
 
-    const std::vector<ClassicEntity>& getEntitys() const { return m_CurrentState; }
+    auto getEntityRegister() const -> const EntityRegistry& { return m_CurrentState; }
     double getEnergy() const { return Energy; }
     double getTime() const { return m_Time; }
     double getTmax() const { return m_Tmax; }
 
 public:
+    ClassicalSystemCore();
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> PropertyCalcer );
     ClassicalSystemCore( std::unique_ptr<IDGLSolver> dglMethod, double DeltaTime );
     ClassicalSystemCore( const ClassicalSystemCore& other );
-    ClassicalSystemCore( ClassicalSystemCore&& other);
-    ~ClassicalSystemCore() = default;
+    ClassicalSystemCore( ClassicalSystemCore&& other) noexcept ;
+    ~ClassicalSystemCore()  
+    {
+        //Benchmarking
+        std::cout << m_CoreStepTime << "," << m_CoreCollisionTime << "," << m_CoreRestTim << "," << "\n";
+    }
 private:
     void advanceTimeIncrement();
 private:
-    SimulationState m_CurrentState;
-    SimulationState m_NextState;
+    EntityRegistry m_CurrentState;
+    EntityRegistry m_NextState;
 
     double m_Time;
     double m_Tmax;
@@ -55,6 +68,13 @@ private:
     double Energy;
     
     std::unique_ptr<IDGLSolver> m_Integrator;
+    std::unique_ptr<IImpactEvaluator> m_Impact;
     std::shared_ptr<IAccelerationEveluater> m_Evaluater;
+
+    //Becnhmarkingvaribels
+private:
+    double m_CoreStepTime{0.0};
+    double m_CoreCollisionTime{0.0};
+    double m_CoreRestTim{0.0};
 };
 }

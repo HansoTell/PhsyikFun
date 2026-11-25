@@ -1,9 +1,9 @@
-#include "Entity.h"
 #include "Interactions.h"
 #include "Printer.h"
 #include <System.h>
-#include <cmath>
+#include <chrono>
 #include <future>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -18,9 +18,18 @@ ClassicalSystem::ClassicalSystem() : m_Calculating (false), m_running(false)
     m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<VelocityVerleit>());
     //PRINTER
     m_Printer = std::make_unique<AsyncCSVPrinter>(m_Core, "data.csv");
+
+    //Becnhmarking
+    m_TimeStart = std::chrono::steady_clock::now();
 }
 
-ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_Calculating (false), m_running(false) {}
+ClassicalSystem::ClassicalSystem( std::unique_ptr<IPrinter> printer) : m_Printer(std::move(printer)) ,m_Calculating (false), m_running(false) 
+{
+    m_Core = std::make_shared<ClassicalSystemCore>(std::make_unique<VelocityVerleit>());
+
+    //Benchmarking
+    m_TimeStart = std::chrono::steady_clock::now();
+}
 
 ClassicalSystem::ClassicalSystem( const ClassicalSystem& other ) 
 {
@@ -32,6 +41,12 @@ ClassicalSystem::~ClassicalSystem()
 {
     Clear();
 
+    //Becnhmarking
+    m_TimeEnd = std::chrono::steady_clock::now();
+    auto rutime = m_TimeEnd - m_TimeStart;
+    double runtimrSec = std::chrono::duration<double>(rutime).count();
+    std::cout << runtimrSec << "," << m_StepTime << "," << m_PrintTime  << ","; 
+
     m_Core.reset();
     m_Printer.reset(nullptr);
 }
@@ -42,22 +57,37 @@ void ClassicalSystem::Start()
         std::lock_guard<std::mutex> _lock ( m_Mutex );
         m_Calculating = true;
         m_running = true;
+        m_Idle = false;
     }
-    m_Finished = std::promise<void>();
-    m_Future = m_Finished.get_future();
+    if( m_FinishedSet )
+    {
+        m_Finished = std::promise<void>();
+        m_Future = m_Finished.get_future();
+        m_FinishedSet = false;
+    }
 
     if( !m_Thread.joinable() )
+    {
+        m_Finished = std::promise<void>();
+        m_Future = m_Finished.get_future();
         m_Thread = std::thread([this](){ this->run(); }); 
+    }
 
     m_SystemCV.notify_all();
 }
 
+bool ClassicalSystem::pauseInternal()
+{
+    std::unique_lock<std::mutex> lock(m_Mutex);
+    const bool wasRunngin = m_Calculating;
+    m_Calculating = false;
+    m_IdleCV.wait(lock, [this]{ return m_Idle; });
+    return wasRunngin;
+}
+
 void ClassicalSystem::Pause() 
 {
-    std::lock_guard<std::mutex> _lock( m_Mutex );
-    m_Calculating = false;
-
-    //kann man iwie garantieren dass hier aufgehalten wird bis er in cv gelaufen ist?
+    pauseInternal();
 }
 
 void ClassicalSystem::Clear()
@@ -77,76 +107,77 @@ void ClassicalSystem::Clear()
 
 void ClassicalSystem::addExternPotential( ClassicField potential )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addExternPotential( std::move(potential) );
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addMulitpleExternPotentials( std::vector<ClassicField> potentials )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addMulitpleExternPotentials( std::move(potentials) );
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addEntityPotential( ClassicInteraction potential )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addEntityPotential(std::move(potential));
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addMultipleEntityPotentials( std::move(potentials) );
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
 void ClassicalSystem::addNonPotentialForce( ClassicNonPotentialForce NonPotForce ) 
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addNonPotentialForce(std::move(NonPotForce)); 
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 void ClassicalSystem::addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce ) 
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->addMultipleNonPotentialForce(std::move(NonPotForce));
     m_Core->UpdateEntityPropertys();
-    Start();
 }
 
-void ClassicalSystem::addEntity( ClassicEntity entity )
+
+void ClassicalSystem::addEntity(EntityDescription desc)
 {
-    Pause();
-    m_Core->addEntity( std::move(entity) );
+    PauseScope pause(*this);
+    auto ID = m_Core->addEntity(std::move(desc));
     m_Core->UpdateEntityPropertys();
-    Start();
+
+    auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
+    m_Printer->OnEntityCreated(CreatedEntity);
 }
 
-void ClassicalSystem::addMulipleEntitys( std::vector<ClassicEntity> entitys )
+void ClassicalSystem::addMulipleEntitys( std::vector<EntityDescription> entitys )
 {
-    Pause();
+    PauseScope pause(*this);
+    auto IDs = m_Core->addMulipleEntitys( std::move(entitys) );
     m_Core->UpdateEntityPropertys();
-    m_Core->addMulipleEntitys( std::move(entitys) );
-    Start();
+    for( auto& ID : IDs )
+    {
+        auto& CreatedEntity = m_Core->getEntityRegister().getById(ID);
+        m_Printer->OnEntityCreated(CreatedEntity);
+    }
 }
 
 void ClassicalSystem::setTimeIncrement( double DeltaTime )
 {
-    Pause();
+    PauseScope pause(*this);
     m_Core->setTimeIncrement( DeltaTime );
-    Start();
 }
 void ClassicalSystem::setTmax( double Tmax )
 {
     assert(std::isfinite(Tmax));
+    PauseScope pause(*this);
     m_Core->setTmax(Tmax);
 }
 
@@ -154,7 +185,7 @@ void ClassicalSystem::run()
 {
     m_Printer->Print();
     std::unique_lock<std::mutex> _lock(m_Mutex);
-    while( m_running && m_Core->getTime() < m_Core->getTmax() )
+    while( m_running )
     {
         m_SystemCV.wait(_lock, [this](){
             return m_Calculating || !m_running;
@@ -168,16 +199,33 @@ void ClassicalSystem::run()
             tick();
 
         _lock.lock();
+
+        if(m_Core->getTime() >= m_Core->getTmax())
+        {
+            m_Calculating = false;
+            if(!m_FinishedSet){ m_Finished.set_value(); m_FinishedSet = true; }
+        }
+        m_Idle = true;
+        m_IdleCV.notify_all();
     }
-    m_running = false;
-    m_Calculating = false;
-    m_Finished.set_value();
+    if(!m_FinishedSet){ m_Finished.set_value(); m_FinishedSet = true; }
+    m_Idle = true;
+    m_IdleCV.notify_all();
 }
 
 void ClassicalSystem::tick() 
 {
+    //Benchmarking
+    auto t1 = std::chrono::steady_clock::now();
     m_Core->Step();
+    auto t2 = std::chrono::steady_clock::now();
+    auto d1 = t2-t1;
+    m_StepTime += std::chrono::duration<double>(d1).count();
 
+    auto t3 = std::chrono::steady_clock::now();
     m_Printer->Print();
+    auto t4 = std::chrono::steady_clock::now();
+    auto d2 = t4-t3;
+    m_PrintTime += std::chrono::duration<double>(d2).count();
 }
 }

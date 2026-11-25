@@ -1,130 +1,197 @@
+#include "Entity.h"
 #include "Printer.h"
+#include "Vector.h"
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <string>
+#include <string_view>
+#include <variant>
 
 namespace Physik 
 {
+namespace PrintingHelpers 
+{
+
+    template<typename T>
+    inline static std::string PrintNumber( T number ) 
+    {
+        static_assert(std::is_arithmetic_v<T>);
+
+        return std::to_string(number);
+    }
+
+    inline static std::string PrintSeperator()
+    {
+        return ",";
+    }
+    template<size_t Dim, typename T>
+    static std::string PrintVector(const Vector<Dim, T>& vector )
+    {
+        std::string erg;
+        for( size_t i = 0; i < vector.size(); i++ )
+        {
+            erg += PrintNumber( vector[i] );
+            if( i != vector.size()-1 )
+               erg += PrintSeperator(); 
+        }
+        return erg;
+    }
+    std::string PrintShapeName(const Sphere<> sphere) { return "SPHERE"; }
+    std::string PrintShapeName(const Box<> box) { return "BOX"; }
+        
+    std::string PrintShapePropertys(const Sphere<>& sphere) { return std::to_string(sphere.m_Radius) += ",,,"; }
+    std::string PrintShapePropertys(const Box<>& box){ return std::string(",") += PrintVector(box.halfSize);}
+    static inline std::string PrintLineEnd(){ return "\n"; }
+}
+
+struct OptionEntry 
+{
+    PrintOptions flag;
+    std::string_view label;
+    std::string (*format)(const ClassicEntity&);
+};
+
+constexpr std::array<OptionEntry, 9> kOptionTable
+{{
+    { PrintOptions::ePosition, ",pos_x,pos_y,pos_z", [](const ClassicEntity& ent) { return PrintingHelpers::PrintVector(ent.getPosition()); } },
+    { PrintOptions::eVelocity, ",veloc_x,veloc_y,veloc_z", [](const ClassicEntity& ent){ return PrintingHelpers::PrintVector(ent.getVelocity()); } },
+    { PrintOptions::eAcceleration, ",acc_x,acc_y,acc_z", [](const ClassicEntity& ent) { return PrintingHelpers::PrintVector(ent.getAcceleration()); } },
+    { PrintOptions::eRotation, ",angel,rot_x,rot_y,rot_z", [](const ClassicEntity& ent) { return PrintingHelpers::PrintVector(ent.getRotation().getAsVector()); } }, 
+    { PrintOptions::eAngularVelocity, ",AngVeloc_x,AngVeloc_y,AngVeloc_z", [](const ClassicEntity& ent) { return PrintingHelpers::PrintVector(ent.getAngularVelocity()); } },
+    { PrintOptions::eAngularAcceleration, ",AngAcc_x,AngAcc_y,AngAcc_z", [](const ClassicEntity& ent) { return PrintingHelpers::PrintVector(ent.getAngularAcceleration()); } },
+    { PrintOptions::eForce, ",F_x,F_y,F_z", [](const ClassicEntity& ent) { return PrintingHelpers::PrintVector(ent.getMass() * ent.getAcceleration()); } },
+    { PrintOptions::eKinEnergy, ",Ekin", [](const ClassicEntity& ent) { return PrintingHelpers::PrintNumber(ent.getKineticEnergy()); } },
+    { PrintOptions::ePotEnergy, ",EPot", [](const ClassicEntity& ent) { return PrintingHelpers::PrintNumber(ent.getPotentialEnergy());  } }
+}};
+
 static constexpr uint64_t buff_size = 5'000'000;
+
+
 CSVFileWriter::CSVFileWriter( std::string FilePath ) : m_FilePath(std::move(FilePath)), m_Options(PrintOptions::eAll) 
 {
     m_Buffer.reserve(buff_size);
+    m_ConstanstBuffer.reserve(buff_size);
 
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
         std::cerr << "Filed to open File" << "\n";
+    if( has(m_Options, PrintOptions::eConstants) )
+    {
+        auto it = m_FilePath.find_last_of('.');
+        auto FileName = m_FilePath.substr(0, it);
+        auto ConstantsFileName = FileName += "Constants.csv";
+        m_ConstantsFile.open(ConstantsFileName);
+        if(!m_ConstantsFile.is_open())
+            std::cerr << "Failed to open ConstantsFile\n";
+    }
 
     printEntityStateHeader();
+    printConstantsHeader();
 }
 
 CSVFileWriter::CSVFileWriter( std::string FilePath, PrintOptions options ) : m_FilePath(std::move(FilePath)), m_Options(options)
 {
     m_Buffer.reserve(buff_size);
+    m_ConstanstBuffer.reserve(buff_size);
 
     m_File.open(m_FilePath, std::ios::trunc);
     if(!m_File.is_open())
         std::cerr << "Filed to open File" << "\n";
 
+    if( has(m_Options, PrintOptions::eConstants) )
+    {
+        auto it = m_FilePath.find_last_of('.');
+        auto FileName = m_FilePath.substr(0, it);
+        auto ConstantsFileName = FileName += "Constants.csv";
+        m_ConstantsFile.open(ConstantsFileName);
+        if(!m_ConstantsFile.is_open())
+            std::cerr << "Failed to open ConstantsFile\n";
+    }
+
     printEntityStateHeader();
+    printConstantsHeader();
 }
 
-void CSVFileWriter::WriteState( const ClassicEntityState& State, uint64_t ID, double Time ) const
+
+void CSVFileWriter::WriteState( const ClassicEntity& State, double Time ) const
 {
     if( m_Buffer.size() + 300 > buff_size )
-        flush();
+        flushVariableFile();
     
-    PrintNumber(ID);
-    PrintSeperator();
-    PrintNumber(Time);
-    if( has(m_Options, PrintOptions::ePosition ))
+    m_Buffer += PrintingHelpers::PrintNumber(State.getID());
+    m_Buffer += PrintingHelpers::PrintSeperator();
+    m_Buffer += PrintingHelpers::PrintNumber(Time);
+
+    for( const auto& entry : kOptionTable )
     {
-        PrintSeperator();
-        PrintVector(State.m_KinState.m_Position);
-    }
-    if( has(m_Options, PrintOptions::eVelocity ))
-    {
-        PrintSeperator();
-        PrintVector(State.m_KinState.m_Velocity);
-    }
-    if( has(m_Options, PrintOptions::eAcceleration ))
-    {
-        PrintSeperator();
-        PrintVector(State.m_KinState.m_Acceleration);
-    }
-    if( has(m_Options, PrintOptions::eForce ))
-    {
-        PrintSeperator();
-        PrintVector(State.m_KinState.m_Acceleration * State.m_Constants.m_Mass);
-    }
-    if( has(m_Options, PrintOptions::eKinEnergy ))
-    {
-        PrintSeperator();
-        PrintNumber(State.m_Energys.KineticEnergy);
-    }
-    if( has(m_Options, PrintOptions::ePotEnergy ))
-    {
-        PrintSeperator();
-        PrintNumber(State.m_Energys.PotentialEnergy);
+        if( has(m_Options, entry.flag) )
+        {
+            m_Buffer += PrintingHelpers::PrintSeperator();
+            m_Buffer += entry.format(State);
+        }
     }
 
-    PrintLineEnd();
+    m_Buffer += PrintingHelpers::PrintLineEnd();
+}
+
+void CSVFileWriter::WirteConstantPropertys( const ClassicConstantsInfo& state ) const
+{
+    if( m_ConstanstBuffer.size() + 300 > buff_size )
+        flushConstantFile();
+
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.id);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.constants.m_Mass);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.constants.m_inverseMass);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    m_ConstanstBuffer += PrintingHelpers::PrintNumber(state.material.Restitution);
+    m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+    std::visit([&](const auto& Shape){
+        m_ConstanstBuffer+=PrintingHelpers::PrintShapeName(Shape);
+        m_ConstanstBuffer += PrintingHelpers::PrintSeperator();
+        m_ConstanstBuffer += PrintingHelpers::PrintShapePropertys(Shape);
+    }, state.shape);
+    m_ConstanstBuffer += PrintingHelpers::PrintLineEnd();
 }
 
 void CSVFileWriter::printEntityStateHeader() const 
 {
     m_Buffer.append("index,Time");
-    if( has(m_Options, PrintOptions::ePosition ))
+
+    for( const auto& entry : kOptionTable )
     {
-        PrintSeperator();
-        m_Buffer.append("pos_x,pos_y,pos_z");
-    }
-    if( has(m_Options, PrintOptions::eVelocity ))
-    {
-        PrintSeperator();
-        m_Buffer.append("veloc_x,veloc_y,veloc_z");
-    }
-    if( has(m_Options, PrintOptions::eAcceleration ))
-    {
-        PrintSeperator();
-        m_Buffer.append("acc_x,acc_y,acc_z");
-    }
-    if( has(m_Options, PrintOptions::eForce ))
-    {
-        PrintSeperator();
-        m_Buffer.append("F_x,F_y,F_z");
-    }
-    if( has(m_Options, PrintOptions::eKinEnergy ))
-    {
-        PrintSeperator();
-        m_Buffer.append("Ekin");
-    }
-    if( has(m_Options, PrintOptions::ePotEnergy ))
-    {
-        PrintSeperator();
-        m_Buffer.append("EPot");
+        if( has(m_Options, entry.flag))
+            m_Buffer.append(entry.label);
     }
 
-    PrintLineEnd();
+    m_Buffer += PrintingHelpers::PrintLineEnd();
 }
 
-void CSVFileWriter::PrintVector( const Vec3D& vector ) const
+void CSVFileWriter::printConstantsHeader() const
 {
-    for( size_t i = 0; i < vector.size(); i++ )
-    {
-        PrintNumber( vector[i] );
-        if( i != vector.size()-1 )
-           PrintSeperator(); 
-    }
+    m_ConstanstBuffer.append("index,Mass,InverseMass,Restitution,ShapeName,sphere_radius,box_hx,box_hy,box_hz\n");
 }
 
-void CSVFileWriter::PrintSeperator() const { m_Buffer += ","; }
-void CSVFileWriter::PrintLineEnd() const { m_Buffer += "\n"; }
-
-void CSVFileWriter::flush() const
+void CSVFileWriter::flushVariableFile() const
 {
-    std::cout << "Flushed with size: " << m_Buffer.size() << "\n";
     m_File << m_Buffer;
     m_Buffer.clear();
     m_File.flush();
+}
+void CSVFileWriter::flushConstantFile() const
+{
+    m_ConstantsFile << m_ConstanstBuffer;
+    m_ConstanstBuffer.clear();
+    m_ConstantsFile.flush();
+
+}
+
+void CSVFileWriter::flush() const
+{
+    flushVariableFile();
+    flushConstantFile();
 }
 }

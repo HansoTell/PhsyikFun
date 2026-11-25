@@ -1,0 +1,189 @@
+#pragma once
+
+#include "Entity.h"
+#include "EntityRegistry.h"
+#include "Vector.h"
+#include "AABB.h"
+
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <unordered_set>
+#include <vector>
+#include <span>
+
+namespace Physik
+{
+
+
+struct CollisionManifold 
+{ 
+    EntityRegistry::ID ent1, ent2; 
+    double Penetration;
+    Vec3D normal;
+    Vec3D contactPoint;
+
+    bool operator==(const CollisionManifold& other) const { return ent1 == other.ent1 && ent2 == other.ent2; }
+};
+
+struct CollisionPairHash
+{
+    std::size_t operator() (const CollisionManifold& pair) const 
+    {
+        std::size_t h1 = std::hash<uint64_t>{}(pair.ent1);
+        std::size_t h2 = std::hash<uint64_t>{}(pair.ent2);
+
+        return h1 ^ (h2 << 1);
+    }
+};
+
+
+class ImpactVelocityOperattions 
+{
+public:
+    Vec3D CalcVelocityNormal( const Vec3D& veclocity, const Vec3D& normal ) const;
+    Vec3D CalcVelocityTangential( const Vec3D& veclocity, const Vec3D& normal ) const;
+    double CalcVelocityAfter( const ClassicEntity& target, const Vec3D& targetNormal, const ClassicEntity& other, const Vec3D& otherNormal ) const;
+};
+
+class ImpactApplier 
+{
+public:
+    void ApplyImpacts( EntityRegistry& State, const std::vector<CollisionManifold>& EntityIdx );
+public:
+    ImpactApplier() : m_Combiner(std::make_unique<BasicMaterialCombiner<>>()) {} 
+    ImpactApplier(const ImpactApplier& other) : m_Combiner(other.m_Combiner->clone()) {} 
+    ImpactApplier(ImpactApplier&& other): m_Combiner(std::move(other.m_Combiner)) {}
+    ~ImpactApplier() = default;
+private:
+    std::optional<Vec3D> CalcImpulse(  const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
+    Vec3D CalcPositionCorrection( const ClassicEntity& hited, const ClassicEntity& hitee, const CollisionManifold& collision) const;
+private:
+    std::unique_ptr<IMaterialCombiner<>> m_Combiner;
+};
+
+using CollisionSet = std::unordered_set<CollisionManifold, CollisionPairHash>;
+class BoundingVolumeHierarchy
+{
+private:
+    using Axis = uint8_t;
+private:
+    struct EntityBound{ EntityRegistry::ID ID; AABB Bound; };
+    struct BVHNode
+    {
+        EntityRegistry::ID EntityID;
+        AABB Bounds;
+
+        BVHNode* left;
+        BVHNode* right;
+
+        bool isLeaf() const { return left == NULL && right == NULL; }
+    };
+public:
+    //void UpdateBVHTree()???
+    void BuildBVH( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
+    CollisionSet CollectCollisions( const EntityRegistry& Entitys, std::span<const EntityRegistry::ID> TestEntitys );
+public:
+    BoundingVolumeHierarchy() = default;
+    BoundingVolumeHierarchy(const BoundingVolumeHierarchy&) = default;
+    BoundingVolumeHierarchy(BoundingVolumeHierarchy&&) = default;
+    ~BoundingVolumeHierarchy() = default;
+private:
+    Axis FindLongestAxis( std::span<const EntityBound> Bounds ) const;
+    BVHNode* BuildTreeRecursiv( std::span<EntityBound> Entitys );
+    BVHNode* CreateLeaf( const EntityBound& payload );
+    BVHNode* CreateInternalNode( BVHNode* left, BVHNode* right );
+    void QueryBVH( BVHNode* Node, AABB bound, const EntityRegistry& Entitys, EntityRegistry::ID testEntityID, CollisionSet& outCollisions ); 
+private:
+    BVHNode* m_root;
+    std::vector<BVHNode> m_Nodes;
+};
+
+
+class SpartialHashGrid
+{
+private:
+    struct CellKoords
+    {
+        int32_t x_Koord, y_Koord, z_Koord;
+        bool operator == ( const CellKoords& other ) const { return  this->x_Koord == other.x_Koord && this->y_Koord == other.y_Koord && this->z_Koord == other.z_Koord; }
+        static CellKoords getCell( const Vec3D& pos, double cellSize ) 
+        { 
+            return { 
+                static_cast<int32_t>(std::floor(pos[0]/cellSize)), 
+                static_cast<int32_t>(std::floor(pos[1]/cellSize)), 
+                static_cast<int32_t>(std::floor(pos[2]/cellSize)) 
+            }; 
+        }
+    };
+    struct CellEntry { uint64_t key; EntityRegistry::ID id; };
+    static uint64_t PackCell( const CellKoords& c)
+    {
+        constexpr int32_t BIAS = 1 << 20;
+        assert(c.x_Koord > -BIAS && c.x_Koord < BIAS);
+        assert(c.y_Koord > -BIAS && c.y_Koord < BIAS);
+        assert(c.z_Koord > -BIAS && c.z_Koord < BIAS);
+        const uint64_t x = static_cast<uint64_t>(c.x_Koord + BIAS) & 0x1FFFFF;
+        const uint64_t y = static_cast<uint64_t>(c.y_Koord + BIAS) & 0x1FFFFF;
+        const uint64_t z = static_cast<uint64_t>(c.z_Koord + BIAS) & 0x1FFFFF;
+
+        return (x << 42) | (y << 21) | z;
+    }
+public:
+    void UpdateCellSize( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet ); 
+    void BuildMap( const EntityRegistry& Entitys, const std::vector<EntityRegistry::ID>& EntitySet );
+    CollisionSet FindAllKollisionPairs( const EntityRegistry& Entitys );
+
+    double getCellSize() const { return m_CellSize; }
+public:
+    SpartialHashGrid() : m_isCellSizeStatic(false), m_CellSize(-1.0) {}
+    SpartialHashGrid(double CellSize) : m_CellSize(CellSize), m_isCellSizeStatic(true){}
+    SpartialHashGrid( const SpartialHashGrid&) = default;
+    SpartialHashGrid( SpartialHashGrid&& ) = default;
+    ~SpartialHashGrid() = default;
+private:
+    void CollectCollisions( const std::vector<EntityRegistry::ID>& cell1, const std::vector<EntityRegistry::ID>& cell2, const EntityRegistry& entitys, CollisionSet& outCollisions );
+private:
+    std::vector<CellEntry> m_CellEntry;
+
+    double m_CellSize;
+    bool m_isCellSizeStatic;
+};
+
+struct ConnectedParts
+{
+    std::vector<std::vector<CollisionManifold>> getConnectedParts( const EntityRegistry& Entitys, const CollisionSet& Collisions );
+};
+
+class IImpactEvaluator  
+{
+public:
+    virtual ~IImpactEvaluator() = default;
+    virtual void ApplyImpacts( EntityRegistry& state ) = 0;
+    virtual void NotifyEntityAddition( const EntityRegistry& ) = 0;
+    virtual std::unique_ptr<IImpactEvaluator> clone() const = 0;
+};
+
+class AdvancedElasticImpact : public IImpactEvaluator 
+{
+public:
+    void ApplyImpacts( EntityRegistry& state ) override;
+    void NotifyEntityAddition( const EntityRegistry& state ) override; 
+    std::unique_ptr<IImpactEvaluator> clone() const  override { return std::make_unique<AdvancedElasticImpact>(m_Grid.getCellSize()); }
+public:
+    AdvancedElasticImpact() = default;
+    AdvancedElasticImpact(double CellSize) : m_Grid(CellSize) {}
+    AdvancedElasticImpact( const AdvancedElasticImpact& other ) = default;
+    AdvancedElasticImpact( AdvancedElasticImpact&& ) = default;
+    ~AdvancedElasticImpact() = default;
+private:
+    SpartialHashGrid m_Grid; //find Impacts DynamicEntitys
+    BoundingVolumeHierarchy m_BVH; //find Impacts Static Entitys on Dynamic Entitys
+    ConnectedParts m_ConnectedParts; //findConnectedParts
+    ImpactApplier m_ImpactApplier; //Apply Impacts
+}; 
+}

@@ -1,3 +1,4 @@
+#include "EntityRegistry.h"
 #include "Integrator.h"
 #include "Vector.h"
 #include <cstddef>
@@ -6,7 +7,7 @@
 
 namespace Physik 
 {
-void EulerCauchy::step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const 
+void EulerCauchy::step( const EntityRegistry& current, EntityRegistry& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const 
 {
     for( size_t i = 0; i < next.size(); i++ )
     {
@@ -21,7 +22,7 @@ void EulerCauchy::step( const SimulationState& current, SimulationState& next, s
     }
 }
 
-void VelocityVerleit::step( const SimulationState& current, SimulationState& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const 
+void VelocityVerleit::step( const EntityRegistry& current, EntityRegistry& next, std::shared_ptr<const IAccelerationEveluater> evaluator, double Time, double dt ) const 
 {
     for( size_t i = 0; i < next.size(); i++ )
     {

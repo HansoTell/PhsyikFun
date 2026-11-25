@@ -1,8 +1,13 @@
 #pragma once
 
-#include "Entity.h"
 #include "Interactions.h"
 #include "Printer.h"
+#include "SystemCore.h"
+#include "Vector.h"
+#include "EntityDescribtion.h"
+
+#include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -10,13 +15,17 @@
 #include <thread>
 #include <vector>
 
-#define CREATE_CLASSIC_EXT_STANDART_POTENTIAL( beta, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicStandartPotential>(beta),  ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, 0.0 ) ) 
 #define CREATE_CLASSIC_ENTITY__STANDART_POTENTIAL( beta ) ClassicInteraction( std::make_unique<ClassicStandartPotential>(beta) )
-#define CREATE_CLASSIC_EXT_GRAVITATIONAL_POTENTIAL( Mass, xPos, yPos, zPos ) ClassicField( std::make_unique<ClassicGravitationPotential>(), ClassicEntityState(Vec3D{ xPos, yPos, zPos }, Vec3D{ 0.0, 0.0, 0.0 }, Mass) ) 
 #define CREATE_CLASSIC_ENTITY_GRAVITATIONAL_POTENTIAL() ClassicInteraction( std::make_unique<ClassicGravitationPotential>() ) 
 
 namespace Physik 
 {
+
+using Rotation = Quaternion<>;
+inline Rotation CreateRotation( double Angel, Vec3D Axis ) { return Quaternion<>::FromAxisAngle(Angel, Axis); }
+inline Rotation CombineRotation( const Rotation& first, const Rotation& secound ) { auto res = first * secound; res.NormQuaterion(); return res; }
+
+inline const Rotation NoRotation = CreateRotation(0.0, Vec3D{1.0, 0.0, 0.0});
 
 class ISystem 
 {
@@ -26,7 +35,6 @@ public:
     virtual void Pause() = 0;
     virtual void Clear() = 0;
 };
-
 
 class ClassicalSystem : public ISystem 
 {
@@ -40,8 +48,8 @@ public:
     void addMultipleEntityPotentials( std::vector<ClassicInteraction> potentials );
     void addNonPotentialForce( ClassicNonPotentialForce NonPotForce );
     void addMultipleNonPotentialForce( std::vector<ClassicNonPotentialForce> NonPotForce );
-    void addEntity( ClassicEntity entity );
-    void addMulipleEntitys( std::vector<ClassicEntity> entitys );
+    void addEntity(EntityDescription desc);
+    void addMulipleEntitys( std::vector<EntityDescription> entitys );
     void setTimeIncrement( double DeltaTime ); 
     void setTmax( double Tmax ); 
     bool isRunning() const { return m_running; }
@@ -57,6 +65,15 @@ public:
 private:
     void run();
     void tick();
+    bool pauseInternal();
+    struct PauseScope
+    {
+        ClassicalSystem& sys;
+        bool wasRunning;
+        explicit PauseScope(ClassicalSystem& s) :sys(s), wasRunning(s.pauseInternal()){}
+        ~PauseScope() { if(wasRunning) sys.Start(); }
+
+    };
 private:
     std::unique_ptr<IPrinter> m_Printer;
     std::shared_ptr<ClassicalSystemCore> m_Core;
@@ -66,7 +83,18 @@ private:
     std::future<void> m_Future;
     std::mutex m_Mutex;
     std::condition_variable m_SystemCV;
-    bool m_Calculating;
-    std::atomic<bool> m_running;
+    std::condition_variable m_IdleCV;
+    std::atomic<bool> m_Calculating{false};
+    std::atomic<bool> m_running{false};
+    bool m_Idle{true};
+    bool m_FinishedSet{false};
+//Benchmarking
+private:
+    std::chrono::steady_clock::time_point m_TimeStart;
+    std::chrono::steady_clock::time_point m_TimeEnd;
+    double m_StepTime{0.0};
+    double m_PrintTime{0.0};
+
 };
+
 }

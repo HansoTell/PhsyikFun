@@ -14,11 +14,11 @@ CSVPrinter::CSVPrinter( const std::shared_ptr<const ClassicalSystemCore> SystemC
 
 void CSVPrinter::Print() const 
 {
-    const auto& AllEntitys = m_SystemCore->getEntitys();
+    const auto& AllEntitys = m_SystemCore->getEntityRegister();
     for( size_t i = 0; i < AllEntitys.size(); i++ )
     {
         const auto& entity = AllEntitys[i];
-        m_FileWriter->WriteState(entity.getEntityState(), entity.getID(), m_SystemCore->getTime());
+        m_FileWriter->WriteState(entity, m_SystemCore->getTime());
     }
 }
 }
